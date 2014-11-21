@@ -22,7 +22,7 @@ function varargout = main(varargin)
 
 % Edit the above text to modify the response to help main
 
-% Last Modified by GUIDE v2.5 19-Nov-2014 17:57:56
+% Last Modified by GUIDE v2.5 20-Nov-2014 17:43:48
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -84,3 +84,45 @@ columnname={'Include','ID','type','Reads','Genes tagged','COV','Simpson diversit
 columnformat={'logical','char','char','numeric','numeric','numeric','numeric','numeric','numeric'};
 set(hObject,'ColumnName',columnname,'ColumnFormat',columnformat,'ColumnEditable',[true false false false false false false false false]);
 set(hObject,'Data',{true,'C1','neuron',1000000,6000,2.3,1.7,1.4,.99;true,'C1','neuron',1000000,6000,2.3,1.7,1.4,.99;true,'C1','neuron',1000000,6000,2.3,1.7,1.4,.99});
+
+
+% --- Executes on button press in load_button.
+function load_button_Callback(hObject, eventdata, handles)
+% hObject    handle to load_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in pushbutton2.
+function pushbutton2_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in restore_button.
+function restore_button_Callback(hObject, eventdata, handles)
+% hObject    handle to restore_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in qc_button.
+function qc_button_Callback(hObject, eventdata, handles)
+% hObject    handle to qc_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in norm_button.
+function norm_button_Callback(hObject, eventdata, handles)
+% hObject    handle to norm_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in analyze_button.
+function analyze_button_Callback(hObject, eventdata, handles)
+% hObject    handle to analyze_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
