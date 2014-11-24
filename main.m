@@ -22,7 +22,7 @@ function varargout = main(varargin)
 
 % Edit the above text to modify the response to help main
 
-% Last Modified by GUIDE v2.5 20-Nov-2014 17:43:48
+% Last Modified by GUIDE v2.5 21-Nov-2014 15:59:59
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -91,7 +91,19 @@ function load_button_Callback(hObject, eventdata, handles)
 % hObject    handle to load_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+main_data=get(handles.root_window,'UserData');
+if ~isfield(main_data,'last_dir')
+    [fname pname]=uigetfile('*.*','Select FeatureCounts output...');
+else
+    [fname pname]=uigetfile([main_data.last_dir,'*.*'],'Select FeatureCounts output...');
+end
+if ~isstr(fname),return;
+else
+    main_data.last_dir=pname;
+    set(handles.root_window,'UserData',main_data);
+    f=fopen(fullfile(pname,fname));
+end
+set(handles.root_window,'UserData',main_data);
 
 % --- Executes on button press in pushbutton2.
 function pushbutton2_Callback(hObject, eventdata, handles)
@@ -126,3 +138,10 @@ function analyze_button_Callback(hObject, eventdata, handles)
 % hObject    handle to analyze_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object creation, after setting all properties.
+function cell_info_table_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to cell_info_table (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
