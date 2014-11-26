@@ -22,7 +22,7 @@ function varargout = main(varargin)
 
 % Edit the above text to modify the response to help main
 
-% Last Modified by GUIDE v2.5 21-Nov-2014 15:59:59
+% Last Modified by GUIDE v2.5 25-Nov-2014 16:22:51
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -83,7 +83,7 @@ function cell_table_CreateFcn(hObject, eventdata, handles)
 columnname={'Include','ID','type','Reads','Genes tagged','COV','Simpson diversity','Lorenz dynamic range','Turing coverage'};
 columnformat={'logical','char','char','numeric','numeric','numeric','numeric','numeric','numeric'};
 set(hObject,'ColumnName',columnname,'ColumnFormat',columnformat,'ColumnEditable',[true false false false false false false false false]);
-set(hObject,'Data',{true,'C1','neuron',1000000,6000,2.3,1.7,1.4,.99;true,'C1','neuron',1000000,6000,2.3,1.7,1.4,.99;true,'C1','neuron',1000000,6000,2.3,1.7,1.4,.99});
+set(hObject,'Data',{});
 
 
 % --- Executes on button press in load_button.
@@ -91,7 +91,7 @@ function load_button_Callback(hObject, eventdata, handles)
 % hObject    handle to load_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-main_data=get(handles.root_window,'UserData');
+main_data=get(handles.main_window,'UserData');
 if ~isfield(main_data,'last_dir')
     [fname pname]=uigetfile('*.*','Select FeatureCounts output...');
 else
@@ -100,10 +100,24 @@ end
 if ~isstr(fname),return;
 else
     main_data.last_dir=pname;
-    set(handles.root_window,'UserData',main_data);
-    f=fopen(fullfile(pname,fname));
+    set(handles.main_window,'UserData',main_data);
+    h=waitbar(.5,['Loading ' fname]);
+    d=load_fc_out(fullfile(pname,fname),'hum');
+    main_data.d=d;
 end
-set(handles.root_window,'UserData',main_data);
+set(handles.main_window,'UserData',main_data);
+ct_dat=get(handles.cell_table,'Data');
+for i=1:length(d.slbls)
+    ct_dat{i,1}=true;
+    ct_dat{i,2}=d.slbls{i};
+    ct_dat{i,3}='?';
+    ct_dat{i,4}=sum(d.counts(:,i));
+    ct_dat{i,5}=nnz(d.counts(:,i));
+end
+set(handles.cell_table,'Data',ct_dat);
+delete(h)
+
+
 
 % --- Executes on button press in pushbutton2.
 function pushbutton2_Callback(hObject, eventdata, handles)
@@ -145,3 +159,26 @@ function cell_info_table_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to cell_info_table (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes when selected cell(s) is changed in cell_table.
+function cell_table_CellSelectionCallback(hObject, eventdata, handles)
+% hObject    handle to cell_table (see GCBO)
+% eventdata  structure with the following fields (see UITABLE)
+%	Indices: row and column indices of the cell(s) currently selecteds
+% handles    structure with handles and user data (see GUIDATA)
+mdat=get(handles.main_window,'UserData');
+d=mdat.d;
+tdat=get(hObject,'Data');
+t=find(strcmp(d.slbls,tdat{eventdata.Indices(1),2});%second column is sample name
+m=get(handles.disp_table,'Data');
+m{1}=d.slbls{
+
+
+
+% --- Executes during object creation, after setting all properties.
+function disp_table_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to disp_table (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+set(hObject,'Data',cell(8,1));
