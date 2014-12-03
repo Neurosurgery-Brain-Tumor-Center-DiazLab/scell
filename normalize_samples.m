@@ -39,7 +39,8 @@ for i=1:m
     didx=[didx;ti];
 end
 [cx,cxi]=max(pn-cs);
-[phat,ci]=binofit(cs(cxi)*n,cxi);
+[phat,ci]=binofit(cs(cxi)*n,cxi,.01);
+disp(ci)
 h=zeros(m,1);pval=zeros(m,1);
 for i=1:m
     h(i)=CS(cxi,i)>ci(2);

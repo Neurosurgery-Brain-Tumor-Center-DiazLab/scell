@@ -80,9 +80,9 @@ function cell_table_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to cell_table (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-columnname={'Include','ID','type','Reads','Genes tagged','COV','Simpson diversity','Lorenz dynamic range','Turing coverage'};
-columnformat={'logical','char','char','numeric','numeric','numeric','numeric','numeric','numeric'};
-set(hObject,'ColumnName',columnname,'ColumnFormat',columnformat,'ColumnEditable',[true false false false false false false false false]);
+%columnname={'Include','ID','type','Reads','Genes tagged','COV','Simpson diversity','Lorenz dynamic range','Turing coverage'};
+%columnformat={'logical','char','char','numeric','numeric','numeric','numeric','numeric','numeric'};
+%set(hObject,'ColumnName',columnname,'ColumnFormat',columnformat,'ColumnEditable',[true false false false false false false false false]);
 set(hObject,'Data',{});
 
 
@@ -138,7 +138,10 @@ function qc_button_Callback(hObject, eventdata, handles)
 % hObject    handle to qc_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+main_data=get(handles.main_window,'UserData');
+d=main_data.d;
+[nS,sf,~,h,pval]=normalize_samples(S,[],true);
+d.ncounts=nS;
 
 % --- Executes on button press in norm_button.
 function norm_button_Callback(hObject, eventdata, handles)
