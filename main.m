@@ -170,9 +170,21 @@ function cell_table_CellSelectionCallback(hObject, eventdata, handles)
 mdat=get(handles.main_window,'UserData');
 d=mdat.d;
 tdat=get(hObject,'Data');
-t=find(strcmp(d.slbls,tdat{eventdata.Indices(1),2});%second column is sample name
+t=find(strcmp(d.slbls,tdat{eventdata.Indices(1),2}));%second column is sample name
 m=get(handles.disp_table,'Data');
-m{1}=d.slbls{
+m{1}=d.slbls{t};
+m{2}=sum(d.counts(:,t));
+m{3}=nnz(d.counts(:,t));
+if isfield(d,'turing')&&~isempty(d.turing)
+    m{4}=d.turing(t);
+    m{5}=d.preseq(t);
+    m{6}=d.simpson(t);
+    m{7}=d.lorenz(t);
+    m{8}=d.pareto(t);
+else
+    for i=4:8, m{i}='NA'; end
+end
+set(handles.disp_table,'Data',m);
 
 
 
