@@ -170,7 +170,7 @@ function cell_table_CellSelectionCallback(hObject, eventdata, handles)
 mdat=get(handles.main_window,'UserData');
 d=mdat.d;
 tdat=get(hObject,'Data');
-t=find(strcmp(d.slbls,tdat{eventdata.Indices(1),2});%second column is sample name
+t=find(strcmp(d.slbls,tdat{eventdata.Indices(1),2}));%second column is sample name
 m=get(handles.disp_table,'Data');
 m{1}=d.slbls{
 
