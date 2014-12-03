@@ -139,6 +139,10 @@ function qc_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+main_data=get(handles.main_window,'UserData');
+d=main_data.d;
+[nS,sf,d,h,pval]=normalize_samples(S,lbls,show_plt);
+
 
 % --- Executes on button press in norm_button.
 function norm_button_Callback(hObject, eventdata, handles)
