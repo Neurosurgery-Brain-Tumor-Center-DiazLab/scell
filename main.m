@@ -155,7 +155,8 @@ function analyze_button_Callback(hObject, eventdata, handles)
 % hObject    handle to analyze_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+main_data=get(handles.main_window,'UserData');
+pca_tool(main_data.d);
 
 % --- Executes during object creation, after setting all properties.
 function cell_info_table_CreateFcn(hObject, eventdata, handles)
