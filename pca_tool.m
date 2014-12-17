@@ -62,15 +62,14 @@ guidata(hObject, handles);
 if strcmp(get(hObject,'Visible'),'off')
     if length(varargin)>0,main_data.d=varargin{1};else,main_data.d=[];end
     d=main_data.d;
-    handles.f=figure;handles.ax=gca;
+    handles.pca_fig=figure;handles.pca_ax=gca;
+    handles.gn_fig=figure;handels.gn_ax=gca;
+    set(handles.pca_fig,'color','w');
+    set(handles.gn_fig,'color','w');
     guidata(hObject,handles);
-    %draw the main plot window
-    oidx=pareto_plot(smp.prank,smp.nsh,smp.mlodz);
-    set(handles.f,'color','w');set(handles.ax,'FontSize',20,'FontName','Arial');
-    xlabel(handles.ax,sprintf('Reproducibility\n(Number of active guide-RNA)'),'FontSize',20,'FontName','Arial');
-    ylabel(handles.ax,sprintf('Gene effect size\n(Summary guide-RNA log-odds)'),'FontSize',20,'FontName','Arial');
-    pdata.sample_name=smp.sample_name;
-    title(handles.ax,pdata.sample_name,'FontSize',20,'FontName','Arial');
+    %draw the pca plot window
+    U=-1*leng
+    [coeff,score,tsq,explained]=visualize_pca(nS,U,handles.pca_ax,handles.gn_ax,pcs)
     %variables to hold network centrality estimates
     n=length(smp.gsymb);
     pdata.net_cent_comb=zeros(n,1);pdata.net_cent_genetic=zeros(n,1);

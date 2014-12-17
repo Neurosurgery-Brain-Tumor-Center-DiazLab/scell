@@ -1,3 +1,4 @@
+
 cD=squareform(pdist(coeff(:,1:2)));
 [T,pred]=graphminspantree(sparse(cD),ridx);
 hold on
