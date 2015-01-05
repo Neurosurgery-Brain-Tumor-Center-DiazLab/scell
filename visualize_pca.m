@@ -24,7 +24,11 @@ end
 bm=brewermap(7,'Accent');
 %plot the pca scores
 axes(pca_ax);
-gscatter(coeff(:,1),coeff(:,2),U,bm,'o',10);
+if U==-1
+    scatter(coeff(:,1),coeff(:,2)),
+else
+    gscatter(coeff(:,1),coeff(:,2),U,bm,'o',10);
+end
 xlabel(['PCA' num2str(pcs(1)) ': ' num2str(explained(1)) '% of variance explained.'],'FontSize',20);
 ylabel(['PCA' num2str(pcs(2)) ': ' num2str(explained(2)) '% of variance explained.'],'FontSize',20);
 title('PCA','FontSize',24);
