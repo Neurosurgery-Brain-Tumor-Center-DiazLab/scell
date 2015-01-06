@@ -344,7 +344,7 @@ void dendro::buildDendrogram() {
 	// non-internal vertices, and then insert them into a random binary tree structure.
 	// For simplicity, we make the first internal node in the array the root.
 	
-	bool flag_debug = true;
+	bool flag_debug = false;
 	n		= g->numNodes();		// size of graph
 	leaf		= new elementd [n];		// allocate memory for G, O(n)
 	internal  = new elementd [n-1];	// allocate memory for D, O(n)
@@ -604,7 +604,7 @@ int dendro::computeEdgeCount(const int a, const short int atype, const int b, co
 					curr       = curr->M;		// 
 					if (curr == NULL) {
 						flag_go = false;
-//						cout << "A exit: reached null parent" << endl;
+//						//cout << "A exit: reached null parent" << endl;
 					}
 				}
 			}
@@ -745,7 +745,7 @@ bool dendro::importDendrogramStructure(const string in_file) {
 	// --- Import basic structure from file O(n)
 	ifstream fin(in_file.c_str(), ios::in);
 	while (fin >> bracketL >> sindex >> bracketR >> sL >> sLindex >> sLtype >> sR >> sRindex >> sRtype >> sp >> sprob >> se >> snume >> sn >> snumn) {
-		cout << bracketL << " " << sindex << " " << bracketR << " " << sL << " " << sLindex << " " << sLtype << " " << sR << " " << sRindex << " " << sRtype << " " << sp << " " << sprob << " " << se << " " << snume << " " << sn << " " << snumn << endl;
+	  //cout << bracketL << " " << sindex << " " << bracketR << " " << sL << " " << sLindex << " " << sLtype << " " << sR << " " << sRindex << " " << sRtype << " " << sp << " " << sprob << " " << se << " " << snume << " " << sn << " " << snumn << endl;
 		if (sLtype == "(D)") { internal[sindex].L = &internal[sLindex]; internal[sLindex].M = &internal[sindex]; } else 
 		if (sLtype == "(G)") { internal[sindex].L = &leaf[sLindex];     leaf[sLindex].M     = &internal[sindex]; } else
 						 { cout << "Error: " << bracketL << sindex << bracketR << sL << sLindex << sLtype << sR << sRindex << sRtype << sp << sprob << se << snume << sn << snumn << endl; safeExit = false; break; }

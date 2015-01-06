@@ -132,6 +132,7 @@ int main(int argc, char * argv[]) {
 	t			= 1;					// 
 	out_count		= 1;					// 
 	time_t t1, t2; t1  = time(&t1);		// 
+	int maxit=1000;
 
 	if (parseCommandLine(argc, argv)) {
 		d = new dendro;						// make the dendro-graph structure
@@ -141,7 +142,7 @@ int main(int argc, char * argv[]) {
 			if (!readInputFile()) { cout << "Error: Malformed input file.\n"; return 0; }
 			bestL = d->getLikelihood();			// store current likelihood
 			//cout << "\nstep   \tLogL       \tbest LogL\tMC step\t\tdLogL\n";
-			while (true) {
+			for (int i=0;i<maxit;i++) {
 				if (!(markovChainMonteCarlo())) { return 0; }
 				if (t >= 4294967294 or t < 0) { t = 1; }	// rollover step count
 			}

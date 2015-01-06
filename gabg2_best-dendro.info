@@ -1,0 +1,14 @@
+---HIERARCHICAL-RANDOM-GRAPH---
+StartTime     : Mon Jan  5 18:12:31 2015
+InputFile     : gabg2.pairs
+Directory     : 
+---Basic-Graph-Information---
+Nodes         : 62
+Edges         : 91
+---HRG-Information---
+OutputTime    : Mon Jan  5 18:12:34 2015
+NumStepsMCMC  : 791721
+NumPrevBests  : 302
+LogLikelihood : -118.979
+HRG           : gabg2_best-dendro.hrg
+InfoFile      : gabg2_best-dendro.info
