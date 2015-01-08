@@ -1,14 +1,14 @@
 ---HIERARCHICAL-RANDOM-GRAPH---
-StartTime     : Sat Jan  3 22:41:54 2015
+StartTime     : Mon Jan  5 15:34:33 2015
 InputFile     : karate.pairs
 Directory     : 
 ---Basic-Graph-Information---
 Nodes         : 34
 Edges         : 78
 ---HRG-Information---
-OutputTime    : Sat Jan  3 22:42:10 2015
-NumStepsMCMC  : 5217827
-NumPrevBests  : 233
-LogLikelihood : -73.3212
+OutputTime    : Mon Jan  5 15:34:33 2015
+NumStepsMCMC  : 38740
+NumPrevBests  : 189
+LogLikelihood : -90.022
 HRG           : karate_best-dendro.hrg
 InfoFile      : karate_best-dendro.info

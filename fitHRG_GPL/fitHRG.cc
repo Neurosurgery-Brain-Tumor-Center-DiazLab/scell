@@ -132,7 +132,7 @@ int main(int argc, char * argv[]) {
 	t			= 1;					// 
 	out_count		= 1;					// 
 	time_t t1, t2; t1  = time(&t1);		// 
-	int maxit=1000;
+	int maxit=10000;
 
 	if (parseCommandLine(argc, argv)) {
 		d = new dendro;						// make the dendro-graph structure
