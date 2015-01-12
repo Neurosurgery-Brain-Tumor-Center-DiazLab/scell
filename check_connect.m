@@ -4,7 +4,7 @@ function [edst,h]=check_connect(coef,per,plt)
 %IN: coef is a nX2 matrix of euclidean coordinates
 %    per is a vector of percentages, at which to downsample the ensemble
 %    plt is a bool, if true then will generate a plot and return handle
-%
+%d
 %OUT: edst is a cell array of size length(per), edst{i} is a beta
 %distribution object fitted from the edge probabilities down-sampled to a
 %percentage of per(i)
@@ -26,6 +26,7 @@ for i=1:m
         fprintf(f,'%i\n',e(j,2));
     end
     [status,result]=system('./fitHRG -f tmp.pairs');
+    disp(status)
     x=textscan(result,'%n','Delimiter','\n');
     x=x{1}; x=x(end-length(c):end);
     pd=fitdist(x,'beta');
