@@ -15,20 +15,18 @@ edst={};
 n=size(coef,1);
 m=length(per);
 for i=1:m
-    idx=randperm(n);
+    e=gabrielGraph(coef);
+    idx=randperm(size(e,1));
     idx=idx(1:floor(per(i)*n));
-    c=coef(sort(idx),:);
-    e=gabrielGraph(c);
     !rm -f tmp.pairs
     f=fopen('tmp.pairs','w');
-    for j=1:size(e,1)
-        fprintf(f,'%i\t',e(j,1));
-        fprintf(f,'%i\n',e(j,2));
+    for j=1:length(idx)
+        fprintf(f,'%i\t',e(idx(j),1));
+        fprintf(f,'%i\n',e(idx(j),2));
     end
     [status,result]=system('./fitHRG -f tmp.pairs');
-    disp(status)
     x=textscan(result,'%n','Delimiter','\n');
-    x=x{1}; x=x(end-length(c):end);
+    x=x{1}; x=x(end-n:end);
     pd=fitdist(x,'beta');
     edst{i}=pd;
 end
@@ -41,10 +39,13 @@ if plt
         N(1,i)=mean(tb);
         tb=makedist('beta','a',M(2,1),'b',M(1,2));
         N(2,i)=mean(tb);
+        t(i)=mean(edst{i});
     end
     h=figure;
     set(h,'color','w');
     bar(N','stacked');
+    hold on
+    plot([1:m],t,'g*')
 end
     
         
