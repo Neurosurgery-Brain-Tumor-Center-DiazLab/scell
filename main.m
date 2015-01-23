@@ -22,7 +22,7 @@ function varargout = main(varargin)
 
 % Edit the above text to modify the response to help main
 
-% Last Modified by GUIDE v2.5 25-Nov-2014 16:22:51
+% Last Modified by GUIDE v2.5 22-Jan-2015 16:10:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -110,9 +110,8 @@ ct_dat=get(handles.cell_table,'Data');
 for i=1:length(d.slbls)
     ct_dat{i,1}=true;
     ct_dat{i,2}=d.slbls{i};
-    ct_dat{i,3}='?';
-    ct_dat{i,4}=sum(d.counts(:,i));
-    ct_dat{i,5}=nnz(d.counts(:,i));
+    ct_dat{i,3}=sum(d.counts(:,i));
+    ct_dat{i,4}=nnz(d.counts(:,i));
 end
 set(handles.cell_table,'Data',ct_dat);
 delete(h)
@@ -198,3 +197,22 @@ function disp_table_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 set(hObject,'Data',cell(8,1));
+
+
+% --- Executes on button press in unselect_all.
+function unselect_all_Callback(hObject, eventdata, handles)
+% hObject    handle to unselect_all (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ct_dat=get(handles.cell_table,'Data');
+for i=1:size(ct_dat,1),ct_dat{i,1}=false;end
+set(handles.cell_table,'Data',ct_dat);
+
+% --- Executes on button press in select_all.
+function select_all_Callback(hObject, eventdata, handles)
+% hObject    handle to select_all (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ct_dat=get(handles.cell_table,'Data');
+for i=1:size(ct_dat,1),ct_dat{i,1}=true;end
+set(handles.cell_table,'Data',ct_dat);
