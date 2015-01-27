@@ -22,7 +22,7 @@ function varargout = main(varargin)
 
 % Edit the above text to modify the response to help main
 
-% Last Modified by GUIDE v2.5 22-Jan-2015 16:10:22
+% Last Modified by GUIDE v2.5 25-Nov-2014 16:22:51
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -101,7 +101,7 @@ if ~isstr(fname),return;
 else
     main_data.last_dir=pname;
     set(handles.main_window,'UserData',main_data);
-    h=waitbar(.5,['Loading ' fname]);
+    h=waitbar(.5,['Loading ' strrep(fname,'_','\_')]);
     d=load_fc_out(fullfile(pname,fname),'hum');
     main_data.d=d;
 end
@@ -139,8 +139,41 @@ function qc_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 main_data=get(handles.main_window,'UserData');
 d=main_data.d;
-[nS,sf,~,h,pval]=normalize_samples(S,[],true);
-d.ncounts=nS;
+preseq_dir='./';
+%for each cell call preseq
+j=1;
+h=waitbar(0,['processing cell ' num2str(j) ' of ' num2str(size(d.counts,2))]);
+while j<size(d.counts,2)
+    fname=tempname;
+    f=fopen(fname,'w');
+    for i=1:size(d.counts,1)
+        if d.counts(i,j)>0,fprintf(f,'%d\n',d.counts(i,j));end
+    end
+    [status,result]=system([preseq_dir 'preseq lc_extrap -V ' fname]);
+    if status~=0, d.preseq(j)=-1;
+    else
+        D=textscan(result,'%n%n%n%n','Headerlines',1);
+        D=D{3};
+        d.preseq(j)=sum(d.counts(:,j))/median(D(length(D)*.75));
+    end
+    fclose(f);
+    d.turing(j)=
+    d.simpson(j)=
+    waitbar(j/size(d.counts,2),h,['processing cell' num2str(j) ' of ' num2str(size(d.counts,2))]);
+    j=j+1;
+end
+delete(h);
+main_data.d=d;
+set(handles.main_window,'UserData',main_data);
+%update sample list
+ct_dat=get(handles.cell_table,'Data');
+for i=1:length(d.slbls)
+    ct_dat{i,5}=d.simpson(i);
+    ct_dat{i,6}=d.preseq(i);
+    ct_dat{i,7}=d.turing(i);
+end
+set(handles.cell_table,'Data',ct_dat);
+
 
 % --- Executes on button press in norm_button.
 function norm_button_Callback(hObject, eventdata, handles)
@@ -182,10 +215,12 @@ if isfield(d,'turing')&&~isempty(d.turing)
     m{4}=d.turing(t);
     m{5}=d.preseq(t);
     m{6}=d.simpson(t);
-    m{7}=d.lorenz(t);
     m{8}=d.pareto(t);
 else
     for i=4:8, m{i}='NA'; end
+end
+if isfield(d,'lorenz')&&~isempty(d.lorenz)
+    m{7}=d.lorenz(t)
 end
 set(handles.disp_table,'Data',m);
 
@@ -197,22 +232,3 @@ function disp_table_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 set(hObject,'Data',cell(8,1));
-
-
-% --- Executes on button press in unselect_all.
-function unselect_all_Callback(hObject, eventdata, handles)
-% hObject    handle to unselect_all (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-ct_dat=get(handles.cell_table,'Data');
-for i=1:size(ct_dat,1),ct_dat{i,1}=false;end
-set(handles.cell_table,'Data',ct_dat);
-
-% --- Executes on button press in select_all.
-function select_all_Callback(hObject, eventdata, handles)
-% hObject    handle to select_all (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-ct_dat=get(handles.cell_table,'Data');
-for i=1:size(ct_dat,1),ct_dat{i,1}=true;end
-set(handles.cell_table,'Data',ct_dat);
