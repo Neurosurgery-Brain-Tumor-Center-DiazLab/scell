@@ -139,11 +139,12 @@ function qc_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 main_data=get(handles.main_window,'UserData');
 d=main_data.d;
+M=zeros(size(d.counts,2),4);%matrix to hold qc metrics, used for pareto rank
 preseq_dir='./';
 %for each cell call preseq
 j=1;
 h=waitbar(0,['processing cell ' num2str(j) ' of ' num2str(size(d.counts,2))]);
-while j<size(d.counts,2)
+while j<=size(d.counts,2)
     fname=tempname;
     f=fopen(fname,'w');
     for i=1:size(d.counts,1)
@@ -153,16 +154,32 @@ while j<size(d.counts,2)
     if status~=0, d.preseq(j)=-1;
     else
         D=textscan(result,'%n%n%n%n','Headerlines',1);
-        D=D{3};
-        d.preseq(j)=sum(d.counts(:,j))/median(D(length(D)*.75));
+        D=D{2};
+        d.preseq(j)=nnz(d.counts(:,j))/median(D(floor(length(D)*.75):end));
     end
+    M(j,1)=d.preseq(j);
     fclose(f);
-    d.turing(j)=
-    d.simpson(j)=
-    waitbar(j/size(d.counts,2),h,['processing cell' num2str(j) ' of ' num2str(size(d.counts,2))]);
+    %turing
+    d.turing(j)=1-sum(d.counts(:,j)==1)/sum(d.counts(d.counts(:,j)>0,j));
+    t=find(d.counts(:,j)>0);
+    pt=d.counts(t,j)/sum(d.counts(t,j));
+    M(j,2)=d.turing(j);
+    %simpson
+    d.simpson(j)=1/(pt'*pt);
+    M(j,3)=d.simpson(j);
+    waitbar(j/size(d.counts,2),h,['processing cell ' num2str(j) ' of ' num2str(size(d.counts,2))]);
     j=j+1;
 end
 delete(h);
+%compute lorenz outlier detection
+if length(d.slbls)>10,slbls=[];
+else, slbls=d.slbls;end
+[~,sf,~,h,pval]=normalize_samples(d.counts,slbls,1);
+d.lorenz=pval;d.lorenzh=h;d.sf=sf;
+M(:,4)=d.lorenz;
+%compute pareto ranking
+[~,f]=paretofronts(M,[1 1 1 1]);
+d.pareto=f/sum(f);
 main_data.d=d;
 set(handles.main_window,'UserData',main_data);
 %update sample list
@@ -171,6 +188,8 @@ for i=1:length(d.slbls)
     ct_dat{i,5}=d.simpson(i);
     ct_dat{i,6}=d.preseq(i);
     ct_dat{i,7}=d.turing(i);
+    ct_dat{i,8}=d.lorenz(i);
+    ct_dat{i,9}=d.pareto(i);
 end
 set(handles.cell_table,'Data',ct_dat);
 
@@ -180,6 +199,8 @@ function norm_button_Callback(hObject, eventdata, handles)
 % hObject    handle to norm_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
 
 
 % --- Executes on button press in analyze_button.
@@ -212,10 +233,10 @@ m{1}=d.slbls{t};
 m{2}=sum(d.counts(:,t));
 m{3}=nnz(d.counts(:,t));
 if isfield(d,'turing')&&~isempty(d.turing)
-    m{4}=d.turing(t);
+    m{4}=d.simpson(t);
     m{5}=d.preseq(t);
-    m{6}=d.simpson(t);
-    m{8}=d.pareto(t);
+    m{6}=d.turing(t);
+    m{7}=d.pareto(t);
 else
     for i=4:8, m{i}='NA'; end
 end

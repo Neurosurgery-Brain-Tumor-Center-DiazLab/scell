@@ -28,7 +28,7 @@ CS=nS(sidx,:);
 CS=cumsum(CS);
 for i=1:m, CS(:,i)=CS(:,i)/CS(end,i); end
 %compute the max distances to the order-stat's trimmed mean
-%compute the point at which they occur and the divergence test p-value
+%compute the point at which they occur and the binomial test p-value
 ad=[];ati=[];d=[]; didx=[]; pval=[];zvall=[];cil=[];
 for i=1:m
     [td,ti]=max(pn-CS(:,i));
@@ -39,7 +39,7 @@ for i=1:m
     didx=[didx;ti];
 end
 [cx,cxi]=max(pn-cs);
-[phat,ci]=binofit(cs(cxi)*n,cxi,.01);
+[phat,ci]=binofit(cs(cxi)*n,cxi,.05);
 disp(ci)
 h=zeros(m,1);pval=zeros(m,1);
 for i=1:m
@@ -52,8 +52,8 @@ if show_plt
     set(gcf,'color','w')
     hold on
     t=linspace(0,1,size(S,1));
-    idx1=find(~h);%find(ad>0);
-    idx2=find(h);%find(ad<0);
+    idx1=find(pval>=0.05);%find(ad>0);
+    idx2=find(pval<0.05);%find(ad<0);
     [~,sidx1]=sort(ad(idx1),'descend');
     [~,sidx2]=sort(ad(idx2),'descend');
     bm1=brewermap(13,'RdBu');
@@ -62,15 +62,15 @@ if show_plt
     grad1(grad1<0)=0;
     grad2(grad2<0)=0;
     for i=length(idx1):-1:1
-        plot(t,CS(:,idx1(sidx1(i))),'color',grad1(i,:))
+        h1=plot(t,CS(:,idx1(sidx1(i))),'color',grad1(i,:));
     end
     %plot(t(1:5:end),cs(1:5:end),'k','LineWidth',2);
     for i=1:length(idx2)
-        plot(t,CS(:,idx2(sidx2(i))),'r')
+        h2=plot(t,CS(:,idx2(sidx2(i))),'r');
     end
     z=ones(size(cs))*2*sqrt(3/8);
     cz=cumsum(z);cz=cz/cz(end);
-    plot(t(1:1000:end),cz(1:1000:end),'ko','LineWidth',1.5,'MarkerSize',8);
+    h3=plot(t(1:1000:end),cz(1:1000:end),'ko','LineWidth',1.5,'MarkerSize',8);
     md=mad(S(:));
     rdi=randi([1,length(cs)],[1,floor(.25*length(cs))]);
     z=poissrnd(ones(size(cs))*md);
@@ -84,9 +84,15 @@ if show_plt
     %z(rdi)=nS(sidx(rdi),dmi);
     %cz=cumsum(z);cz=cz/cz(end);
     %plot(t(1:1000:end),cz(1:1000:end),'k^','LineWidth',1.5,'MarkerSize',8);
-    plot(t,cs,'g','LineWidth',3)
+    h4=plot(t,cs,'g','LineWidth',3)
+    set(gca,'FontSize',18);
     ylabel('% of reads','FontSize',18);
     xlabel('% of genome','FontSize',18);
+    if exist('h2','var')
+        legend([h1;h2;h3;h4],{'Acceptable quality','Low quality','Poisson noise','Geometric mean'},'Location','NorthWest');
+    else
+        legend([h1;h3;h4],{'Acceptable quality','Poisson noise','Geometric mean'},'Location','NorthWest');
+    end
 end
 %compute the scaling factors and the scaled samples
 md=min(didx);
@@ -131,13 +137,13 @@ if show_plt
     colormap(bm);
     set(gcf,'color','w')
     %plot 1
-    subplot(2,1,1)
+    %subplot(2,1,1)
     bar(N1,'stacked');
     st=sum(N1');
     hold on
     yl=ylim;
-    plot(find(pval<=0.05),st(find(pval<=0.05))+.05,'y*')
-    plot(find(h),st(find(h))+.05,'r*')
+    hy=plot(find(pval<=0.05),st(find(pval<=0.05))+.05,'m*');
+    hr=plot(find(h),st(find(h))+.05,'r*');
     set(gca,'YLim',[0,1.1],'XLim',[0,m+1])
     title(gca,'raw counts','FontSize',18)
     set(gca,'FontSize',18)
@@ -151,23 +157,25 @@ if show_plt
         set(gca,'XtickLabel',lbls);
         rotateXLabels(gca,90);
     end
+    legend([hy;hr],{'low quality','extreme outliers'},'FontSize',12,'Location','SouthWest');
     %plot 2
-    subplot(2,1,2)
-    bar(M1,'stacked');
-    hold on
-    st=sum(M1');
-    plot(find(pval<=0.05),st(find(pval<=0.05))+.05,'y*')
-    plot(find(h),st(find(h))+.05,'r*')   
-    set(gca,'YLim',[0,1.1],'XLim',[0,m+1])
-    title(gca,'normalized counts','FontSize',18)
-    set(gca,'FontSize',18);
-    ylabel({'% genes expressed', 'above quantile'});
-    if ~isempty(lbls)
-        set(gca,'XtickLabel',lbls);
-        rotateXLabels(gca,90);
-    end
-    cb=colorbar;
-    set(cb,'YDir','reverse','YTickLabel',cbl(end:-1:1));
-    ylabel(cb,'Expression quantile','FontSize',18);
-    set(cb,'FontSize',18);
+%     subplot(2,1,2)
+%     bar(M1,'stacked');
+%     hold on
+%     st=sum(M1');
+%     hy=plot(find(pval<=0.05),st(find(pval<=0.05))+.05,'m*');
+%     hr=plot(find(h),st(find(h))+.05,'r*');   
+%     set(gca,'YLim',[0,1.1],'XLim',[0,m+1])
+%     title(gca,'normalized counts','FontSize',18)
+%     set(gca,'FontSize',18);
+%     ylabel({'% genes expressed', 'above quantile'});
+%     if ~isempty(lbls)
+%         set(gca,'XtickLabel',lbls);
+%         rotateXLabels(gca,90);
+%     end
+%     cb=colorbar;
+%     set(cb,'YDir','reverse','YTickLabel',cbl(end:-1:1));
+%     ylabel(cb,'Expression quantile','FontSize',18);
+%     set(cb,'FontSize',18);
+%     legend([hy;hr],{'low quality','extreme outliers'},'FontSize',12,'Location','SouthWest');
 end
