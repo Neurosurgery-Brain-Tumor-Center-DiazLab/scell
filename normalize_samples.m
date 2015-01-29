@@ -1,5 +1,5 @@
-function [nS,sf,d,h,pval]=normalize_samples(S,lbls,show_plt)
-%function [nS,sf,d,h,pval]=normalize_samples(S,lbls,show_plt)
+function [nS,sf,d,h,pval,sidx,cxi]=normalize_samples(S,lbls,show_plt)
+%function [nS,sf,d,h,pval,sidx,cxi]=normalize_samples(S,lbls,show_plt)
 %
 %IN: S is a nXm matrix of raw fragment counts for n genes and m samples
 %    lbls is a cell array of m strings labeling the samples
@@ -11,6 +11,9 @@ function [nS,sf,d,h,pval]=normalize_samples(S,lbls,show_plt)
 %          geometric mean
 %     pval is a vector of p-values testing the hypothesis that the ith
 %     cell is enriched over the mean
+%     sidx index which sorts the order stats of the geo-mean
+%     cxi point of maximal difference between poisson noise simulation and
+%          order stats
 n=size(S,1); m=size(S,2);
 %anscombe transform
 nS=2*sqrt(S+3/8);
@@ -38,7 +41,7 @@ for i=1:m
     ad=[ad;atd];
     didx=[didx;ti];
 end
-[cx,cxi]=max(pn-cs);
+[~,cxi]=max(pn-cs);
 [phat,ci]=binofit(cs(cxi)*n,cxi,.05);
 disp(ci)
 h=zeros(m,1);pval=zeros(m,1);
@@ -84,7 +87,7 @@ if show_plt
     %z(rdi)=nS(sidx(rdi),dmi);
     %cz=cumsum(z);cz=cz/cz(end);
     %plot(t(1:1000:end),cz(1:1000:end),'k^','LineWidth',1.5,'MarkerSize',8);
-    h4=plot(t,cs,'g','LineWidth',3)
+    h4=plot(t,cs,'g','LineWidth',3);
     set(gca,'FontSize',18);
     ylabel('% of reads','FontSize',18);
     xlabel('% of genome','FontSize',18);

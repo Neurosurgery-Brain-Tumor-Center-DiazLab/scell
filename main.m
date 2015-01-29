@@ -103,6 +103,7 @@ else
     set(handles.main_window,'UserData',main_data);
     h=waitbar(.5,['Loading ' strrep(fname,'_','\_')]);
     d=load_fc_out(fullfile(pname,fname),'hum');
+    d.qc=false;
     main_data.d=d;
 end
 set(handles.main_window,'UserData',main_data);
@@ -144,14 +145,14 @@ preseq_dir='./';
 %for each cell call preseq
 j=1;
 h=waitbar(0,['processing cell ' num2str(j) ' of ' num2str(size(d.counts,2))]);
-while j<=size(d.counts,2)
+while ~d.qc&&j<=size(d.counts,2)
     fname=tempname;
     f=fopen(fname,'w');
     for i=1:size(d.counts,1)
         if d.counts(i,j)>0,fprintf(f,'%d\n',d.counts(i,j));end
     end
     [status,result]=system([preseq_dir 'preseq lc_extrap -V ' fname]);
-    if status~=0, d.preseq(j)=-1;
+    if status~=0, d.preseq(j)=0;
     else
         D=textscan(result,'%n%n%n%n','Headerlines',1);
         D=D{2};
@@ -170,16 +171,33 @@ while j<=size(d.counts,2)
     waitbar(j/size(d.counts,2),h,['processing cell ' num2str(j) ' of ' num2str(size(d.counts,2))]);
     j=j+1;
 end
-delete(h);
 %compute lorenz outlier detection
-if length(d.slbls)>10,slbls=[];
-else, slbls=d.slbls;end
-[~,sf,~,h,pval]=normalize_samples(d.counts,slbls,1);
-d.lorenz=pval;d.lorenzh=h;d.sf=sf;
+[~,sf,~,lorenzh,pval,sidx,cxi]=normalize_samples(d.counts,[],1);
+delete(h);
+figure
+set(gcf,'color','w');
+subplot(2,1,1);
+set(gca,'FontSize',18);
+ylabel('Simpson diversity','FontSize',18)
+notBoxPlot(d.simpson(pval<0.05),1);
+hold
+notBoxPlot(d.simpson(pval>=0.05),2);
+set(gca,'XTick',1:2,'XTickLabel',{'QC pass','QC fail'});
+subplot(2,1,2);
+set(gca,'FontSize',18);
+ylabel('Preseq coverage','FontSize',18)
+notBoxPlot(d.preseq(pval<0.05),1);
+hold
+notBoxPlot(d.preseq(pval>=0.05),2);
+set(gca,'XTick',1:2,'XTickLabel',{'QC pass','QC fail'});
+d.lorenz=pval;d.lorenzh=lorenzh;d.sf=sf;
 M(:,4)=d.lorenz;
 %compute pareto ranking
 [~,f]=paretofronts(M,[1 1 1 1]);
-d.pareto=f/sum(f);
+d.pareto=f;
+d.sidx=sidx;%index vector which sorts order stats of geo-mean
+d.cxi=cxi;%index scalar of point of maximal separation of geomean to poisson noise
+d.qc=true;
 main_data.d=d;
 set(handles.main_window,'UserData',main_data);
 %update sample list
@@ -232,16 +250,14 @@ m=get(handles.disp_table,'Data');
 m{1}=d.slbls{t};
 m{2}=sum(d.counts(:,t));
 m{3}=nnz(d.counts(:,t));
-if isfield(d,'turing')&&~isempty(d.turing)
+if isfield(d,'turing')&&~isempty(d.turing)%then we've done QC
     m{4}=d.simpson(t);
     m{5}=d.preseq(t);
     m{6}=d.turing(t);
-    m{7}=d.pareto(t);
+    m{7}=d.lorenz(t);
+    m{8}=d.pareto(t);
 else
     for i=4:8, m{i}='NA'; end
-end
-if isfield(d,'lorenz')&&~isempty(d.lorenz)
-    m{7}=d.lorenz(t)
 end
 set(handles.disp_table,'Data',m);
 
