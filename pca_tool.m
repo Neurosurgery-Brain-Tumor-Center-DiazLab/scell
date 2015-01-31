@@ -71,30 +71,6 @@ if strcmp(get(hObject,'Visible'),'off')
     U=-1*leng
     [coeff,score,tsq,explained]=visualize_pca(nS,U,handles.pca_ax,handles.gn_ax,pcs)
     %variables to hold network centrality estimates
-    n=length(smp.gsymb);
-    pdata.net_cent_comb=zeros(n,1);pdata.net_cent_genetic=zeros(n,1);
-    pdata.net_cent_protein=zeros(n,1);pdata.net_cent_coloc=zeros(n,1);
-    pdata.net_cent_pathway=zeros(n,1);
-    if isfield(smp,'net_cent')
-        nc=smp.net_cent('combined');
-        pdata.net_cent_comb=nc/max(nc);
-        max(pdata.net_cent_comb),min(pdata.net_cent_comb)
-        nc=smp.net_cent('Genetic');
-        pdata.net_cent_genetic=nc/max(nc);
-        nc=smp.net_cent('Co-localization');
-        pdata.net_cent_coloc=nc/max(nc);
-        nc=smp.net_cent('Pathway');
-        pdata.net_cent_pathway=nc/max(nc);
-        nc=smp.net_cent('Physical');
-        pdata.net_cent_physical=nc/max(nc);
-    end
-    %variables to hold screen enrichment stats
-    pdata.xdat=smp.nsh;pdata.ydat=smp.mlodz;
-    pdata.lbls=smp.gsymb;pdata.prank=smp.prank;pdata.ntar=smp.ntar;
-    pdata.fdr=smp.fdr;
-    %variables to hold gene expression data
-    pdata.fc=smp.fc;pdata.tt=smp.tt;
-    pdata.handles=handles;
     %update gene data display on mouse move
     fh=@(varargin) mouse_mv_callback(handles.ax,pdata);
     set(handles.f,'windowbuttonmotionfcn',fh);
