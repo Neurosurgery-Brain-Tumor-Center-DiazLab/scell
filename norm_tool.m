@@ -22,7 +22,7 @@ function varargout = norm_tool(varargin)
 
 % Edit the above text to modify the response to help norm_tool
 
-% Last Modified by GUIDE v2.5 29-Jan-2015 13:13:14
+% Last Modified by GUIDE v2.5 03-Feb-2015 17:50:39
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,10 +59,12 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % UIWAIT makes norm_tool wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.norm_tool_root);
 if strcmp(get(hObject,'Visible'),'off')
+    main_data=get(handles.norm_tool_root,'UserData');
     if length(varargin)>0,main_data.d=varargin{1};else,main_data.d=[];end
-    d=main_data.d;
+    set(handles.norm_tool_root,'UserData',main_data);
+end
 
 
 % --- Outputs from this function are returned to the command line.
@@ -117,7 +119,31 @@ function ercc_pushbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to ercc_pushbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+[fname pname]=uigetfile([],'Please load the ERCC gene identifiers.');
+try
+    D=importdata(fullfile(pname,fname));
+catch me
+    alert('String','File input error');
+end
+%find the ids in d and generate an index to them
+main_data=get(handles.norm_tool_root,'UserData');
+main_data.ercc_idx=[];
+not_found={};
+d=main_data.d;
+for i=1:length(D)
+    t=min(find(strcmp(D{i},d.gsymb)));
+    if ~isempty(t), main_data.ercc_idx=[main_data.ercc_idx;t];
+    else, not_found{end+1}=D{i};end
+end
+set(handles.norm_tool_root,'UserData',main_data);
+if ~isempty(not_found)
+    out_str=[num2str(length(not_found)),...
+            sprintf(' genes could not be identified\n'),...
+            sprintf('Genes not found:\n')];
+    for u=1:length(not_found)-1,out_str=[out_str,sprintf('%s,',not_found{u})];end
+    out_str=[out_str,sprintf('%s',not_found{end})];
+    alert('String',out_str);
+end 
 
 % --- Executes on button press in bak_pushbutton.
 function bak_pushbutton_Callback(hObject, eventdata, handles)

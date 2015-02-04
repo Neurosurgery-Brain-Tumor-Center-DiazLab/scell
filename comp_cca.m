@@ -36,10 +36,7 @@ else
     if isempty(t),t=length(d.facs)+1;end
 end
 d.facs{t}=fstr;d.facm{t}=V;
-rdn=0;m=size(U,1);
-for i=1:length(r)
-   rdn=rdn+U(:,i)'*U(:,i)*r(i)/m; 
-end
+rdn=sum(mean(corr(X,V).^2));
 if show_plot
     fh=figure;
     set(fh,'color','w');
@@ -49,25 +46,26 @@ if show_plot
     [scrs,cidx]=sort(crs,'descend');
     bar(scrs(1:min(length(scrs),10)));%plot the top 10 most correlated genes in the factor
     set(ax,'XTickLabel',d.gsymb(gidx(cidx(1:min(length(cidx),10)))));
-    title([fstr ' redundancy index = ' num2str(rdn*100) '%'],'FontSize',18);
+    title([fstr ' Tenenhaus redundancy = ' num2str(rdn*100) '%'],'FontSize',18);
     rotateXLabels(ax,90);
 end
 %write a ranking of genes in the factor, by mean canonical cross
 %correlation
+[~,cidx]=sort(abs(crs),'descend');
 [fname pname]=uiputfile([fstr '_correlation_rank.tsv'],['Where should I save ' fstr ', ranked by correlation?']);
 f=fopen(fullfile(pname,fname),'w');
 fprintf(f,[fstr '_gene\tMean_correlation\n']);
 for i=1:length(sidx)
     fprintf(f,'%s\t',d.gsymb{gidx(cidx(i))});
-    fprintf(f,'%g\n',scrs(i));
+    fprintf(f,'%g\n',crs(cidx(i)));
 end
 fclose(f);
 %write a list of top correlated genes with the factor
 [fname pname]=uiputfile([fstr '_correlated_genes.tsv'],['Where should I save genes most correlated with' fstr]);
 f=fopen(fullfile(pname,fname),'w');
 fprintf(f,['Gene\tMean_correlation_with_' fstr 'COV\n']);
-crs=max(corr(X,V));
-cut=quantile(crs,.9);
+crs=max(corr(X,V)');
+cut=quantile(crs,.5);
 cvs=var(X)./(mean(X).^2);%coefficient of variation
 [scvs,cvidx]=sort(cvs,'descend');
 cgidx=setdiff(1:n,gidx);
