@@ -1,12 +1,38 @@
+function [pnz,zinfp,zinf_fdr,iod,iodp,iod_fdr]=comp_gene_var_stats(d,wtbar)
+%function [pnz,zinfp,zinf_fdr,iod,iodp,iod_fdr]=comp_gene_var_stats(d,wtbar)
+%
+%IN: d - a single-cell sequencing data object
+%    wtbar - a boolean, true if a waitbar should be displayed
+%
+%OUT: pnz - pnz(i) is the percent of nonzero readcounts (across cells) for
+%           gene i
+%     zinfp - is the p-value for a null hypothesis that the data was drawn
+%           from a generalized Poisson distribution with no zero-inflation.
+%           c.f. Yang, Z. 2010
+%     zinf_fdr - q values for zinfp, via Storey's method with bootstrapped
+%           lambda
+%     iod - iod(i) is the index of dispersion (var/mean) for gene i
+%     iodp - iodp(i) is the p-value for a null hypothesis that readcounts from
+%           differnt cells, for the ith gene, were all drawn from poisson
+%           distributions with the same mean. c.f. Selby, B. 1965
+%     iod_fdr - the power function for Selby's test statistic is closed
+%               form, and is used to perform this FDR estimates
+
+if isempty(gcp('nocreate')), parpool; end
+h=waitbar(0.25,'Performing gene variance analysis...');
 [m,n]=size(d.counts);
-C=log(d.counts+1);
+%index of dispersion analysis:
+C=log(d.counts+1);%the dispersion test is performed on a log scale
 iod=sum(C')+n^2*(sum((C.^(-1))')).^(-1);iod=iod';%Selby's Wald statistic for the index of dispersion
 d.iod=iod;
 cr=chi2inv(.99,n-1);%critical point to evaluate non-central chi2, to compute power of W, see Selby '65
+                    %we set the rejection region (arbitrarily) at 1%
 iod_fdr=1-ncx2cdf(cr,n-1,iod,'upper');%false discovery rate of a test of the null hypothesis of no
                             %differential gene expression between cells, at
                             %the 1% significance level
 d.iod_fdr=iod_fdr;
+waitbar(0.5,h,'Performing zero-inflation analysis...');
+%zero-inflation analysis:
 numnz=sum(d.counts'>0)';%number of cells with non-zero read counts, genewise
 num0=n-numnz;
 d.pnz=numnz/n;%percent of cells with non-zero read counts, genewise
@@ -16,6 +42,10 @@ d.pnz=numnz/n;%percent of cells with non-zero read counts, genewise
 %zinf_stat=((num0-n*p0).^2)./(n*p0.*(1-p0)-n*mean(C')'.*p0.^2);
 %d.zinf_stat=zinf_stat;
 %d.zinfp=chi2cdf(zinf_stat,1,'upper');%score test for more zeros than expected under a Poisson model
+%
+%This approach seems to have lower statistical power, and has been
+%abandoned in favor of the (slower) method of Yang, which uses a
+%generalized Poisson null hypothesis
 
 %method of Yang et al, test zero inflation with generalized poisson null
 lmbda=zeros(m,1);%mean of generalized poisson
@@ -32,25 +62,7 @@ end
 d.zinfp=chi2cdf(zinf_stat,1,'upper');%score test for more zeros than expected under a Poisson model
 d.zinfp(d.pnz==1)=1;
 d.zinfp(d.pnz==0)=0;
-%%
 [~,q]=mafdr(d.zinfp);%control for false discovery
 d.zinf_fdr=q;
 d.zinf_fdr(d.pnz==0)=0;
-f=figure;
-bet1=0.01;bet2=0.01;
-idx_pnz=find(d.zinf_fdr<bet2);
-idx_pnzc=find(d.zinf_fdr>=bet2);
-idx_iod=find(d.iod_fdr<bet1);
-idx_iodc=find(d.iod_fdr>=bet1);
-gidx={};
-idx1=find(2*d.iod_fdr<bet1&2*d.zinf_fdr>=bet2);
-idx2=find(2*d.iod_fdr>=bet1|2*d.zinf_fdr<bet2);
-%idx1=find(d.iod_fdr<=bet1);idx2=find(d.iod_fdr>bet1);
-gidx(idx1)={'good'};
-%gidx(intersect(idx_pnzc,idx_iodc))={'2'};
-%gidx(intersect(idx_pnz,idx_iodc))={'3'};
-%gidx(intersect(idx_pnzc,idx_iod))={'4'};
-gidx(idx2)={'bad'};
-gscatter(d.pnz,log(d.iod)/max(log(d.iod)),gidx','br','o',6);
-axis square
-%set(gca,'XLim',[0 1],'Ylim',[0,1]);
+delete(h)

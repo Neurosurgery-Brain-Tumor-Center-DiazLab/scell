@@ -22,7 +22,7 @@ function varargout = norm_tool(varargin)
 
 % Edit the above text to modify the response to help norm_tool
 
-% Last Modified by GUIDE v2.5 04-Feb-2015 23:00:28
+% Last Modified by GUIDE v2.5 06-Feb-2015 15:27:13
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -173,25 +173,4 @@ function select_genes_pushbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 main_data=get(handles.norm_tool_root,'UserData');
 d=main_data.d;
-%for each gene compute the index of dispersion, its statistic, the
-%percentage of cells with a zero readcount, and the score test
-[m,n]=size(d.counts);
-iod=sum(d.counts')+n^2/(sum((d.counts.^(-1))'));w=w';%Selby's Wald statistic for the index of dispersion
-d.iod=iod;
-cr=chi2inv(.95,n-1);%critical point to evaluate non-central chi2, to compute power of W, see Selby '65
-iod_fdr=ncx2cdf(cr,n-1,iod);%false discovery rate of a test of the null hypothesis of no
-                            %differential gene expression between cells, at
-                            %the 5% significance level
-d.iod_fdr=iod_fdr;
-numnz=sum(d.counts'>0)';%number of cells with non-zero read counts, genewise
-num0=n-numnz;
-d.pnz=numnz/n;%percent of cells with non-zero read counts, genewise
-lmbda=poissfit(d.counts')';%fit poisson distribution, under the null hypothesis of no zero inflation
-p0=poisspdf(0,lmbda);
-zinf_stat=((num0-n*p0).^2)./(n*p0.*(1-p0)-n*mean(d.counts')'.*p0^2);
-d.zinfp=1-chi2cdf(zinf_stat,1);%score test for more zeros than expected under a Poisson model
-
-
-
-
 
