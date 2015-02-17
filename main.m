@@ -22,7 +22,7 @@ function varargout = main(varargin)
 
 % Edit the above text to modify the response to help main
 
-% Last Modified by GUIDE v2.5 25-Nov-2014 16:22:51
+% Last Modified by GUIDE v2.5 16-Feb-2015 16:09:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -104,6 +104,10 @@ else
     h=waitbar(.5,['Loading ' strrep(fname,'_','\_')]);
     d=load_fc_out(fullfile(pname,fname),'hum');
     d.qc=false;
+    d.cidx=ones(size(d.slbls));%index of cells to include in analysis
+    d.gidx=ones(size(d.gsymb));%index of genes to include in analysis
+    d.ctype=cell(size(d.gsymb));
+    for i=1:length(d.ctype),d.ctype{i}='';end
     main_data.d=d;
 end
 set(handles.main_window,'UserData',main_data);
@@ -146,51 +150,63 @@ preseq_dir='./';
 j=1;
 h=waitbar(0,['processing cell ' num2str(j) ' of ' num2str(size(d.counts,2))]);
 while ~d.qc&&j<=size(d.counts,2)
-    fname=tempname;
-    f=fopen(fname,'w');
-    for i=1:size(d.counts,1)
-        if d.counts(i,j)>0,fprintf(f,'%d\n',d.counts(i,j));end
+    %don't recompute metrics for samples already done
+    comp_turing=~isfield(d,'turing')||isempty(d.turing)||j>length(d.turing)||d.turing(j)==0;
+    comp_simp=~isfield(d,'simpson')||isempty(d.simpson)||j>length(d.simpson)||d.simpson(j)==0;
+    comp_preseq=~isfield(d,'preseq')||isempty(d.preseq)||j>length(d.preseq)||d.preseq(j)==0;
+    %preseq
+    if comp_preseq
+        fname=tempname;
+        f=fopen(fname,'w');
+        for i=1:size(d.counts,1)
+            if d.counts(i,j)>0,fprintf(f,'%d\n',d.counts(i,j));end
+        end
+        [status,result]=system([preseq_dir 'preseq lc_extrap -V ' fname]);
+        if status~=0, d.preseq(j)=0;
+        else
+            D=textscan(result,'%n%n%n%n','Headerlines',1);
+            D=D{2};
+            d.preseq(j)=nnz(d.counts(:,j))/median(D(floor(length(D)*.75):end));
+        end
+        fclose(f);
     end
-    [status,result]=system([preseq_dir 'preseq lc_extrap -V ' fname]);
-    if status~=0, d.preseq(j)=0;
-    else
-        D=textscan(result,'%n%n%n%n','Headerlines',1);
-        D=D{2};
-        d.preseq(j)=nnz(d.counts(:,j))/median(D(floor(length(D)*.75):end));
+    %turing
+    if comp_turing
+        d.turing(j)=1-sum(d.counts(:,j)==1)/sum(d.counts(d.counts(:,j)>0,j));
+        t=find(d.counts(:,j)>0);
+        pt=d.counts(t,j)/sum(d.counts(t,j));
+    end
+    %simpson
+    if comp_simp
+        pt=d.counts(t,j)/sum(d.counts(t,j));
+        d.simpson(j)=1/(pt'*pt);
     end
     M(j,1)=d.preseq(j);
-    fclose(f);
-    %turing
-    d.turing(j)=1-sum(d.counts(:,j)==1)/sum(d.counts(d.counts(:,j)>0,j));
-    t=find(d.counts(:,j)>0);
-    pt=d.counts(t,j)/sum(d.counts(t,j));
     M(j,2)=d.turing(j);
-    %simpson
-    d.simpson(j)=1/(pt'*pt);
     M(j,3)=d.simpson(j);
     waitbar(j/size(d.counts,2),h,['processing cell ' num2str(j) ' of ' num2str(size(d.counts,2))]);
     j=j+1;
 end
 %compute lorenz outlier detection
 [~,sf,~,lorenzh,pval,sidx,cxi]=normalize_samples(d.counts,[],1);
+d.lorenz=pval;d.lorenzh=lorenzh;d.sf=sf;
 delete(h);
 figure
 set(gcf,'color','w');
 subplot(2,1,1);
 set(gca,'FontSize',18);
 ylabel('Simpson diversity','FontSize',18)
-notBoxPlot(d.simpson(pval<0.05),1);
+notBoxPlot(d.simpson(d.lorenz>=0.05),1);
 hold
-notBoxPlot(d.simpson(pval>=0.05),2);
+notBoxPlot(d.simpson(d.lorenz<0.05),2);
 set(gca,'XTick',1:2,'XTickLabel',{'QC pass','QC fail'});
 subplot(2,1,2);
 set(gca,'FontSize',18);
 ylabel('Preseq coverage','FontSize',18)
-notBoxPlot(d.preseq(pval<0.05),1);
+notBoxPlot(d.preseq(d.lorenz>=0.05),1);
 hold
-notBoxPlot(d.preseq(pval>=0.05),2);
+notBoxPlot(d.preseq(d.lorenz<0.05),2);
 set(gca,'XTick',1:2,'XTickLabel',{'QC pass','QC fail'});
-d.lorenz=pval;d.lorenzh=lorenzh;d.sf=sf;
 M(:,4)=d.lorenz;
 %compute pareto ranking
 [~,f]=paretofronts(M,[1 1 1 1]);
@@ -217,6 +233,12 @@ function norm_button_Callback(hObject, eventdata, handles)
 % hObject    handle to norm_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+main_data=get(handles.main_window,'UserData');
+d=main_data.d;
+kidx=find(d.cidx);
+d.slbls=d.slbls(kidx);
+d.counts=d.counts(:,kidx);
+dnew=norm_tool(d);
 
 
 
@@ -269,3 +291,30 @@ function disp_table_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 set(hObject,'Data',cell(8,1));
+
+
+% --- Executes when entered data in editable cell(s) in cell_table.
+function cell_table_CellEditCallback(hObject, eventdata, handles)
+% hObject    handle to cell_table (see GCBO)
+% eventdata  structure with the following fields (see UITABLE)
+%	Indices: row and column indices of the cell(s) edited
+%	PreviousData: previous data for the cell(s) edited
+%	EditData: string(s) entered by the user
+%	NewData: EditData or its converted form set on the Data property. Empty if Data was not changed
+%	Error: error string when failed to convert EditData to appropriate value for Data
+% handles    structure with handles and user data (see GUIDATA)
+if isempty(eventdata.NewData),return;end
+main_data=get(handles.main_window,'UserData');
+d=main_data.d;
+hdrs=get(handles.cell_table,'ColumnName');
+if strcmp(hdrs{eventdata.Indices(2)},'Include') %update whether to include cell 
+    d.cidx(eventdata.Indices(1))=eventdata.NewData;
+end
+if strcmp(hdrs{eventdata.Indices(2)},'ID') %change cell ID
+    d.slbls{eventdata.Indices(1)}=eventdata.NewData;
+end
+if strcmp(hdrs{eventdata.Indices(2)},'type') %change cell type
+    d.ctype{eventdata.Indices(1)}=eventdata.NewData;
+end
+main_data.d=d;
+set(handles.main_window,'UserData',main_data);

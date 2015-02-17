@@ -22,7 +22,7 @@ function varargout = norm_tool(varargin)
 
 % Edit the above text to modify the response to help norm_tool
 
-% Last Modified by GUIDE v2.5 06-Feb-2015 15:27:13
+% Last Modified by GUIDE v2.5 16-Feb-2015 17:39:04
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -75,7 +75,8 @@ function varargout = norm_tool_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-varargout{1} = handles.output;
+main_data=get(handles.norm_tool_root,'UserData');
+varargout{1} = main_data.d;
 
 
 % --- Executes on button press in ercc_checkbox.
@@ -173,4 +174,3 @@ function select_genes_pushbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 main_data=get(handles.norm_tool_root,'UserData');
 d=main_data.d;
-
