@@ -22,7 +22,7 @@ function varargout = gene_select_tool(varargin)
 
 % Edit the above text to modify the response to help gene_select_tool
 
-% Last Modified by GUIDE v2.5 17-Feb-2015 17:58:57
+% Last Modified by GUIDE v2.5 18-Feb-2015 12:37:53
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,14 +59,45 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % UIWAIT makes gene_select_tool wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.gene_select_tool_root);
 if strcmp(get(hObject,'Visible'),'off')
     main_data=get(handles.gene_select_tool_root,'UserData');
-    if length(varargin)>0,main_data.d=varargin{1};else,main_data.d=[];end
+    if length(varargin)>0,d=varargin{1};else,return;end
+    %test each gene for high variance (dispersion test)
+    %test each gene for under-sampline (zero-inflation test)
+    if ~isfield(d,'pnz')
+        [pnz,zinf_fdr,iod,iod_fdr]=comp_gene_var_stats(d,true);
+        d.pnz=pnz;d.zinf_fdr=zinf_fdr;
+        d.iod=iod;d.iod_fdr=iod_fdr;
+    end
+    iod_fdr_cut=0.01;zinf_fdr_cut=0.01;pnz_cut=0.5;iod_cut=0.01;
+    pl_iod=log(d.iod)/max(log(d.iod));
+    idx1=find(d.iod_fdr<iod_fdr_cut&d.zinf_fdr>=zinf_fdr_cut|pl_iod>=(1-iod_cut)|d.pnz>=pnz_cut);
+    idx2=setdiff(1:length(pl_iod),idx1);
+    gidx=cell(length(pl_iod),1);
+    for i=1:length(idx1),gidx{idx1(i)}='Above thresholds';end
+    for i=1:length(idx2),gidx{idx2(i)}='Below thresholds';end
+    axes(handles.axes1);
+    gscatter(d.pnz,pl_iod,gidx,'br','o',8);
+    xlabel('Percent of cells expressing gene','FontSize',16);
+    ylabel('Log index of dispersion percentile','FontSize',16)
+    set(handles.axes1,'Xlim',[0 1],'Ylim',[0 1],'FontSize',16);
+    l=findobj(gcf,'tag','legend');
+    set(l,'location','SouthEast');
+    main_data.d=d;
     set(handles.gene_select_tool_root,'UserData',main_data);
-    [pnz,zinfp,zinf_fdr,iod,iodp,iod_fdr]=comp_gene_var_stats(d,true);
-    d.pnz=pnz;d.zinfp=zinfp;d.zinf_fdr=zinf_fdr;
-    d.iod=iod;d.iodp=iodp;d.iod_fdr=iod_fdr;
+    [~,sidx]=sortrows(pnz,-1);
+    [~,sidx2]=sortrows(iod(sidx),-1);
+    sidx=sidx(sidx2);
+    T=get(handles.gene_listbox,'Data');
+    for i=1:length(d.gsymb)
+        T{i,1}=d.gsymb{sidx(i)};
+        T{i,2}=iod(sidx(i));
+        T{i,3}=iod_fdr(sidx(i));
+        T{i,4}=pnz(sidx(i));
+        T{i,5}=zinf_fdr(sidx(i));
+    end
+    set(handles.gene_listbox,'Data',T);
 end
 
 
@@ -210,9 +241,91 @@ if isempty(t)
 else
     zinf_fdr_cut=t;
 end
-idx1=find(d.iod_fdr<0.01&d.zinf_fdr<0.01);
-idx2=find(d.iod_fdr>0|d.zinf_fdr>0);
+pl_iod=log(d.iod)/max(log(d.iod));
+idx1=find(d.iod_fdr<iod_fdr_cut&d.zinf_fdr>=zinf_fdr_cut|pl_iod>=(1-iod_cut)|d.pnz>=pnz_cut);
+idx2=setdiff(1:length(pl_iod),idx1);
+gidx=cell(length(pl_iod),1);
+for i=1:length(idx1),gidx{idx1(i)}='Above thresholds';end
+for i=1:length(idx2),gidx{idx2(i)}='Below thresholds';end
+axes(handles.axes1);
+gscatter(d.pnz,pl_iod,gidx,'br','o',8)
+xlabel('Percent of cells expressing gene','FontSize',16);
+ylabel('Log index of dispersion percentile','FontSize',16)
+set(handles.axes1,'Xlim',[0 1],'Ylim',[0 1],'FontSize',16);
+l=findobj(gcf,'tag','legend');
+set(l,'location','SouthEast');
+
+
+% --- Executes on button press in export_plot_button.
+function export_plot_button_Callback(hObject, eventdata, handles)
+% hObject    handle to export_plot_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+main_data=get(handles.gene_select_tool_root,'UserData');
+d=main_data.d;
+%get thresholds from user
+t=str2num(get(handles.iod_edit,'String'));
+if isempty(t)
+    iod_cut=0.75;
+    set(handles.iod_edit,'String','0.75');
+else
+    iod_cut=t;
+end
+t=str2num(get(handles.pnz_edit,'String'));
+if isempty(t)
+    pnz_cut=0.5;
+    set(handles.pnz_edit,'String','0.5');
+else
+    pnz_cut=t;
+end
+t=str2num(get(handles.iod_fdr_edit,'String'));
+if isempty(t)
+    iod_fdr_cut=0.01;
+    set(handles.iod_fdr_edit,'String','0.01');
+else
+    iod_fdr_cut=t;
+end
+t=str2num(get(handles.zinf_fdr_edit,'String'));
+if isempty(t)
+    zinf_fdr_cut=0.01;
+    set(handles.zinf_fdr_edit,'String','0.01');
+else
+    zinf_fdr_cut=t;
+end
+pl_iod=log(d.iod)/max(log(d.iod));
+idx1=find(d.iod_fdr<iod_fdr_cut&d.zinf_fdr>=zinf_fdr_cut|pl_iod>=(1-iod_cut)|d.pnz>=pnz_cut);
+idx2=setdiff(1:length(pl_iod),idx1);
+gidx=cell(length(pl_iod),1);
+for i=1:length(idx1),gidx{idx1(i)}='Above thresholds';end
+for i=1:length(idx2),gidx{idx2(i)}='Below thresholds';end
 figure
-scatter(d.pnz(idx1),log(d.iod(idx1))/log(max(d.iod)),'r')
-hold
-scatter(d.pnz(idx2),log(d.iod(idx2))/max(log(d.iod)),'b')
+gscatter(d.pnz,pl_iod,gidx,'br','o',8)
+xlabel('Percent of cells expressing gene','FontSize',16);
+ylabel('Log index of dispersion percentile','FontSize',16)
+set(gca,'Xlim',[0 1],'Ylim',[0 1],'FontSize',16);
+l=findobj(gcf,'tag','legend');
+set(l,'location','SouthEast');
+
+
+% --- Executes on button press in export_gene_list_pushbutton.
+function export_gene_list_pushbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to export_gene_list_pushbutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+T=get(handles.gene_listbox,'Data');
+[fname pname]=uiputfile('*.txt','Save data as...','gene_list.txt');
+try
+    f=fopen(fullfile(pname,fname),'w');
+catch me
+    alert('String',['Error opening ' fullfile(pname,fname)]);
+    return;
+end
+fprintf(f,'Gene\tIOD\tIOD_FDR\tPercent_expressing\tZero_inf_FDR\n');
+for i=1:size(T,1)
+    fprintf(f,'%s\t',T{i,1});
+    fprintf(f,'%g\t',T{i,2});
+    fprintf(f,'%g\t',T{i,3});
+    fprintf(f,'%g\t',T{i,4});
+    fprintf(f,'%g\n',T{i,5});
+end
+fclose(f);
