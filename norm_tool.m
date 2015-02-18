@@ -174,3 +174,4 @@ function select_genes_pushbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 main_data=get(handles.norm_tool_root,'UserData');
 d=main_data.d;
+dnew=gene_select_tool(d);

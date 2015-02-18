@@ -22,7 +22,7 @@ function varargout = gene_select_tool(varargin)
 
 % Edit the above text to modify the response to help gene_select_tool
 
-% Last Modified by GUIDE v2.5 06-Feb-2015 18:01:02
+% Last Modified by GUIDE v2.5 17-Feb-2015 17:58:57
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -78,22 +78,23 @@ function varargout = gene_select_tool_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-varargout{1} = handles.output;
+main_data=get(handles.gene_select_tool_root,'UserData');
+varargout{1} = main_data.d;
 
 
 
-function edit1_Callback(hObject, eventdata, handles)
-% hObject    handle to edit1 (see GCBO)
+function iod_edit_Callback(hObject, eventdata, handles)
+% hObject    handle to iod_edit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit1 as text
-%        str2double(get(hObject,'String')) returns contents of edit1 as a double
+% Hints: get(hObject,'String') returns contents of iod_edit as text
+%        str2double(get(hObject,'String')) returns contents of iod_edit as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit1 (see GCBO)
+function iod_edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to iod_edit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -105,18 +106,18 @@ end
 
 
 
-function edit2_Callback(hObject, eventdata, handles)
-% hObject    handle to edit2 (see GCBO)
+function pnz_edit_Callback(hObject, eventdata, handles)
+% hObject    handle to pnz_edit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit2 as text
-%        str2double(get(hObject,'String')) returns contents of edit2 as a double
+% Hints: get(hObject,'String') returns contents of pnz_edit as text
+%        str2double(get(hObject,'String')) returns contents of pnz_edit as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit2_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit2 (see GCBO)
+function pnz_edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pnz_edit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -128,18 +129,18 @@ end
 
 
 
-function edit3_Callback(hObject, eventdata, handles)
-% hObject    handle to edit3 (see GCBO)
+function iod_fdr_edit_Callback(hObject, eventdata, handles)
+% hObject    handle to iod_fdr_edit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit3 as text
-%        str2double(get(hObject,'String')) returns contents of edit3 as a double
+% Hints: get(hObject,'String') returns contents of iod_fdr_edit as text
+%        str2double(get(hObject,'String')) returns contents of iod_fdr_edit as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit3_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit3 (see GCBO)
+function iod_fdr_edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to iod_fdr_edit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -151,18 +152,18 @@ end
 
 
 
-function edit4_Callback(hObject, eventdata, handles)
-% hObject    handle to edit4 (see GCBO)
+function zinf_fdr_edit_Callback(hObject, eventdata, handles)
+% hObject    handle to zinf_fdr_edit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit4 as text
-%        str2double(get(hObject,'String')) returns contents of edit4 as a double
+% Hints: get(hObject,'String') returns contents of zinf_fdr_edit as text
+%        str2double(get(hObject,'String')) returns contents of zinf_fdr_edit as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit4_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit4 (see GCBO)
+function zinf_fdr_edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to zinf_fdr_edit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -178,3 +179,40 @@ function refresh_pushbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to refresh_pushbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+main_data=get(handles.gene_select_tool_root,'UserData');
+d=main_data.d;
+%get thresholds from user
+t=str2num(get(handles.iod_edit,'String'));
+if isempty(t)
+    iod_cut=0.75;
+    set(handles.iod_edit,'String','0.75');
+else
+    iod_cut=t;
+end
+t=str2num(get(handles.pnz_edit,'String'));
+if isempty(t)
+    pnz_cut=0.5;
+    set(handles.pnz_edit,'String','0.5');
+else
+    pnz_cut=t;
+end
+t=str2num(get(handles.iod_fdr_edit,'String'));
+if isempty(t)
+    iod_fdr_cut=0.01;
+    set(handles.iod_fdr_edit,'String','0.01');
+else
+    iod_fdr_cut=t;
+end
+t=str2num(get(handles.zinf_fdr_edit,'String'));
+if isempty(t)
+    zinf_fdr_cut=0.01;
+    set(handles.zinf_fdr_edit,'String','0.01');
+else
+    zinf_fdr_cut=t;
+end
+idx1=find(d.iod_fdr<0.01&d.zinf_fdr<0.01);
+idx2=find(d.iod_fdr>0|d.zinf_fdr>0);
+figure
+scatter(d.pnz(idx1),log(d.iod(idx1))/log(max(d.iod)),'r')
+hold
+scatter(d.pnz(idx2),log(d.iod(idx2))/max(log(d.iod)),'b')
