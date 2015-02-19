@@ -22,7 +22,7 @@ function varargout = norm_tool(varargin)
 
 % Edit the above text to modify the response to help norm_tool
 
-% Last Modified by GUIDE v2.5 16-Feb-2015 17:39:04
+% Last Modified by GUIDE v2.5 18-Feb-2015 13:02:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -175,3 +175,17 @@ function select_genes_pushbutton_Callback(hObject, eventdata, handles)
 main_data=get(handles.norm_tool_root,'UserData');
 d=main_data.d;
 dnew=gene_select_tool(d);
+d.gidx=dnew.gidx;
+d.iod=dnew.iod;
+d.pnz=dnew.pnz;
+d.iod_fdr=dnew.iod_fdr;
+d.zinf_fdr=dnew.zinf_fdr;
+main_data.d=d;
+set(handles.norm_tool_root,'UserData',main_data);
+
+
+% --- Executes on button press in norm_button.
+function norm_button_Callback(hObject, eventdata, handles)
+% hObject    handle to norm_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

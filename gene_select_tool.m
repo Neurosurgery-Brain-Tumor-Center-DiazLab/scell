@@ -70,10 +70,11 @@ if strcmp(get(hObject,'Visible'),'off')
         d.pnz=pnz;d.zinf_fdr=zinf_fdr;
         d.iod=iod;d.iod_fdr=iod_fdr;
     end
-    iod_fdr_cut=0.01;zinf_fdr_cut=0.01;pnz_cut=0.5;iod_cut=0.01;
+    iod_fdr_cut=0.01;zinf_fdr_cut=0.01;pnz_cut=0.5;iod_cut=0.1;
     pl_iod=log(d.iod)/max(log(d.iod));
     idx1=find(d.iod_fdr<iod_fdr_cut&d.zinf_fdr>=zinf_fdr_cut|pl_iod>=(1-iod_cut)|d.pnz>=pnz_cut);
     idx2=setdiff(1:length(pl_iod),idx1);
+    d.gidx=idx1;
     gidx=cell(length(pl_iod),1);
     for i=1:length(idx1),gidx{idx1(i)}='Above thresholds';end
     for i=1:length(idx2),gidx{idx2(i)}='Below thresholds';end
@@ -216,7 +217,7 @@ d=main_data.d;
 t=str2num(get(handles.iod_edit,'String'));
 if isempty(t)
     iod_cut=0.75;
-    set(handles.iod_edit,'String','0.75');
+    set(handles.iod_edit,'String','0.1');
 else
     iod_cut=t;
 end
@@ -244,6 +245,9 @@ end
 pl_iod=log(d.iod)/max(log(d.iod));
 idx1=find(d.iod_fdr<iod_fdr_cut&d.zinf_fdr>=zinf_fdr_cut|pl_iod>=(1-iod_cut)|d.pnz>=pnz_cut);
 idx2=setdiff(1:length(pl_iod),idx1);
+d.gidx=idx1;
+main_data.d=d;
+set(handles.gene_select_tool_root,'UserData',main_data);
 gidx=cell(length(pl_iod),1);
 for i=1:length(idx1),gidx{idx1(i)}='Above thresholds';end
 for i=1:length(idx2),gidx{idx2(i)}='Below thresholds';end
@@ -266,8 +270,8 @@ d=main_data.d;
 %get thresholds from user
 t=str2num(get(handles.iod_edit,'String'));
 if isempty(t)
-    iod_cut=0.75;
-    set(handles.iod_edit,'String','0.75');
+    iod_cut=0.1;
+    set(handles.iod_edit,'String','0.1');
 else
     iod_cut=t;
 end
