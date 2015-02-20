@@ -188,8 +188,8 @@ while ~d.qc&&j<=size(d.counts,2)
     j=j+1;
 end
 %compute lorenz outlier detection
-[~,sf,~,lorenzh,pval,sidx,cxi]=normalize_samples(d.counts,[],1);
-d.lorenz=pval;d.lorenzh=lorenzh;d.sf=sf;
+[~,sf,~,lorenzh,pval,sidx,cxi,bak_idx]=normalize_samples(d.counts,[],1);
+d.lorenz=pval;d.lorenzh=lorenzh;d.sf=sf;d.bak_idx=bak_idx;
 delete(h);
 figure
 set(gcf,'color','w');

@@ -1,5 +1,5 @@
-function [nS,sf,d,h,pval,sidx,cxi]=normalize_samples(S,lbls,show_plt)
-%function [nS,sf,d,h,pval,sidx,cxi]=normalize_samples(S,lbls,show_plt)
+function [nS,sf,d,h,pval,sidx,cxi,bak_idx]=normalize_samples(S,lbls,show_plt)
+%function [nS,sf,d,h,pval,sidx,cxi,bak_idx]=normalize_samples(S,lbls,show_plt)
 %
 %IN: S is a nXm matrix of raw fragment counts for n genes and m samples
 %    lbls is a cell array of m strings labeling the samples
@@ -14,9 +14,13 @@ function [nS,sf,d,h,pval,sidx,cxi]=normalize_samples(S,lbls,show_plt)
 %     sidx index which sorts the order stats of the geo-mean
 %     cxi point of maximal difference between poisson noise simulation and
 %          order stats
+%     bak_idx is a boolean vector, identifying genes in the mutual
+%           background
 n=size(S,1); m=size(S,2);
 %anscombe transform
 nS=2*sqrt(S+3/8);
+bak_idx=zeros(n,1);
+cxi_min=n;
 %trimmed means of order stats
 gm=geomean(nS')';
 [cs,sidx]=sort(gm);
@@ -37,18 +41,19 @@ for i=1:m
     [td,ti]=max(pn-CS(:,i));
     d=[d;td];
     [atd,ati]=max(abs(pn-CS(:,i)));
+    cxi_min=min(ati,cxi_min);%find the smallest background estimate
     if cs(ati)<CS(ati,i),atd=-atd;end
     ad=[ad;atd];
     didx=[didx;ti];
 end
+bak_idx(sidx(1:cxi_min))=1;%the smallest common background fraction
 [~,cxi]=max(pn-cs);
-[phat,ci]=binofit(cs(cxi)*n,cxi,.05);
-disp(ci)
-h=zeros(m,1);pval=zeros(m,1);
-for i=1:m
+[phat,ci]=binofit(cs(cxi)*n,cxi,.05);%confidence interval around the geomean
+h=zeros(m,1);pval=zeros(m,1);        %far below mean enrichment for signal
+for i=1:m                            %indicates an outlier
     h(i)=CS(cxi,i)>ci(2);
-    pval(i)=binocdf(CS(cxi,i)*n,cxi,phat,'upper');
-end
+    pval(i)=binocdf(CS(cxi,i)*n,cxi,phat,'upper'); %binomial distribution p-value
+end                                  %gives an alternative to the confidence interval for outliers
 %plot lorenz curves
 if show_plt
     figure

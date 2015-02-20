@@ -22,7 +22,7 @@ function varargout = norm_tool(varargin)
 
 % Edit the above text to modify the response to help norm_tool
 
-% Last Modified by GUIDE v2.5 18-Feb-2015 13:02:01
+% Last Modified by GUIDE v2.5 20-Feb-2015 00:07:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -62,7 +62,14 @@ guidata(hObject, handles);
 % uiwait(handles.norm_tool_root);
 if strcmp(get(hObject,'Visible'),'off')
     main_data=get(handles.norm_tool_root,'UserData');
-    if length(varargin)>0,main_data.d=varargin{1};else,main_data.d=[];end
+    if length(varargin)>0,d=varargin{1};else,d=[];end
+    if isfield(d,'factor_ids')%redo factor analysis every time tool is loaded
+        d.factor_ids={};
+        d.fac_varexp={};
+        d.fac_counts={};
+        d.factor={};
+    end
+    main_data.d=d;
     set(handles.norm_tool_root,'UserData',main_data);
 end
 
@@ -189,3 +196,64 @@ function norm_button_Callback(hObject, eventdata, handles)
 % hObject    handle to norm_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+%for the ercc's and mutual background, represent regressor with reduced
+%singular-vector space
+%for cyclin/cdks and user list, use cannonical factors
+
+main_data=get(handles.norm_tool_root,'UserData');
+d=main_data.d;
+if ~isfield(d,'factor_ids')
+    d.factor_ids={};
+    d.fac_varexp={};
+    d.fac_counts={};
+    d.factor={};
+end
+%identify which factors to use
+if get(handles.ercc_checkbox,'Value')&&~any(strcmp(d.factor_ids,'ERCCs'))
+    d.factor_ids{end+1}='ERCCs';
+    d.fac_varexp{end+1}=zeros(length(d.gsymb),1); 
+    try 
+        ercc_cts=load_fc_out(get(handles.ercc_text,'String'),'hum');
+    catch me
+        alert('String','Invalid ercc file...');
+        return;       
+    end
+    [U,S,~]=svd(ercc_cts.counts');
+    W=U*S;
+    ds=diag(S);
+    p=length(ds);
+    gk=cumsum(1./[p:-1:1])/p;%broken stick criterion
+    gk=gk(end:-1:1)';
+    chk=diag(S)/sum(ds);
+    kpt=find(gk<chk);
+    d.factor{end+1}=W(:,kpt);
+end
+if get(handles.bak_checkbox,'Value')&&~any(strcmp(d.factor_ids,'Background'))
+    d.factor_ids{end+1}='Background';
+    d.fac_varexp{end+1}=zeros(length(d.gsymb),1); 
+    try 
+        bak_cts=load_fc_out(get(handles.bak_text,'String'),'hum');
+    catch me
+        alert('String','Invalid mutual background file...');
+        return;       
+    end
+    [U,S,~]=svd(bak_cts.counts');
+    W=U*S;
+    ds=diag(S);
+    p=length(ds);
+    gk=cumsum(1./[p:-1:1])/p;%broken stick criterion
+    gk=gk(end:-1:1)';
+    chk=diag(S)/sum(ds);
+    kpt=find(gk<chk);
+    d.factor{end+1}=W(:,kpt);
+end
+
+    
+
+%store the factors in d
+%store the variance explained per gene, per factor, in d
+
+
+
+%compute svd and choose basis vectors, ERCCs and mutual background
