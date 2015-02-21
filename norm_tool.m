@@ -223,7 +223,7 @@ if get(handles.ercc_checkbox,'Value')&&~any(strcmp(d.factor_ids,'ERCCs'))
         [fname pname]=uigetfile([main_data.last_dir,'*.*'],'Select ERCCs readcounts...');
     end
     try
-        ercc_cts=load_fc_out(,'hum');
+        ercc_cts=load_fc_out(fullfile(pname,fname),'hum');
         main_data.last_dir=pname;
     catch me
         alert('String','Error loading ERCCs');
@@ -284,16 +284,17 @@ if get(handles.cyclin_checkbox,'Value')&&~any(strcmp(d.factor_ids,'Cyclins'))
         alert('String','Error loading Cyclins/CDKs gene symbol list');
         return;
     end
-    tgidx=[];%find the cyclin/CDKs in the list
+    tgidx=[];%find the cyclin/CDKs in the list, and in chosen gene panel
     for i=1:length(D)
         t=min(find(strcmp(D{i},d.gsymb)));
         if ~isempty(t),tgidx=[tgidx;t];end
     end
     if isempty(tgidx),alert('String','error no genes found');break;end
+    tgidx=intersect(tgidx,d.gidx);%only use cyclins/CDKs in chosen gene panel
     d.factor_ids{end+1}='Cyclins';
     d.fac_varexp{end+1}=zeros(length(d.gsymb),1);
     d.fac_counts{end+1}=d.counts(tgidx,:)';
-    X=d.counts(setdiff(1:length(d.gsymb),tgidx),:)';
+    X=d.counts(setdiff(d.gidx,tgidx),:)';
     Y=d.counts(tgidx,:)';
     [U,V]=comp_cca(X,Y,0.05);%keep cannonical factors of cyclins at p=0.05 cutoff  
     d.factor{end+1}=V;
@@ -305,29 +306,121 @@ if get(handles.cyclin_checkbox,'Value')&&~any(strcmp(d.factor_ids,'Cyclins'))
     %correlation
     crs=mean(corr(U,Y));
     [~,cidx]=sort(abs(crs),'descend');
-    [fname pname]=uiputfile('cyclin-CDK_correlation_rank.tsv','Where should I save a file of the most correlated Cyclin\CDKs?');
-    f=fopen(fullfile(pname,fname),'w');
-    fprintf(f,[fstr '_gene\tMean_correlation\n']);
-    for i=1:length(sidx)
-        fprintf(f,'%s\t',d.gsymb{gidx(cidx(i))});
-        fprintf(f,'%g\n',crs(cidx(i)));
+    [fname pname]=uiputfile('cyclin-CDK_correlation_rank.tsv','Where should I save a file of the most correlated Cyclin-CDKs?');
+    flag=true;
+    try
+        f=fopen(fullfile(pname,fname),'w');
+    catch me
+        alert('String',['I couln''t open ' fname]);
+        flag=false;
     end
-    fclose(f);
-%write a list of top correlated genes with the factor
-[fname pname]=uiputfile([fstr '_correlated_genes.tsv'],['Where should I save genes most correlated with' fstr]);
-f=fopen(fullfile(pname,fname),'w');
-fprintf(f,['Gene\tMean_correlation_with_' fstr 'COV\n']);
-crs=max(corr(X,V)');
-cut=quantile(crs,.5);
-cvs=var(X)./(mean(X).^2);%coefficient of variation
-[scvs,cvidx]=sort(cvs,'descend');
-cgidx=setdiff(1:n,gidx);
-for i=1:length(cvidx)
-    fprintf(f,'%s\t',d.gsymb{cgidx(cvidx(i))});
-    fprintf(f,'%g\t',crs(cvidx(i)));
-    fprintf(f,'%g\n',scvs(i));
+    if flag
+        fprintf(f,[fstr '_gene\tMean_correlation\n']);
+        for i=1:length(cidx)
+            fprintf(f,'%s\t',d.gsymb{d.gidx(cidx(i))});
+            fprintf(f,'%g\n',crs(cidx(i)));
+        end
+        fclose(f);
+    end
+    %write a list of top correlated genes with the factor
+    [fname pname]=uiputfile('Cyclin-CDK_correlated_genes.tsv','Where should I save genes most correlated with Cyclins/CDKs?');
+    flag=true;
+    try
+        f=fopen(fullfile(pname,fname),'w');
+    catch me
+        alert('String',['I couldn''t open ' fname]);
+        flag=false;
+    end
+    if flag
+        fprintf(f,'Gene\tMean_correlation_with_Cyclin-CDKs\tCOV\n');
+        crs=max(corr(X,V)');
+        cut=quantile(crs,.5);
+        cvs=var(X)./(mean(X).^2);%coefficient of variation
+        [scvs,cvidx]=sort(cvs,'descend');
+        cgidx=setdiff(d.gidx,tgidx);
+        for i=1:length(cvidx)
+            fprintf(f,'%s\t',d.gsymb{cgidx(cvidx(i))});
+            fprintf(f,'%g\t',crs(cvidx(i)));
+            fprintf(f,'%g\n',scvs(i));
+        end
+        fclose(f);
+    end
 end
-fclose(f);
+%user list
+if get(handles.user_checkbox,'Value')&&~any(strcmp(d.factor_ids,'User_list'))
+    if ~isfield(main_data,'last_dir')
+        [fname pname]=uigetfile('*.*','Select gene symbol list...');
+    else
+        [fname pname]=uigetfile([main_data.last_dir,'*.*'],'Select gene symbol list...');
+    end
+    try
+        D=importdata(fullfile(pname,fname));
+        main_data.last_dir=pname;
+    catch me
+        alert('String','Error loading gene symbol list');
+        return;
+    end
+    tgidx=[];%find user genes in the list, and in chosen gene panel
+    for i=1:length(D)
+        t=min(find(strcmp(D{i},d.gsymb)));
+        if ~isempty(t),tgidx=[tgidx;t];end
+    end
+    if isempty(tgidx),alert('String','error no genes found');break;end
+    tgidx=intersect(tgidx,d.gidx);%only use user genes in chosen gene panel
+    d.factor_ids{end+1}='User_list';
+    d.fac_varexp{end+1}=zeros(length(d.gsymb),1);
+    d.fac_counts{end+1}=d.counts(tgidx,:)';
+    X=d.counts(setdiff(d.gidx,tgidx),:)';
+    Y=d.counts(tgidx,:)';
+    [U,V]=comp_cca(X,Y,0.05);%keep cannonical factors of user genes at p=0.05 cutoff  
+    d.factor{end+1}=V;
+    [~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:),log(d.sf));
+    t=d.fac_varexp{end};
+    t(d.gidx)=rsq;
+    d.fac_varexp{end}=t;   
+    %write a ranking of genes in the factor, by mean canonical cross
+    %correlation
+    crs=mean(corr(U,Y));
+    [~,cidx]=sort(abs(crs),'descend');
+    [fname pname]=uiputfile('user_genes_correlation_rank.tsv','Where should I save a file of the genes on your list that most correlate with other genes?');
+    flag=true;
+    try
+        f=fopen(fullfile(pname,fname),'w');
+    catch me
+        alert('String',['I couln''t open ' fname]);
+        flag=false;
+    end
+    if flag
+        fprintf(f,[fstr '_gene\tMean_correlation\n']);
+        for i=1:length(cidx)
+            fprintf(f,'%s\t',d.gsymb{d.gidx(cidx(i))});
+            fprintf(f,'%g\n',crs(cidx(i)));
+        end
+        fclose(f);
+    end
+    %write a list of top correlated genes with the factor
+    [fname pname]=uiputfile('Genes_correlated_with_user_list.tsv','Where should I save genes most correlated with your gene list?');
+    flag=true;
+    try
+        f=fopen(fullfile(pname,fname),'w');
+    catch me
+        alert('String',['I couldn''t open ' fname]);
+        flag=false;
+    end
+    if flag
+        fprintf(f,'Gene\tMean_correlation_with_user_list\tCOV\n');
+        crs=max(corr(X,V)');
+        cut=quantile(crs,.5);
+        cvs=var(X)./(mean(X).^2);%coefficient of variation
+        [scvs,cvidx]=sort(cvs,'descend');
+        cgidx=setdiff(d.gidx,tgidx);
+        for i=1:length(cvidx)
+            fprintf(f,'%s\t',d.gsymb{cgidx(cvidx(i))});
+            fprintf(f,'%g\t',crs(cvidx(i)));
+            fprintf(f,'%g\n',scvs(i));
+        end
+        fclose(f);
+    end
 end
 
     
