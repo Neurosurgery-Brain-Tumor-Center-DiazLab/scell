@@ -19,9 +19,9 @@ function [nS,sf,d,h,pval,sidx,cxi,bak_idx]=normalize_samples(S,lbls,show_plt)
 n=size(S,1); m=size(S,2);
 %anscombe transform
 nS=2*sqrt(S+3/8);
-bak_idx=zeros(n,1);
-cxi_min=n;
-%trimmed means of order stats
+bak_idx=zeros(n,1);%index into the mutual background fraction
+%trimmed means of order stats of the geometric mean, geometric mean is a
+%reference sample
 gm=geomean(nS')';
 [cs,sidx]=sort(gm);
 cs=cumsum(cs);
@@ -31,22 +31,23 @@ pn=pn(sidx);
 pn=cumsum(pn);
 pn=pn/pn(end);
 CS=nS(sidx,:);
-%trimmed means of concomitants
+%trimmed means of concomitants (samples)
 CS=cumsum(CS);
 for i=1:m, CS(:,i)=CS(:,i)/CS(end,i); end
-%compute the max distances to the order-stat's trimmed mean
-%compute the point at which they occur and the binomial test p-value
+%compute the max distance from the order-stat's trimmed mean (reference sample) to the poisson
+%noise simulation, at that point compute a 95% confidence interval around
+%the proportion of reads in the background fraction of the reference
+%sample (assuming a bionmial distribution), and compute the right tail probability of every other sample's
+%proportion of background reads (again under a bionomial model) 
 ad=[];ati=[];d=[]; didx=[]; pval=[];zvall=[];cil=[];
 for i=1:m
     [td,ti]=max(pn-CS(:,i));
-    d=[d;td];
-    [atd,ati]=max(abs(pn-CS(:,i)));
-    cxi_min=min(ati,cxi_min);%find the smallest background estimate
+    didx=[didx;ti];
+    d=[d;td];%the raw distance to the ref's order-stats is used for coloring in the plot
+    [atd,ati]=max(abs(pn-CS(:,i)));%absolute distance, also used for coloring
     if cs(ati)<CS(ati,i),atd=-atd;end
     ad=[ad;atd];
-    didx=[didx;ti];
 end
-bak_idx(sidx(1:cxi_min))=1;%the smallest common background fraction
 [~,cxi]=max(pn-cs);
 [phat,ci]=binofit(cs(cxi)*n,cxi,.05);%confidence interval around the geomean
 h=zeros(m,1);pval=zeros(m,1);        %far below mean enrichment for signal
@@ -104,6 +105,7 @@ if show_plt
 end
 %compute the scaling factors and the scaled samples
 md=min(didx);
+bak_idx(sidx(1:md))=1;%the smallest common background fraction
 for i=1:m
     sf(i)=(cs(md)/CS(md,i));
     nS(:,i)=nS(:,i)*sf(i);
@@ -127,7 +129,7 @@ if show_plt
         N1(i,:)=N1(i,:)/sum(N1(i,:));
     end
     N1=N1(:,end:-1:1);
-    nSt=zeros(size(nS));for i=1:size(nS,2),tx=S(:,i); nSt(find(tx>0),i)=nS(find(tx>0),i);end
+    nSt=zeros(size(nS));for i=1:size(nS,2),tx=S(:,i); nSt(tx>0,i)=nS(tx>0,i);end
     y=nS(:);%normalized counts on the right panel
     q=quantile(y,qt);
     M1=zeros(m,length(q)-1);
@@ -150,7 +152,7 @@ if show_plt
     st=sum(N1');
     hold on
     yl=ylim;
-    hy=plot(find(pval<=0.05),st(find(pval<=0.05))+.05,'m*');
+    hy=plot(find(pval<=0.05),st(pval<=0.05)+.05,'m*');
     hr=plot(find(h),st(find(h))+.05,'r*');
     set(gca,'YLim',[0,1.1],'XLim',[0,m+1])
     title(gca,'raw counts','FontSize',18)

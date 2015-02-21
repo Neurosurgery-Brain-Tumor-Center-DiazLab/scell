@@ -22,7 +22,7 @@ function varargout = norm_tool(varargin)
 
 % Edit the above text to modify the response to help norm_tool
 
-% Last Modified by GUIDE v2.5 20-Feb-2015 00:07:16
+% Last Modified by GUIDE v2.5 20-Feb-2015 14:07:36
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -64,10 +64,10 @@ if strcmp(get(hObject,'Visible'),'off')
     main_data=get(handles.norm_tool_root,'UserData');
     if length(varargin)>0,d=varargin{1};else,d=[];end
     if isfield(d,'factor_ids')%redo factor analysis every time tool is loaded
-        d.factor_ids={};
-        d.fac_varexp={};
-        d.fac_counts={};
-        d.factor={};
+        d.factor_ids={};%string IDs for each factor in the regression model
+        d.fac_varexp={};%vectors of variance explained per gene, per factor
+        d.fac_counts={};%matrices of counts, used to generate each factor, stored samples-by-genes
+        d.factor={};%matrices of the factors themselves, derived from d.fac_counts
     end
     main_data.d=d;
     set(handles.norm_tool_root,'UserData',main_data);
@@ -198,47 +198,65 @@ function norm_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 %for the ercc's and mutual background, represent regressor with reduced
-%singular-vector space
-%for cyclin/cdks and user list, use cannonical factors
+%singular-vector space of raw counts
+%for cyclin/cdks and user list, use cannonical factors of raw counts
+%obtained through cannonical correlation analysis with the raw counts
 
 main_data=get(handles.norm_tool_root,'UserData');
 d=main_data.d;
+if ~isfield(d,'gidx')
+    alert('String','select genes for analysis first');
+    return;
+end
 if ~isfield(d,'factor_ids')
-    d.factor_ids={};
-    d.fac_varexp={};
-    d.fac_counts={};
-    d.factor={};
+    d.factor_ids={};%string IDs for each factor in the regression model
+    d.fac_varexp={};%vectors of variance explained per gene, per factor
+    d.fac_counts={};%matrices of counts, used to generate each factor, stored samples-by-genes
+    d.factor={};%matrices of the factors themselves, derived from d.fac_counts
 end
 %identify which factors to use
-if get(handles.ercc_checkbox,'Value')&&~any(strcmp(d.factor_ids,'ERCCs'))
-    d.factor_ids{end+1}='ERCCs';
-    d.fac_varexp{end+1}=zeros(length(d.gsymb),1); 
-    try 
-        ercc_cts=load_fc_out(get(handles.ercc_text,'String'),'hum');
-    catch me
-        alert('String','Invalid ercc file...');
-        return;       
+%ERCCs
+if get(handles.ercc_checkbox,'Value')&&~any(strcmp(d.factor_ids,'ERCCs')) 
+    if ~isfield(main_data,'last_dir')
+        [fname pname]=uigetfile('*.*','Select ERCCs readcounts...');
+    else
+        [fname pname]=uigetfile([main_data.last_dir,'*.*'],'Select ERCCs readcounts...');
     end
+    try
+        ercc_cts=load_fc_out(,'hum');
+        main_data.last_dir=pname;
+    catch me
+        alert('String','Error loading ERCCs');
+        return;
+    end
+    d.factor_ids{end+1}='ERCCs';
+    d.fac_varexp{end+1}=zeros(length(d.gsymb),1);
+    d.fac_counts{end+1}=ercc_cts.counts';
+    d.factor{end+1}=[];
     [U,S,~]=svd(ercc_cts.counts');
     W=U*S;
     ds=diag(S);
     p=length(ds);
-    gk=cumsum(1./[p:-1:1])/p;%broken stick criterion
+    gk=cumsum(1./[p:-1:1])/p;%broken stick criterion to select singular values
     gk=gk(end:-1:1)';
     chk=diag(S)/sum(ds);
     kpt=find(gk<chk);
     d.factor{end+1}=W(:,kpt);
+    [~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:),log(d.sf));
+    t=d.fac_varexp{end};
+    t(d.gidx)=rsq;
+    d.fac_varexp{end}=t;
 end
+%mutual background
 if get(handles.bak_checkbox,'Value')&&~any(strcmp(d.factor_ids,'Background'))
+    if ~isfield(d,'bak_idx')
+        alert('String',sprintf('No estimate of mutual background found\nUncheck mutual background, or close the normalization tool and run QC first'));
+        return;
+    end
     d.factor_ids{end+1}='Background';
     d.fac_varexp{end+1}=zeros(length(d.gsymb),1); 
-    try 
-        bak_cts=load_fc_out(get(handles.bak_text,'String'),'hum');
-    catch me
-        alert('String','Invalid mutual background file...');
-        return;       
-    end
-    [U,S,~]=svd(bak_cts.counts');
+    d.fac_counts{end+1}=d.counts(d.bak_idx,:)';
+    [U,S,~]=svd(d.counts(d.bak_idx,:)');
     W=U*S;
     ds=diag(S);
     p=length(ds);
@@ -247,13 +265,69 @@ if get(handles.bak_checkbox,'Value')&&~any(strcmp(d.factor_ids,'Background'))
     chk=diag(S)/sum(ds);
     kpt=find(gk<chk);
     d.factor{end+1}=W(:,kpt);
+    [~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:),log(d.sf));
+    t=d.fac_varexp{end};
+    t(d.gidx)=rsq;
+    d.fac_varexp{end}=t;
+end
+%cyclins/CDKs
+if get(handles.cyclin_checkbox,'Value')&&~any(strcmp(d.factor_ids,'Cyclins'))
+    if ~isfield(main_data,'last_dir')
+        [fname pname]=uigetfile('*.*','Select Cyclin/CDKs gene symbol list...');
+    else
+        [fname pname]=uigetfile([main_data.last_dir,'*.*'],'Select Cyclin/CDKs gene symbol list...');
+    end
+    try
+        D=importdata(fullfile(pname,fname));
+        main_data.last_dir=pname;
+    catch me
+        alert('String','Error loading Cyclins/CDKs gene symbol list');
+        return;
+    end
+    tgidx=[];%find the cyclin/CDKs in the list
+    for i=1:length(D)
+        t=min(find(strcmp(D{i},d.gsymb)));
+        if ~isempty(t),tgidx=[tgidx;t];end
+    end
+    if isempty(tgidx),alert('String','error no genes found');break;end
+    d.factor_ids{end+1}='Cyclins';
+    d.fac_varexp{end+1}=zeros(length(d.gsymb),1);
+    d.fac_counts{end+1}=d.counts(tgidx,:)';
+    X=d.counts(setdiff(1:length(d.gsymb),tgidx),:)';
+    Y=d.counts(tgidx,:)';
+    [U,V]=comp_cca(X,Y,0.05);%keep cannonical factors of cyclins at p=0.05 cutoff  
+    d.factor{end+1}=V;
+    [~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:),log(d.sf));
+    t=d.fac_varexp{end};
+    t(d.gidx)=rsq;
+    d.fac_varexp{end}=t;   
+    %write a ranking of genes in the factor, by mean canonical cross
+    %correlation
+    crs=mean(corr(U,Y));
+    [~,cidx]=sort(abs(crs),'descend');
+    [fname pname]=uiputfile('cyclin-CDK_correlation_rank.tsv','Where should I save a file of the most correlated Cyclin\CDKs?');
+    f=fopen(fullfile(pname,fname),'w');
+    fprintf(f,[fstr '_gene\tMean_correlation\n']);
+    for i=1:length(sidx)
+        fprintf(f,'%s\t',d.gsymb{gidx(cidx(i))});
+        fprintf(f,'%g\n',crs(cidx(i)));
+    end
+    fclose(f);
+%write a list of top correlated genes with the factor
+[fname pname]=uiputfile([fstr '_correlated_genes.tsv'],['Where should I save genes most correlated with' fstr]);
+f=fopen(fullfile(pname,fname),'w');
+fprintf(f,['Gene\tMean_correlation_with_' fstr 'COV\n']);
+crs=max(corr(X,V)');
+cut=quantile(crs,.5);
+cvs=var(X)./(mean(X).^2);%coefficient of variation
+[scvs,cvidx]=sort(cvs,'descend');
+cgidx=setdiff(1:n,gidx);
+for i=1:length(cvidx)
+    fprintf(f,'%s\t',d.gsymb{cgidx(cvidx(i))});
+    fprintf(f,'%g\t',crs(cvidx(i)));
+    fprintf(f,'%g\n',scvs(i));
+end
+fclose(f);
 end
 
     
-
-%store the factors in d
-%store the variance explained per gene, per factor, in d
-
-
-
-%compute svd and choose basis vectors, ERCCs and mutual background

@@ -238,6 +238,7 @@ d=main_data.d;
 kidx=find(d.cidx);
 d.slbls=d.slbls(kidx);
 d.counts=d.counts(:,kidx);
+d.sf=d.sf(kidx);
 dnew=norm_tool(d);
 
 
