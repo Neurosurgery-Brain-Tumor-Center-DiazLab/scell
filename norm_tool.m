@@ -289,7 +289,7 @@ if get(handles.cyclin_checkbox,'Value')&&~any(strcmp(d.factor_ids,'Cyclins'))
         t=min(find(strcmp(D{i},d.gsymb)));
         if ~isempty(t),tgidx=[tgidx;t];end
     end
-    if isempty(tgidx),alert('String','error no genes found');break;end
+    if isempty(tgidx),alert('String','error no genes found');return;end
     tgidx=intersect(tgidx,d.gidx);%only use cyclins/CDKs in chosen gene panel
     d.factor_ids{end+1}='Cyclins';
     d.fac_varexp{end+1}=zeros(length(d.gsymb),1);
@@ -365,7 +365,7 @@ if get(handles.user_checkbox,'Value')&&~any(strcmp(d.factor_ids,'User_list'))
         t=min(find(strcmp(D{i},d.gsymb)));
         if ~isempty(t),tgidx=[tgidx;t];end
     end
-    if isempty(tgidx),alert('String','error no genes found');break;end
+    if isempty(tgidx),alert('String','error no genes found');return;end
     tgidx=intersect(tgidx,d.gidx);%only use user genes in chosen gene panel
     d.factor_ids{end+1}='User_list';
     d.fac_varexp{end+1}=zeros(length(d.gsymb),1);
@@ -422,5 +422,5 @@ if get(handles.user_checkbox,'Value')&&~any(strcmp(d.factor_ids,'User_list'))
         fclose(f);
     end
 end
-
+keyboard()
     

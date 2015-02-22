@@ -22,7 +22,7 @@ function varargout = main(varargin)
 
 % Edit the above text to modify the response to help main
 
-% Last Modified by GUIDE v2.5 16-Feb-2015 16:09:49
+% Last Modified by GUIDE v2.5 21-Feb-2015 23:37:14
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -102,7 +102,11 @@ else
     main_data.last_dir=pname;
     set(handles.main_window,'UserData',main_data);
     h=waitbar(.5,['Loading ' strrep(fname,'_','\_')]);
-    d=load_fc_out(fullfile(pname,fname),'hum');
+    if get(handles.featureCounts_toggle,'Value')
+        d=load_counts(fullfile(pname,fname),'hum','fc');
+    else
+        d=load_counts(fullfile(pname,fname),'hum','ct');
+    end
     d.qc=false;
     d.cidx=ones(size(d.slbls));%index of cells to include in analysis
     d.gidx=ones(size(d.gsymb));%index of genes to include in analysis
@@ -319,3 +323,12 @@ if strcmp(hdrs{eventdata.Indices(2)},'type') %change cell type
 end
 main_data.d=d;
 set(handles.main_window,'UserData',main_data);
+
+
+% --- Executes on button press in featureCounts_toggle.
+function featureCounts_toggle_Callback(hObject, eventdata, handles)
+% hObject    handle to featureCounts_toggle (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of featureCounts_toggle
