@@ -22,7 +22,7 @@ function varargout = norm_tool(varargin)
 
 % Edit the above text to modify the response to help norm_tool
 
-% Last Modified by GUIDE v2.5 20-Feb-2015 14:07:36
+% Last Modified by GUIDE v2.5 22-Feb-2015 20:40:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -58,11 +58,12 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes norm_tool wait for user response (see UIRESUME)
-% uiwait(handles.norm_tool_root);
 if strcmp(get(hObject,'Visible'),'off')
     main_data=get(handles.norm_tool_root,'UserData');
-    if length(varargin)>0,d=varargin{1};else,d=[];end
+    if length(varargin)>0
+        d=varargin{1};
+        main_window_handle=varargin{2};
+    else, return; end
     if isfield(d,'factor_ids')%redo factor analysis every time tool is loaded
         d.factor_ids={};%string IDs for each factor in the regression model
         d.fac_varexp={};%vectors of variance explained per gene, per factor
@@ -70,9 +71,9 @@ if strcmp(get(hObject,'Visible'),'off')
         d.factor={};%matrices of the factors themselves, derived from d.fac_counts
     end
     main_data.d=d;
+    main_data.main_window_handle=main_window_handle;
     set(handles.norm_tool_root,'UserData',main_data);
 end
-
 
 % --- Outputs from this function are returned to the command line.
 function varargout = norm_tool_OutputFcn(hObject, eventdata, handles) 
@@ -82,9 +83,7 @@ function varargout = norm_tool_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-main_data=get(handles.norm_tool_root,'UserData');
-varargout{1} = main_data.d;
-
+varargout{1} = handles.output;
 
 % --- Executes on button press in ercc_checkbox.
 function ercc_checkbox_Callback(hObject, eventdata, handles)
@@ -181,14 +180,8 @@ function select_genes_pushbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 main_data=get(handles.norm_tool_root,'UserData');
 d=main_data.d;
-dnew=gene_select_tool(d);
-d.gidx=dnew.gidx;
-d.iod=dnew.iod;
-d.pnz=dnew.pnz;
-d.iod_fdr=dnew.iod_fdr;
-d.zinf_fdr=dnew.zinf_fdr;
-main_data.d=d;
-set(handles.norm_tool_root,'UserData',main_data);
+gene_select_tool(d,handles.norm_tool_root);
+
 
 
 % --- Executes on button press in norm_button.
@@ -242,7 +235,7 @@ if get(handles.ercc_checkbox,'Value')&&~any(strcmp(d.factor_ids,'ERCCs'))
     chk=diag(S)/sum(ds);
     kpt=find(gk<chk);
     d.factor{end+1}=W(:,kpt);
-    [~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:),log(d.sf));
+    [~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
     t=d.fac_varexp{end};
     t(d.gidx)=rsq;
     d.fac_varexp{end}=t;
@@ -265,85 +258,121 @@ if get(handles.bak_checkbox,'Value')&&~any(strcmp(d.factor_ids,'Background'))
     chk=diag(S)/sum(ds);
     kpt=find(gk<chk);
     d.factor{end+1}=W(:,kpt);
-    [~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:),log(d.sf));
+    [~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
     t=d.fac_varexp{end};
     t(d.gidx)=rsq;
     d.fac_varexp{end}=t;
 end
 %cyclins/CDKs
-if get(handles.cyclin_checkbox,'Value')&&~any(strcmp(d.factor_ids,'Cyclins'))
-    if ~isfield(main_data,'last_dir')
-        [fname pname]=uigetfile('*.*','Select Cyclin/CDKs gene symbol list...');
-    else
-        [fname pname]=uigetfile([main_data.last_dir,'*.*'],'Select Cyclin/CDKs gene symbol list...');
-    end
-    try
-        D=importdata(fullfile(pname,fname));
-        main_data.last_dir=pname;
-    catch me
-        alert('String','Error loading Cyclins/CDKs gene symbol list');
-        return;
-    end
-    tgidx=[];%find the cyclin/CDKs in the list, and in chosen gene panel
-    for i=1:length(D)
-        t=min(find(strcmp(D{i},d.gsymb)));
-        if ~isempty(t),tgidx=[tgidx;t];end
-    end
-    if isempty(tgidx),alert('String','error no genes found');return;end
-    tgidx=intersect(tgidx,d.gidx);%only use cyclins/CDKs in chosen gene panel
-    d.factor_ids{end+1}='Cyclins';
-    d.fac_varexp{end+1}=zeros(length(d.gsymb),1);
-    d.fac_counts{end+1}=d.counts(tgidx,:)';
-    X=d.counts(setdiff(d.gidx,tgidx),:)';
-    Y=d.counts(tgidx,:)';
-    [U,V]=comp_cca(X,Y,0.05);%keep cannonical factors of cyclins at p=0.05 cutoff  
-    d.factor{end+1}=V;
-    [~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:),log(d.sf));
-    t=d.fac_varexp{end};
-    t(d.gidx)=rsq;
-    d.fac_varexp{end}=t;   
-    %write a ranking of genes in the factor, by mean canonical cross
-    %correlation
-    crs=mean(corr(U,Y));
-    [~,cidx]=sort(abs(crs),'descend');
-    [fname pname]=uiputfile('cyclin-CDK_correlation_rank.tsv','Where should I save a file of the most correlated Cyclin-CDKs?');
-    flag=true;
-    try
-        f=fopen(fullfile(pname,fname),'w');
-    catch me
-        alert('String',['I couln''t open ' fname]);
-        flag=false;
-    end
-    if flag
-        fprintf(f,[fstr '_gene\tMean_correlation\n']);
-        for i=1:length(cidx)
-            fprintf(f,'%s\t',d.gsymb{d.gidx(cidx(i))});
-            fprintf(f,'%g\n',crs(cidx(i)));
+if get(handles.cyclin_checkbox,'Value')
+    if ~any(strcmp(d.factor_ids,'Cyclins'))
+        load cyclins.mat;
+        tgidx=[];%find the cyclin/CDKs in the list, and in chosen gene panel
+        for i=1:length(cln_gns)
+            t=min(find(strcmpi(cln_gns{i},d.gsymb)));
+            if ~isempty(t),tgidx=[tgidx;t];end
         end
-        fclose(f);
-    end
-    %write a list of top correlated genes with the factor
-    [fname pname]=uiputfile('Cyclin-CDK_correlated_genes.tsv','Where should I save genes most correlated with Cyclins/CDKs?');
-    flag=true;
-    try
-        f=fopen(fullfile(pname,fname),'w');
-    catch me
-        alert('String',['I couldn''t open ' fname]);
-        flag=false;
-    end
-    if flag
-        fprintf(f,'Gene\tMean_correlation_with_Cyclin-CDKs\tCOV\n');
-        crs=max(corr(X,V)');
-        cut=quantile(crs,.5);
-        cvs=var(X)./(mean(X).^2);%coefficient of variation
-        [scvs,cvidx]=sort(cvs,'descend');
-        cgidx=setdiff(d.gidx,tgidx);
-        for i=1:length(cvidx)
-            fprintf(f,'%s\t',d.gsymb{cgidx(cvidx(i))});
-            fprintf(f,'%g\t',crs(cvidx(i)));
-            fprintf(f,'%g\n',scvs(i));
+        if isempty(tgidx),alert('String','error no genes found');return;end
+        tgidx=intersect(tgidx,d.gidx);%only use cyclins/CDKs in chosen gene panel
+        d.cyclin_idx=tgidx;
+        d.factor_ids{end+1}='Cyclins';
+        d.fac_varexp{end+1}=zeros(length(d.gsymb),1);
+        d.fac_counts{end+1}=d.counts(tgidx,:)';
+        X=d.counts(setdiff(d.gidx,tgidx),:)';
+        Y=d.counts(tgidx,:)';
+        [U,V]=comp_cca(X,Y,0.05);%keep cannonical factors of cyclins at p=0.05 cutoff  
+        if ~isempty(U)&&~isempty(V)
+            d.factor{end+1}=V;
+            [~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
+            t=d.fac_varexp{end};
+            t(d.gidx)=rsq;
+            d.fac_varexp{end}=t;
+            d.cyclinU=U;d.cyclinV=V;
+            crs=mean(corr(U,Y));
+            [scrs,cidx]=sort(abs(crs),'descend');
+            %plot the top 10 most correlated genes in the factor and total redundancy 
+            rdn=sum(mean(corr(X,V).^2));
+            fh=figure;
+            set(fh,'color','w');
+            ax=gca;
+            set(gca,'FontSize',18);
+            bar(scrs(1:min(length(scrs),10)));
+            set(ax,'XTickLabel',d.gsymb(d.gidx(cidx(1:min(length(cidx),10)))));
+            title(['Cyclin/CDK Tenenhaus redundancy = ' num2str(rdn*100) '%'],'FontSize',18);
+            rotateXLabels(ax,90);
+            %write a ranking of genes in the factor, by mean canonical cross
+            %correlation
+            [fname pname]=uiputfile('cyclin-CDK_correlation_rank.tsv','Where should I save a file of the most correlated Cyclin-CDKs?');
+            flag=true;
+            try
+                f=fopen(fullfile(pname,fname),'w');
+            catch me
+                alert('String',['I couln''t open ' fname]);
+                flag=false;
+            end
+            if flag
+                fprintf(f,'Cyclin-CDK\tMean_correlation\n');
+                for i=1:length(cidx)
+                    fprintf(f,'%s\t',d.gsymb{d.gidx(cidx(i))});
+                    fprintf(f,'%g\n',crs(cidx(i)));
+                end
+                fclose(f);
+            end
+            %write a list of top correlated genes with the factor
+            [fname pname]=uiputfile('Cyclin-CDK_correlated_genes.tsv','Where should I save genes most correlated with Cyclins/CDKs?');
+            flag=true;
+            try
+                f=fopen(fullfile(pname,fname),'w');
+            catch me
+                alert('String',['I couldn''t open ' fname]);
+                flag=false;
+            end
+            if flag
+                fprintf(f,'Gene\tMean_correlation_with_Cyclin-CDKs\tCOV\n');
+                crs=max(corr(X,V)');
+                cut=quantile(crs,.5);
+                cvs=var(X)./(mean(X).^2);%coefficient of variation
+                [scvs,cvidx]=sort(cvs,'descend');
+                cgidx=setdiff(d.gidx,tgidx);
+                for i=1:length(cvidx)
+                    fprintf(f,'%s\t',d.gsymb{cgidx(cvidx(i))});
+                    fprintf(f,'%g\t',crs(cvidx(i)));
+                    fprintf(f,'%g\n',scvs(i));
+                end
+                fclose(f);
+            end
+        else
+            [U1,S,~]=svd(Y);
+            W=U1*S;
+            ds=diag(S);
+            kpt=1:rank(Y)/2;
+            d.factor{end+1}=W(:,kpt);
+            [~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
+            t=d.fac_varexp{end};
+            t(d.gidx)=rsq;
+            d.fac_varexp{end}=t;
         end
-        fclose(f);
+    elseif isfield(d,'cyclinU')
+        U=d.cyclinU;V=d.cyclinV;
+        tgidx=intersect(d.cyclin_idx,d.gidx);
+        X=d.counts(setdiff(d.gidx,tgidx),:)';
+        Y=d.counts(tgidx,:)';
+        crs=mean(corr(U,Y));
+        [scrs,cidx]=sort(abs(crs),'descend');
+        %plot the top 10 most correlated genes in the factor and total redundancy 
+        rdn=sum(mean(corr(X,V).^2));
+        fh=figure;
+        set(fh,'color','w');
+        ax=gca;
+        set(gca,'FontSize',18);
+        bar(scrs(1:min(length(scrs),10)));
+        set(ax,'XTickLabel',d.gsymb(gidx(cidx(1:min(length(cidx),10)))));
+        title([fstr ' Tenenhaus redundancy = ' num2str(rdn*100) '%'],'FontSize',18);
+        rotateXLabels(ax,90); 
+        [~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
+        t=d.fac_varexp{end};
+        t(d.gidx)=rsq;
+        d.fac_varexp{end}=t;
     end
 end
 %user list
@@ -374,7 +403,7 @@ if get(handles.user_checkbox,'Value')&&~any(strcmp(d.factor_ids,'User_list'))
     Y=d.counts(tgidx,:)';
     [U,V]=comp_cca(X,Y,0.05);%keep cannonical factors of user genes at p=0.05 cutoff  
     d.factor{end+1}=V;
-    [~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:),log(d.sf));
+    [~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
     t=d.fac_varexp{end};
     t(d.gidx)=rsq;
     d.fac_varexp{end}=t;   
@@ -391,7 +420,7 @@ if get(handles.user_checkbox,'Value')&&~any(strcmp(d.factor_ids,'User_list'))
         flag=false;
     end
     if flag
-        fprintf(f,[fstr '_gene\tMean_correlation\n']);
+        fprintf(f,'User_gene\tMean_correlation\n');
         for i=1:length(cidx)
             fprintf(f,'%s\t',d.gsymb{d.gidx(cidx(i))});
             fprintf(f,'%g\n',crs(cidx(i)));
@@ -422,5 +451,28 @@ if get(handles.user_checkbox,'Value')&&~any(strcmp(d.factor_ids,'User_list'))
         fclose(f);
     end
 end
+main_data.d=d;
+set(handles.norm_tool_root,'UserData',main_data);
 keyboard()
+
     
+% --- Executes on button press in done_button.
+function done_button_Callback(hObject, eventdata, handles)
+% hObject    handle to done_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+main_data=get(handles.norm_tool_root,'UserData');
+dnew=main_data.d;
+main_window_data=get(main_data.main_window_handle,'UserData');
+d=main_window_data.d;
+d.iod=dnew.iod;
+d.pnz=dnew.pnz;
+d.iod_fdr=dnew.iod_fdr;
+d.zinf_fdr=dnew.zinf_fdr;
+d.factor_ids=dnew.factor_ids;%string IDs for each factor in the regression model
+d.fac_varexp=dnew.fac_varexp;%vectors of variance explained per gene, per factor
+d.fac_counts=dnew.fac_counts;%matrices of counts, used to generate each factor, stored samples-by-genes
+d.factor=dnew.factor;
+main_window_data.d=d;
+set(main_data.main_window_handle,'UserData',main_window_data);
+close(handles.norm_tool_root);

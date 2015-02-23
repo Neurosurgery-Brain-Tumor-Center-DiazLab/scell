@@ -13,6 +13,7 @@ m=size(Y,2);
 opt=statset('UseParallel',true);
 R=zeros(size(Y));
 rsq=zeros(m,1);
+warning off;
 parfor i=1:m
 %    [b,FitInfo]=lassoglm(W,Y(:,i),'poisson','Options',opt,'Offset',offset,'CV',4,'Alpha',1e-4);
 %    kpt=find(b(:,FitInfo.IndexMinDeviance));

@@ -57,7 +57,7 @@ handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
-
+if isempty(gcp('nocreate')), parpool; end
 %set(jCBList, 'ValueChangedCallback', @myMatlabCallbackFcn);
 % UIWAIT makes main wait for user response (see UIRESUME)
 % uiwait(handles.main_window);
@@ -243,7 +243,8 @@ kidx=find(d.cidx);
 d.slbls=d.slbls(kidx);
 d.counts=d.counts(:,kidx);
 d.sf=d.sf(kidx);
-dnew=norm_tool(d);
+norm_tool(d,handles.main_window);
+
 
 
 

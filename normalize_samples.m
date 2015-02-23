@@ -105,7 +105,7 @@ if show_plt
 end
 %compute the scaling factors and the scaled samples
 md=min(didx);
-bak_idx(sidx(1:md))=1;%the smallest common background fraction
+bak_idx=sidx(1:md);%the smallest common background fraction
 for i=1:m
     sf(i)=(cs(md)/CS(md,i));
     nS(:,i)=nS(:,i)*sf(i);

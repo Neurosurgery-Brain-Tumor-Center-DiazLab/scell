@@ -22,7 +22,7 @@ function varargout = gene_select_tool(varargin)
 
 % Edit the above text to modify the response to help gene_select_tool
 
-% Last Modified by GUIDE v2.5 18-Feb-2015 12:37:53
+% Last Modified by GUIDE v2.5 22-Feb-2015 20:41:11
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -62,7 +62,10 @@ guidata(hObject, handles);
 % uiwait(handles.gene_select_tool_root);
 if strcmp(get(hObject,'Visible'),'off')
     main_data=get(handles.gene_select_tool_root,'UserData');
-    if length(varargin)>0,d=varargin{1};else,return;end
+    if length(varargin)>0
+        d=varargin{1};
+        norm_tool_handle=varargin{2};
+    else,return;end
     %test each gene for high variance (dispersion test)
     %test each gene for under-sampline (zero-inflation test)
     if ~isfield(d,'pnz')
@@ -72,7 +75,7 @@ if strcmp(get(hObject,'Visible'),'off')
     end
     iod_fdr_cut=0.01;zinf_fdr_cut=0.01;pnz_cut=0.5;iod_cut=0.1;
     pl_iod=log(d.iod)/max(log(d.iod));
-    idx1=find(d.iod_fdr<iod_fdr_cut&d.zinf_fdr>=zinf_fdr_cut|pl_iod>=(1-iod_cut)|d.pnz>=pnz_cut);
+    idx1=find((d.iod_fdr<iod_fdr_cut&d.zinf_fdr>=zinf_fdr_cut)|(pl_iod>=(1-iod_cut)&d.pnz>=pnz_cut));
     idx2=setdiff(1:length(pl_iod),idx1);
     d.gidx=idx1;
     gidx=cell(length(pl_iod),1);
@@ -86,21 +89,21 @@ if strcmp(get(hObject,'Visible'),'off')
     l=findobj(gcf,'tag','legend');
     set(l,'location','SouthEast');
     main_data.d=d;
+    main_data.norm_tool_handle=norm_tool_handle;
     set(handles.gene_select_tool_root,'UserData',main_data);
-    [~,sidx]=sortrows(pnz,-1);
-    [~,sidx2]=sortrows(iod(sidx),-1);
+    [~,sidx]=sortrows(d.pnz,-1);
+    [~,sidx2]=sortrows(d.iod(sidx),-1);
     sidx=sidx(sidx2);
     T=get(handles.gene_listbox,'Data');
     for i=1:length(d.gsymb)
         T{i,1}=d.gsymb{sidx(i)};
-        T{i,2}=iod(sidx(i));
-        T{i,3}=iod_fdr(sidx(i));
-        T{i,4}=pnz(sidx(i));
-        T{i,5}=zinf_fdr(sidx(i));
+        T{i,2}=d.iod(sidx(i));
+        T{i,3}=d.iod_fdr(sidx(i));
+        T{i,4}=d.pnz(sidx(i));
+        T{i,5}=d.zinf_fdr(sidx(i));
     end
     set(handles.gene_listbox,'Data',T);
 end
-
 
 % --- Outputs from this function are returned to the command line.
 function varargout = gene_select_tool_OutputFcn(hObject, eventdata, handles) 
@@ -110,10 +113,7 @@ function varargout = gene_select_tool_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-main_data=get(handles.gene_select_tool_root,'UserData');
-varargout{1} = main_data.d;
-
-
+varargout{1} = handles.output;
 
 function iod_edit_Callback(hObject, eventdata, handles)
 % hObject    handle to iod_edit (see GCBO)
@@ -243,7 +243,7 @@ else
     zinf_fdr_cut=t;
 end
 pl_iod=log(d.iod)/max(log(d.iod));
-idx1=find(d.iod_fdr<iod_fdr_cut&d.zinf_fdr>=zinf_fdr_cut|pl_iod>=(1-iod_cut)|d.pnz>=pnz_cut);
+idx1=find((d.iod_fdr<iod_fdr_cut&d.zinf_fdr>=zinf_fdr_cut)|(pl_iod>=(1-iod_cut)&d.pnz>=pnz_cut));
 idx2=setdiff(1:length(pl_iod),idx1);
 d.gidx=idx1;
 main_data.d=d;
@@ -333,3 +333,53 @@ for i=1:size(T,1)
     fprintf(f,'%g\n',T{i,5});
 end
 fclose(f);
+
+
+% --- Executes on button press in select_genes.
+function select_genes_Callback(hObject, eventdata, handles)
+% hObject    handle to select_genes (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+main_data=get(handles.gene_select_tool_root,'UserData');
+dnew=main_data.d;
+norm_tool_data=get(main_data.norm_tool_handle,'UserData');
+d=norm_tool_data.d;
+t=str2num(get(handles.iod_edit,'String'));
+if isempty(t)
+    iod_cut=0.75;
+    set(handles.iod_edit,'String','0.1');
+else
+    iod_cut=t;
+end
+t=str2num(get(handles.pnz_edit,'String'));
+if isempty(t)
+    pnz_cut=0.5;
+    set(handles.pnz_edit,'String','0.5');
+else
+    pnz_cut=t;
+end
+t=str2num(get(handles.iod_fdr_edit,'String'));
+if isempty(t)
+    iod_fdr_cut=0.01;
+    set(handles.iod_fdr_edit,'String','0.01');
+else
+    iod_fdr_cut=t;
+end
+t=str2num(get(handles.zinf_fdr_edit,'String'));
+if isempty(t)
+    zinf_fdr_cut=0.01;
+    set(handles.zinf_fdr_edit,'String','0.01');
+else
+    zinf_fdr_cut=t;
+end
+pl_iod=log(dnew.iod)/max(log(dnew.iod));
+d.gidx=find((dnew.iod_fdr<iod_fdr_cut&dnew.zinf_fdr>=zinf_fdr_cut)|(pl_iod>=(1-iod_cut)&dnew.pnz>=pnz_cut));
+d.iod=dnew.iod;
+d.pnz=dnew.pnz;
+d.iod_fdr=dnew.iod_fdr;
+d.zinf_fdr=dnew.zinf_fdr;
+norm_tool_data.d=d;
+set(main_data.norm_tool_handle,'UserData',norm_tool_data);
+close(handles.gene_select_tool_root);
+
