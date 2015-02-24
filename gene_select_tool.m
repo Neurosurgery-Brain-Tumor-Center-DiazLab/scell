@@ -22,7 +22,7 @@ function varargout = gene_select_tool(varargin)
 
 % Edit the above text to modify the response to help gene_select_tool
 
-% Last Modified by GUIDE v2.5 22-Feb-2015 20:41:11
+% Last Modified by GUIDE v2.5 23-Feb-2015 13:59:42
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -382,4 +382,3 @@ d.zinf_fdr=dnew.zinf_fdr;
 norm_tool_data.d=d;
 set(main_data.norm_tool_handle,'UserData',norm_tool_data);
 close(handles.gene_select_tool_root);
-

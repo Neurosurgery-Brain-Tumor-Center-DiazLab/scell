@@ -22,7 +22,7 @@ function varargout = main(varargin)
 
 % Edit the above text to modify the response to help main
 
-% Last Modified by GUIDE v2.5 21-Feb-2015 23:37:14
+% Last Modified by GUIDE v2.5 23-Feb-2015 14:14:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -127,18 +127,27 @@ delete(h)
 
 
 
-% --- Executes on button press in pushbutton2.
-function pushbutton2_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton2 (see GCBO)
+% --- Executes on button press in save_button.
+function save_button_Callback(hObject, eventdata, handles)
+% hObject    handle to save_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+main_data=get(handles.main_window,'UserData');
+d=main_data.d;
+[fname pname]=uiputfile('*.mat','Save data as...','my_session.txt');
+save(fullfile(pname,fname),'d');
 
 % --- Executes on button press in restore_button.
 function restore_button_Callback(hObject, eventdata, handles)
 % hObject    handle to restore_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+main_data=get(handles.main_window,'UserData');
+[fname pname]=uigetfile('*.mat','Restore session from matfile...');
+load(fullfile(pname,fname));
+main_data.d=d;
+set(handles.main_window,'UserData',main_data);
 
 
 % --- Executes on button press in qc_button.
@@ -157,23 +166,6 @@ while ~d.qc&&j<=size(d.counts,2)
     %don't recompute metrics for samples already done
     comp_turing=~isfield(d,'turing')||isempty(d.turing)||j>length(d.turing)||d.turing(j)==0;
     comp_simp=~isfield(d,'simpson')||isempty(d.simpson)||j>length(d.simpson)||d.simpson(j)==0;
-    comp_preseq=~isfield(d,'preseq')||isempty(d.preseq)||j>length(d.preseq)||d.preseq(j)==0;
-    %preseq
-    if comp_preseq
-        fname=tempname;
-        f=fopen(fname,'w');
-        for i=1:size(d.counts,1)
-            if d.counts(i,j)>0,fprintf(f,'%d\n',d.counts(i,j));end
-        end
-        [status,result]=system([preseq_dir 'preseq lc_extrap -V ' fname]);
-        if status~=0, d.preseq(j)=0;
-        else
-            D=textscan(result,'%n%n%n%n','Headerlines',1);
-            D=D{2};
-            d.preseq(j)=nnz(d.counts(:,j))/median(D(floor(length(D)*.75):end));
-        end
-        fclose(f);
-    end
     %turing
     if comp_turing
         d.turing(j)=1-sum(d.counts(:,j)==1)/sum(d.counts(d.counts(:,j)>0,j));
@@ -185,12 +177,39 @@ while ~d.qc&&j<=size(d.counts,2)
         pt=d.counts(t,j)/sum(d.counts(t,j));
         d.simpson(j)=1/(pt'*pt);
     end
-    M(j,1)=d.preseq(j);
+%    M(j,1)=d.preseq(j);
     M(j,2)=d.turing(j);
     M(j,3)=d.simpson(j);
     waitbar(j/size(d.counts,2),h,['processing cell ' num2str(j) ' of ' num2str(size(d.counts,2))]);
     j=j+1;
 end
+comp_preseq=~isfield(d,'preseq')||isempty(d.preseq);
+if comp_preseq
+    preseq=zeros(size(d.counts,2),1);
+    preseq_mar=zeros(size(d.counts,2),1);
+    counts=d.counts;
+    parfor i=1:length(preseq)
+        fname=tempname;
+        f=fopen(fname,'w');
+        for k=1:size(d.counts,1)
+            if counts(k,i)>0,fprintf(f,'%d\n',counts(k,i));end
+        end
+        [status,result]=system([preseq_dir 'preseq lc_extrap -V ' fname]);
+        if status==0
+            D=textscan(result,'%n%n%n%n','Headerlines',1);
+            if ~isempty(D)&&~isempty(D{2})
+                D=D{2};
+                preseq_mar(i)=D(3)-D(2);
+                preseq(i)=nnz(counts(:,i))/median(D(floor(length(D)*.75):end));
+            end
+        end
+        fclose(f);
+    end
+    M(:,1)=preseq;
+    d.preseq=preseq;
+    d.preseq_mar=preseq_mar;
+end
+
 %compute lorenz outlier detection
 [~,sf,~,lorenzh,pval,sidx,cxi,bak_idx]=normalize_samples(d.counts,[],1);
 d.lorenz=pval;d.lorenzh=lorenzh;d.sf=sf;d.bak_idx=bak_idx;
@@ -228,6 +247,7 @@ for i=1:length(d.slbls)
     ct_dat{i,7}=d.turing(i);
     ct_dat{i,8}=d.lorenz(i);
     ct_dat{i,9}=d.pareto(i);
+    ct_dat{i,9}=d.preseq_mar(i);
 end
 set(handles.cell_table,'Data',ct_dat);
 
@@ -333,3 +353,36 @@ function featureCounts_toggle_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of featureCounts_toggle
+
+
+% --- Executes on button press in write_qc_button.
+function write_qc_button_Callback(hObject, eventdata, handles)
+% hObject    handle to write_qc_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+main_data=get(handles.main_window,'UserData');
+d=main_data.d;
+if isempty(d.preseq)
+    alert('String','Run library QC first');
+    return;
+end
+[fname pname]=uiputfile('*.txt','Save data as...','QC_metrics.txt');
+try
+    f=fopen(fullfile(pname,fname),'w');
+catch me
+    alert('String',['Error opening ' fullfile(pname,fname)]);
+    return;
+end
+fprintf(f,'ID\tFragments\tGenes_tagged\tSimpson_diversity\tPRESEQ_coverage\tTuring_coverage\tLorenz_outlier_test\tPareto_rank\tMarginal_return\n');
+for i=1:d.slbls
+    fprintf(f,'%s\t',d.slbls{i});
+    fprintf(f,'%i\t',sum(d.counts(:,i)));
+    fprintf(f,'%i\t',nnz(d.counts(:,i)));
+    fprintf(f,'%g\t',d.simpson(i));
+    fprintf(f,'%g\t',d.preseq(i));
+    fprintf(f,'%g\t',d.turing(i));
+    fprintf(f,'%g\t',d.lorenz(i));
+    fprintf(f,'%g\t',d.pareto(i));
+    fprintf(f,'%g\n',d.preseq_mar(i));
+end
+fclose(f);

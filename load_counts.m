@@ -53,7 +53,6 @@ end
 if strcmp(typ,'ct')
     t=fgets(f);
     nsmp = numel(strfind(t,dlm));%# cols - (gene id column)
-    keyboard()
     fclose(f);
     f=fopen(fname);
     s='';
