@@ -1,9 +1,11 @@
-function [nS,sf,d,h,pval,sidx,cxi,bak_idx]=normalize_samples(S,lbls,show_plt)
-%function [nS,sf,d,h,pval,sidx,cxi,bak_idx]=normalize_samples(S,lbls,show_plt)
+function [nS,sf,d,h,pval,sidx,cxi,bak_idx]=normalize_samples(S,lbls,show_plt,slbls)
+%function [nS,sf,d,h,pval,sidx,cxi,bak_idx]=normalize_samples(S,lbls,show_plt,slbls)
 %
 %IN: S is a nXm matrix of raw fragment counts for n genes and m samples
 %    lbls is a cell array of m strings labeling the samples
 %    show_plt is a boolean, 1 if you want to display plots
+%    slbls - if show_plot is true then gsymb will be used in the datacursor
+%            tooltip callback
 %
 %OUT: nS are the variance stabalized and normalized counts
 %     sf is a m-vector of scaling factors
@@ -129,31 +131,24 @@ if show_plt
         N1(i,:)=N1(i,:)/sum(N1(i,:));
     end
     N1=N1(:,end:-1:1);
-    nSt=zeros(size(nS));for i=1:size(nS,2),tx=S(:,i); nSt(tx>0,i)=nS(tx>0,i);end
-    y=nS(:);%normalized counts on the right panel
-    q=quantile(y,qt);
-    M1=zeros(m,length(q)-1);
-    for i=1:m
-        for j=1:length(q)-1
-            M1(i,j)=length(find(nSt(:,i)>q(j)));
-        end
-        M1(i,:)=M1(i,:)/sum(M1(i,:));
-    end
-    M1=M1(:,end:-1:1);
+    [~,sidx]=sort(N1(:,1),'descend');
     %figure
     figure
-     bm=brewermap(12,'YlOrRd');
+    bm=brewermap(12,'YlOrRd');
     bm=bm(end:-1:1,:);
     colormap(bm);
     set(gcf,'color','w')
     %plot 1
     %subplot(2,1,1)
-    bar(N1,'stacked');
+    bar(N1(sidx,:),'stacked');
+    dcm_obj = datacursormode(gcf);
+    set(dcm_obj,'enable','on')
+    set(dcm_obj,'UpdateFcn',{@NormBarCallback,slbls,sidx})
     st=sum(N1');
     hold on
     yl=ylim;
-    hy=plot(find(pval<=0.05),st(pval<=0.05)+.05,'m*');
-    hr=plot(find(h),st(find(h))+.05,'r*');
+    hy=plot(find(pval(sidx)<0.05&N1(sidx,1)<quantile(N1(:,1),.25)),st(pval(sidx)<0.05&N1(sidx,1)<quantile(N1(:,1),.25))+.05,'m*');
+    hr=plot(find(h(sidx)),st(find(h(sidx)))+.05,'r*');
     set(gca,'YLim',[0,1.1],'XLim',[0,m+1])
     title(gca,'raw counts','FontSize',18)
     set(gca,'FontSize',18)

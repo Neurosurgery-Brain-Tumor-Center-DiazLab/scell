@@ -148,6 +148,31 @@ main_data=get(handles.main_window,'UserData');
 load(fullfile(pname,fname));
 main_data.d=d;
 set(handles.main_window,'UserData',main_data);
+ct_dat=get(handles.cell_table,'Data');
+for i=1:length(d.slbls)
+    ct_dat{i,1}=true;
+    ct_dat{i,2}=d.slbls{i};
+    ct_dat{i,3}=sum(d.counts(:,i));
+    ct_dat{i,4}=nnz(d.counts(:,i));
+    ct_dat{i,5}=d.simpson(i);
+    ct_dat{i,6}=d.preseq(i);
+    ct_dat{i,7}=d.turing(i);
+    ct_dat{i,8}=d.lorenz(i);
+    ct_dat{i,9}=d.pareto(i);
+    ct_dat{i,11}=d.preseq_mar(i);
+end
+set(handles.cell_table,'Data',ct_dat);
+m=get(handles.disp_table,'Data');
+m{1}=d.slbls{1};
+m{2}=sum(d.counts(:,1));
+m{3}=nnz(d.counts(:,1));
+m{4}=d.simpson(1);
+m{5}=d.preseq(1);
+m{6}=d.turing(1);
+m{7}=d.lorenz(1);
+m{8}=d.pareto(1);
+m{9}=d.preseq_mar(1);
+set(handles.disp_table,'Data',m);
 
 
 % --- Executes on button press in qc_button.
@@ -183,8 +208,10 @@ while ~d.qc&&j<=size(d.counts,2)
     waitbar(j/size(d.counts,2),h,['processing cell ' num2str(j) ' of ' num2str(size(d.counts,2))]);
     j=j+1;
 end
+delete(h);
 comp_preseq=~isfield(d,'preseq')||isempty(d.preseq);
 if comp_preseq
+    h=waitbar(0.5,'estimating library complexity');
     preseq=zeros(size(d.counts,2),1);
     preseq_mar=zeros(size(d.counts,2),1);
     counts=d.counts;
@@ -205,13 +232,16 @@ if comp_preseq
         end
         fclose(f);
     end
+    waitbar(1,h,'done');
     M(:,1)=preseq;
     d.preseq=preseq;
     d.preseq_mar=preseq_mar;
+    delete(h);
 end
-
+h=waitbar(0.5,'identifying outliers');
 %compute lorenz outlier detection
-[~,sf,~,lorenzh,pval,sidx,cxi,bak_idx]=normalize_samples(d.counts,[],1);
+[~,sf,~,lorenzh,pval,sidx,cxi,bak_idx]=normalize_samples(d.counts,[],1,d.slbls);
+waitbar(1,h,'done');
 d.lorenz=pval;d.lorenzh=lorenzh;d.sf=sf;d.bak_idx=bak_idx;
 delete(h);
 figure
@@ -219,16 +249,20 @@ set(gcf,'color','w');
 subplot(2,1,1);
 set(gca,'FontSize',18);
 ylabel('Simpson diversity','FontSize',18)
-notBoxPlot(d.simpson(d.lorenz>=0.05),1);
+H=notBoxPlot(d.simpson(d.lorenz>=0.05),1);
+set([H.data],'markersize',2);
 hold
-notBoxPlot(d.simpson(d.lorenz<0.05),2);
+H=notBoxPlot(d.simpson(d.lorenz<0.05),2);
+set([H.data],'markersize',2);
 set(gca,'XTick',1:2,'XTickLabel',{'QC pass','QC fail'});
 subplot(2,1,2);
 set(gca,'FontSize',18);
 ylabel('Preseq coverage','FontSize',18)
-notBoxPlot(d.preseq(d.lorenz>=0.05),1);
+H=notBoxPlot(d.preseq(d.lorenz>=0.05),1);
+set([H.data],'markersize',2);
 hold
-notBoxPlot(d.preseq(d.lorenz<0.05),2);
+H=notBoxPlot(d.preseq(d.lorenz<0.05),2);
+set([H.data],'markersize',2);
 set(gca,'XTick',1:2,'XTickLabel',{'QC pass','QC fail'});
 M(:,4)=d.lorenz;
 %compute pareto ranking
@@ -247,9 +281,20 @@ for i=1:length(d.slbls)
     ct_dat{i,7}=d.turing(i);
     ct_dat{i,8}=d.lorenz(i);
     ct_dat{i,9}=d.pareto(i);
-    ct_dat{i,9}=d.preseq_mar(i);
+    ct_dat{i,11}=d.preseq_mar(i);
 end
 set(handles.cell_table,'Data',ct_dat);
+m=get(handles.disp_table,'Data');
+m{1}=d.slbls{1};
+m{2}=sum(d.counts(:,1));
+m{3}=nnz(d.counts(:,1));
+m{4}=d.simpson(1);
+m{5}=d.preseq(1);
+m{6}=d.turing(1);
+m{7}=d.lorenz(1);
+m{8}=d.pareto(1);
+m{9}=d.preseq_mar(1);
+set(handles.disp_table,'Data',m);
 
 
 % --- Executes on button press in norm_button.
@@ -304,6 +349,7 @@ if isfield(d,'turing')&&~isempty(d.turing)%then we've done QC
     m{6}=d.turing(t);
     m{7}=d.lorenz(t);
     m{8}=d.pareto(t);
+    m{9}=d.preseq_mar(t);
 else
     for i=4:8, m{i}='NA'; end
 end
