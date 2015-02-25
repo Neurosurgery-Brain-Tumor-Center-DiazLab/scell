@@ -197,6 +197,7 @@ function norm_button_Callback(hObject, eventdata, handles)
 
 main_data=get(handles.norm_tool_root,'UserData');
 d=main_data.d;
+length(d.gidx)
 if ~isfield(d,'gidx')
     alert('String','select genes for analysis first');
     return;
@@ -207,6 +208,7 @@ if ~isfield(d,'factor_ids')
     d.fac_counts={};%matrices of counts, used to generate each factor, stored samples-by-genes
     d.factor={};%matrices of the factors themselves, derived from d.fac_counts
 end
+h=waitbar(0,'Processing factors');
 %identify which factors to use
 %ERCCs
 if get(handles.ercc_checkbox,'Value')&&~any(strcmp(d.factor_ids,'ERCCs')) 
@@ -235,11 +237,12 @@ if get(handles.ercc_checkbox,'Value')&&~any(strcmp(d.factor_ids,'ERCCs'))
     chk=diag(S)/sum(ds);
     kpt=find(gk<chk);
     d.factor{end+1}=W(:,kpt);
-    [~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
-    t=d.fac_varexp{end};
-    t(d.gidx)=rsq;
-    d.fac_varexp{end}=t;
+    %[~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
+    %t=d.fac_varexp{end};
+    %t(d.gidx)=rsq;
+    %d.fac_varexp{end}=t;
 end
+waitbar(0.25,h,'Processing factors');
 %mutual background
 if get(handles.bak_checkbox,'Value')&&~any(strcmp(d.factor_ids,'Background'))
     if ~isfield(d,'bak_idx')
@@ -258,48 +261,64 @@ if get(handles.bak_checkbox,'Value')&&~any(strcmp(d.factor_ids,'Background'))
     chk=diag(S)/sum(ds);
     kpt=find(gk<chk);
     d.factor{end+1}=W(:,kpt);
-    [~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
-    t=d.fac_varexp{end};
-    t(d.gidx)=rsq;
-    d.fac_varexp{end}=t;
+    %[~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
+    %t=d.fac_varexp{end};
+    %t(d.gidx)=rsq;
+    %d.fac_varexp{end}=t;
 end
+waitbar(0.5,h,'Processing factors');
 %cyclins/CDKs
 if get(handles.cyclin_checkbox,'Value')
     if ~any(strcmp(d.factor_ids,'Cyclins'))
         load cyclins.mat;
-        tgidx=[];%find the cyclin/CDKs in the list, and in chosen gene panel
+        tgidx1=[];%find the cyclin/CDKs in the list, and in chosen gene panel
         for i=1:length(cln_gns)
             t=min(find(strcmpi(cln_gns{i},d.gsymb)));
-            if ~isempty(t),tgidx=[tgidx;t];end
+            if ~isempty(t),tgidx1=[tgidx1;t];end
         end
-        if isempty(tgidx),alert('String','error no genes found');return;end
-        tgidx=intersect(tgidx,d.gidx);%only use cyclins/CDKs in chosen gene panel
+        if isempty(tgidx1),alert('String','error no genes found');return;end
+        tgidx=intersect(tgidx1,d.gidx);%only use cyclins/CDKs in chosen gene panel
         d.cyclin_idx=tgidx;
         d.factor_ids{end+1}='Cyclins';
         d.fac_varexp{end+1}=zeros(length(d.gsymb),1);
         d.fac_counts{end+1}=d.counts(tgidx,:)';
-        X=d.counts(setdiff(d.gidx,tgidx),:)';
+        d.non_cln_idx=setdiff(d.gidx,tgidx1);
+        X=d.counts(d.non_cln_idx,:)';
         Y=d.counts(tgidx,:)';
         [U,V]=comp_cca(X,Y,0.05);%keep cannonical factors of cyclins at p=0.05 cutoff  
         if ~isempty(U)&&~isempty(V)
             d.factor{end+1}=V;
-            [~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
-            t=d.fac_varexp{end};
-            t(d.gidx)=rsq;
-            d.fac_varexp{end}=t;
             d.cyclinU=U;d.cyclinV=V;
-            crs=mean(corr(U,Y));
-            [scrs,cidx]=sort(abs(crs),'descend');
-            %plot the top 10 most correlated genes in the factor and total redundancy 
+            %plot the top 20 most correlated Cyclins
+            cln_crs=mean(corr(U,Y)');%correlations between cyclins and gene factors
+            [cln_scrs,cln_cidx]=sort(abs(cln_crs),'descend');
             rdn=sum(mean(corr(X,V).^2));
-            fh=figure;
-            set(fh,'color','w');
+            f1=figure;
+            set(f1,'color','w');
             ax=gca;
-            set(gca,'FontSize',18);
-            bar(scrs(1:min(length(scrs),10)));
-            set(ax,'XTickLabel',d.gsymb(d.gidx(cidx(1:min(length(cidx),10)))));
+            set(ax,'FontSize',18);
+            bar(cln_scrs(1:min(length(cln_scrs),20)));
+            set(ax,'XTick',1:min(length(cln_scrs),20));
+            set(ax,'XTickLabel',d.gsymb(d.cyclin_idx(cln_cidx(1:min(length(cln_cidx),20)))));
             title(['Cyclin/CDK Tenenhaus redundancy = ' num2str(rdn*100) '%'],'FontSize',18);
+            ylabel(sprintf('Mean correlation \nwith non-Cyclin/CDK gene factors'));
             rotateXLabels(ax,90);
+            xlim([0 min(length(cln_scrs),20)+1]);
+            %plot the top 20 most correlated genes
+%             gn_crs=mean(corr(X,V)');%correlations between cyclins and gene factors
+%             [gn_scrs,gn_cidx]=sort(abs(gn_crs),'descend');
+%             rdn=sum(mean(corr(X,V).^2));
+%             f2=figure;
+%             set(f2,'color','w');
+%             ax=gca;
+%             set(ax,'FontSize',18);
+%             bar(gn_scrs(1:min(length(gn_scrs),20)));
+%             set(ax,'XTick',1:min(length(gn_scrs),20));
+%             set(ax,'XTickLabel',d.gsymb(d.non_cln_idx(gn_cidx(1:min(length(gn_cidx),20)))));
+%             title(['Cyclin/CDK Tenenhaus redundancy = ' num2str(rdn*100) '%'],'FontSize',18);
+%             ylabel(sprintf('Mean correlation \nwith Cyclins-CDK factors'));
+%             rotateXLabels(ax,90);
+%             xlim([0 min(length(gn_scrs),20)+1]);
             %write a ranking of genes in the factor, by mean canonical cross
             %correlation
             [fname pname]=uiputfile('cyclin-CDK_correlation_rank.tsv','Where should I save a file of the most correlated Cyclin-CDKs?');
@@ -312,9 +331,9 @@ if get(handles.cyclin_checkbox,'Value')
             end
             if flag
                 fprintf(f,'Cyclin-CDK\tMean_correlation\n');
-                for i=1:length(cidx)
-                    fprintf(f,'%s\t',d.gsymb{d.gidx(cidx(i))});
-                    fprintf(f,'%g\n',crs(cidx(i)));
+                for i=1:length(cln_cidx)
+                    fprintf(f,'%s\t',d.gsymb{d.cyclin_idx(cln_cidx(i))});
+                    fprintf(f,'%g\n',cln_crs(cln_cidx(i)));
                 end
                 fclose(f);
             end
@@ -329,14 +348,11 @@ if get(handles.cyclin_checkbox,'Value')
             end
             if flag
                 fprintf(f,'Gene\tMean_correlation_with_Cyclin-CDKs\tCOV\n');
-                crs=max(corr(X,V)');
-                cut=quantile(crs,.5);
                 cvs=var(X)./(mean(X).^2);%coefficient of variation
                 [scvs,cvidx]=sort(cvs,'descend');
-                cgidx=setdiff(d.gidx,tgidx);
                 for i=1:length(cvidx)
-                    fprintf(f,'%s\t',d.gsymb{cgidx(cvidx(i))});
-                    fprintf(f,'%g\t',crs(cvidx(i)));
+                    fprintf(f,'%s\t',d.gsymb{d.non_cln_idx(cvidx(i))});
+                    fprintf(f,'%g\t',gn_crs(cvidx(i)));
                     fprintf(f,'%g\n',scvs(i));
                 end
                 fclose(f);
@@ -347,113 +363,129 @@ if get(handles.cyclin_checkbox,'Value')
             ds=diag(S);
             kpt=1:rank(Y)/2;
             d.factor{end+1}=W(:,kpt);
-            [~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
-            t=d.fac_varexp{end};
-            t(d.gidx)=rsq;
-            d.fac_varexp{end}=t;
+            %[~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
+            %t=d.fac_varexp{end};
+            %t(d.gidx)=rsq;
+            %d.fac_varexp{end}=t;
         end
     elseif isfield(d,'cyclinU')
         U=d.cyclinU;V=d.cyclinV;
         tgidx=intersect(d.cyclin_idx,d.gidx);
-        X=d.counts(setdiff(d.gidx,tgidx),:)';
+        d.non_cln_idx=setdiff(d.gidx,tgidx)
+        X=d.counts(d.non_cln_idx,:)';
         Y=d.counts(tgidx,:)';
-        crs=mean(corr(U,Y));
-        [scrs,cidx]=sort(abs(crs),'descend');
-        %plot the top 10 most correlated genes in the factor and total redundancy 
-        rdn=sum(mean(corr(X,V).^2));
-        fh=figure;
-        set(fh,'color','w');
+        %plot the top 20 most correlated Cyclins
+        cln_crs=max(corr(U,Y));%correlations between cyclins and gene factors
+        [cln_scrs,cln_cidx]=sort(abs(cln_crs),'descend');
+        f1=figure;
+        set(f1,'color','w');
         ax=gca;
-        set(gca,'FontSize',18);
-        bar(scrs(1:min(length(scrs),10)));
-        set(ax,'XTickLabel',d.gsymb(gidx(cidx(1:min(length(cidx),10)))));
-        title([fstr ' Tenenhaus redundancy = ' num2str(rdn*100) '%'],'FontSize',18);
-        rotateXLabels(ax,90); 
-        [~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
-        t=d.fac_varexp{end};
-        t(d.gidx)=rsq;
-        d.fac_varexp{end}=t;
+        set(ax,'FontSize',18);
+        bar(cln_scrs(1:min(length(cln_scrs),20)));
+        set(ax,'XTickLabel',d.gsymb(d.non_cln_idx(cln_cidx(1:min(length(cln_cidx),20)))));
+        ylabel('Maximum correlation with non-Cyclin/CDK genes');
+        rotateXLabels(ax,90);
+        %plot the top 20 most correlated genes
+        gn_crs=max(corr(X,V));%correlations between cyclins and gene factors
+        [gn_scrs,gn_cidx]=sort(abs(gn_crs),'descend');
+        rdn=sum(max(corr(X,V).^2));
+        f2=figure;
+        set(f1,'color','w');
+        ax=gca;
+        set(ax,'FontSize',18);
+        bar(gn_scrs(1:min(length(gn_scrs),20)));
+        set(ax,'XTickLabel',d.gsymb(d.cyclin_idx(gn_cidx(1:min(length(gn_cidx),20)))));
+        title(['Cyclin/CDK Tenenhaus redundancy = ' num2str(rdn*100) '%'],'FontSize',18);
+        ylabel('Maximum correlation with Cyclins/CDKs');
+        rotateXLabels(ax,90);
     end
 end
 %user list
-if get(handles.user_checkbox,'Value')&&~any(strcmp(d.factor_ids,'User_list'))
-    if ~isfield(main_data,'last_dir')
-        [fname pname]=uigetfile('*.*','Select gene symbol list...');
-    else
-        [fname pname]=uigetfile([main_data.last_dir,'*.*'],'Select gene symbol list...');
-    end
-    try
-        D=importdata(fullfile(pname,fname));
-        main_data.last_dir=pname;
-    catch me
-        alert('String','Error loading gene symbol list');
-        return;
-    end
-    tgidx=[];%find user genes in the list, and in chosen gene panel
-    for i=1:length(D)
-        t=min(find(strcmp(D{i},d.gsymb)));
-        if ~isempty(t),tgidx=[tgidx;t];end
-    end
-    if isempty(tgidx),alert('String','error no genes found');return;end
-    tgidx=intersect(tgidx,d.gidx);%only use user genes in chosen gene panel
-    d.factor_ids{end+1}='User_list';
-    d.fac_varexp{end+1}=zeros(length(d.gsymb),1);
-    d.fac_counts{end+1}=d.counts(tgidx,:)';
-    X=d.counts(setdiff(d.gidx,tgidx),:)';
-    Y=d.counts(tgidx,:)';
-    [U,V]=comp_cca(X,Y,0.05);%keep cannonical factors of user genes at p=0.05 cutoff  
-    d.factor{end+1}=V;
-    [~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
-    t=d.fac_varexp{end};
-    t(d.gidx)=rsq;
-    d.fac_varexp{end}=t;   
-    %write a ranking of genes in the factor, by mean canonical cross
-    %correlation
-    crs=mean(corr(U,Y));
-    [~,cidx]=sort(abs(crs),'descend');
-    [fname pname]=uiputfile('user_genes_correlation_rank.tsv','Where should I save a file of the genes on your list that most correlate with other genes?');
-    flag=true;
-    try
-        f=fopen(fullfile(pname,fname),'w');
-    catch me
-        alert('String',['I couln''t open ' fname]);
-        flag=false;
-    end
-    if flag
-        fprintf(f,'User_gene\tMean_correlation\n');
-        for i=1:length(cidx)
-            fprintf(f,'%s\t',d.gsymb{d.gidx(cidx(i))});
-            fprintf(f,'%g\n',crs(cidx(i)));
-        end
-        fclose(f);
-    end
-    %write a list of top correlated genes with the factor
-    [fname pname]=uiputfile('Genes_correlated_with_user_list.tsv','Where should I save genes most correlated with your gene list?');
-    flag=true;
-    try
-        f=fopen(fullfile(pname,fname),'w');
-    catch me
-        alert('String',['I couldn''t open ' fname]);
-        flag=false;
-    end
-    if flag
-        fprintf(f,'Gene\tMean_correlation_with_user_list\tCOV\n');
-        crs=max(corr(X,V)');
-        cut=quantile(crs,.5);
-        cvs=var(X)./(mean(X).^2);%coefficient of variation
-        [scvs,cvidx]=sort(cvs,'descend');
-        cgidx=setdiff(d.gidx,tgidx);
-        for i=1:length(cvidx)
-            fprintf(f,'%s\t',d.gsymb{cgidx(cvidx(i))});
-            fprintf(f,'%g\t',crs(cvidx(i)));
-            fprintf(f,'%g\n',scvs(i));
-        end
-        fclose(f);
-    end
+% if get(handles.user_checkbox,'Value')&&~any(strcmp(d.factor_ids,'User_list'))
+%     if ~isfield(main_data,'last_dir')
+%         [fname pname]=uigetfile('*.*','Select gene symbol list...');
+%     else
+%         [fname pname]=uigetfile([main_data.last_dir,'*.*'],'Select gene symbol list...');
+%     end
+%     try
+%         D=importdata(fullfile(pname,fname));
+%         main_data.last_dir=pname;
+%     catch me
+%         alert('String','Error loading gene symbol list');
+%         return;
+%     end
+%     tgidx=[];%find user genes in the list, and in chosen gene panel
+%     for i=1:length(D)
+%         t=min(find(strcmp(D{i},d.gsymb)));
+%         if ~isempty(t),tgidx=[tgidx;t];end
+%     end
+%     if isempty(tgidx),alert('String','error no genes found');return;end
+%     tgidx=intersect(tgidx,d.gidx);%only use user genes in chosen gene panel
+%     d.factor_ids{end+1}='User_list';
+%     d.fac_varexp{end+1}=zeros(length(d.gsymb),1);
+%     d.fac_counts{end+1}=d.counts(tgidx,:)';
+%     X=d.counts(setdiff(d.gidx,tgidx),:)';
+%     Y=d.counts(tgidx,:)';
+%     [U,V]=comp_cca(X,Y,0.05);%keep cannonical factors of user genes at p=0.05 cutoff  
+%     d.factor{end+1}=V;
+%     %[~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
+%     %t=d.fac_varexp{end};
+%     %t(d.gidx)=rsq;
+%     %d.fac_varexp{end}=t;   
+%     %write a ranking of genes in the factor, by mean canonical cross
+%     %correlation
+%     crs=max(corr(U,Y));
+%     [~,cidx]=sort(abs(crs),'descend');
+%     [fname pname]=uiputfile('user_genes_correlation_rank.tsv','Where should I save a file of the genes on your list that most correlate with other genes?');
+%     flag=true;
+%     try
+%         f=fopen(fullfile(pname,fname),'w');
+%     catch me
+%         alert('String',['I couln''t open ' fname]);
+%         flag=false;
+%     end
+%     if flag
+%         fprintf(f,'User_gene\tMean_correlation\n');
+%         for i=1:length(cidx)
+%             fprintf(f,'%s\t',d.gsymb{d.gidx(cidx(i))});
+%             fprintf(f,'%g\n',crs(cidx(i)));
+%         end
+%         fclose(f);
+%     end
+%     %write a list of top correlated genes with the factor
+%     [fname pname]=uiputfile('Genes_correlated_with_user_list.tsv','Where should I save genes most correlated with your gene list?');
+%     flag=true;
+%     try
+%         f=fopen(fullfile(pname,fname),'w');
+%     catch me
+%         alert('String',['I couldn''t open ' fname]);
+%         flag=false;
+%     end
+%     if flag
+%         fprintf(f,'Gene\tMean_correlation_with_user_list\tCOV\n');
+%         crs=max(corr(X,V)');
+%         cut=quantile(crs,.5);
+%         cvs=var(X)./(mean(X).^2);%coefficient of variation
+%         [scvs,cvidx]=sort(cvs,'descend');
+%         cgidx=setdiff(d.gidx,tgidx);
+%         for i=1:length(cvidx)
+%             fprintf(f,'%s\t',d.gsymb{cgidx(cvidx(i))});
+%             fprintf(f,'%g\t',crs(cvidx(i)));
+%             fprintf(f,'%g\n',scvs(i));
+%         end
+%         fclose(f);
+%     end
+% end
+[var_exp,R]=glm_reg_step(d);
+for i=1:length(d.fac_varexp)
+    t=d.fac_varexp{i};
+    t(d.gidx)=var_exp{i};
+    d.fac_varexp{i}=t;
 end
+d.norm_counts=R;
+keyboard()
 main_data.d=d;
 set(handles.norm_tool_root,'UserData',main_data);
-keyboard()
 
     
 % --- Executes on button press in done_button.

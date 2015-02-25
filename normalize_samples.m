@@ -162,7 +162,7 @@ if show_plt
         set(gca,'XtickLabel',lbls);
         rotateXLabels(gca,90);
     end
-    legend([hy;hr],{'low quality','extreme outliers'},'FontSize',12,'Location','SouthWest');
+    legend([hy;hr],{'low quality','extreme outliers'},'FontSize',12,'Location','NorthEast');
     %plot 2
 %     subplot(2,1,2)
 %     bar(M1,'stacked');

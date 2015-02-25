@@ -59,7 +59,8 @@ end
 zinfp=chi2cdf(zinf_stat,1,'upper');%score test for more zeros than expected under a Poisson model
 zinfp(pnz==1)=1;
 zinfp(pnz==0)=0;
-[~,q]=mafdr(zinfp);%control for false discovery
+%[~,q]=mafdr(zinfp);%control for false discovery
+q=mafdr(zinfp,'BHFDR',true);
 zinf_fdr=q';
 zinf_fdr(pnz==0)=0;
 delete(h)

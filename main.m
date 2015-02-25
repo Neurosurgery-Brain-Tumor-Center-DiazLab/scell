@@ -296,7 +296,6 @@ m{8}=d.pareto(1);
 m{9}=d.preseq_mar(1);
 set(handles.disp_table,'Data',m);
 
-
 % --- Executes on button press in norm_button.
 function norm_button_Callback(hObject, eventdata, handles)
 % hObject    handle to norm_button (see GCBO)
@@ -309,10 +308,6 @@ d.slbls=d.slbls(kidx);
 d.counts=d.counts(:,kidx);
 d.sf=d.sf(kidx);
 norm_tool(d,handles.main_window);
-
-
-
-
 
 % --- Executes on button press in analyze_button.
 function analyze_button_Callback(hObject, eventdata, handles)
