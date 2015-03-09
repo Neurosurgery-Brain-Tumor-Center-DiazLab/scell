@@ -21,22 +21,22 @@ for i=1:length(U)
     if U(i)<0, gstr{i}='Not clustered';
     else, gstr{i}=['Cluster ' num2str(i)];end
 end
-bm=brewermap(7,'Accent');
+bm=brewermap(7,'Dark2');
 %plot the pca scores
 axes(pca_ax);
 if U==-1
-    scatter(coeff(:,1),coeff(:,2)),
+    scatter(coeff(:,pcs(1)),coeff(:,pcs(2))),
 else
-    gscatter(coeff(:,1),coeff(:,2),U,bm,'o',10);
+    gscatter(coeff(:,pcs(1)),coeff(:,pcs(2)),U,bm,'o',10);
 end
-xlabel(['PCA' num2str(pcs(1)) ': ' num2str(explained(1)) '% of variance explained.'],'FontSize',20);
-ylabel(['PCA' num2str(pcs(2)) ': ' num2str(explained(2)) '% of variance explained.'],'FontSize',20);
+xlabel(['PCA' num2str(pcs(1)) ': ' num2str(explained(pcs(1))) '% of variance explained.'],'FontSize',20);
+ylabel(['PCA' num2str(pcs(2)) ': ' num2str(explained(pcs(2))) '% of variance explained.'],'FontSize',20);
 title('PCA','FontSize',24);
 axis tight;
 %plot the gene loadings
 axes(gn_ax)
-scatter(score(:,1),score(:,2));
-xlabel(['PCA' num2str(pcs(1)) ': ' num2str(explained(1)) '% of variance explained.'],'FontSize',20);
-ylabel(['PCA' num2str(pcs(2)) ': ' num2str(explained(2)) '% of variance explained.'],'FontSize',20);
+scatter(score(:,pcs(1)),score(:,pcs(2)));
+xlabel(['PCA' num2str(pcs(1))],'FontSize',10);
+ylabel(['PCA' num2str(pcs(2))],'FontSize',10);
 title('PCA','FontSize',24);
 axis tight;

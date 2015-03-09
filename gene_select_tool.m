@@ -79,6 +79,7 @@ if strcmp(get(hObject,'Visible'),'off')
     idx2=setdiff(1:length(pl_iod),idx1);
     d.gidx=idx1;
     gidx=cell(length(pl_iod),1);
+    set(handles.num_genes_text,'String',[num2str(length(idx1)) ' genes meet thresholds']);
     for i=1:length(idx1),gidx{idx1(i)}='Above thresholds';end
     for i=1:length(idx2),gidx{idx2(i)}='Below thresholds';end
     axes(handles.axes1);
@@ -245,6 +246,7 @@ end
 pl_iod=log(d.iod)/max(log(d.iod));
 idx1=find((d.iod_fdr<iod_fdr_cut&d.zinf_fdr>=zinf_fdr_cut)|(pl_iod>=(1-iod_cut)&d.pnz>=pnz_cut));
 idx2=setdiff(1:length(pl_iod),idx1);
+set(handles.num_genes_text,'String',[num2str(length(idx1)) ' genes meet thresholds']);
 d.gidx=idx1;
 main_data.d=d;
 set(handles.gene_select_tool_root,'UserData',main_data);

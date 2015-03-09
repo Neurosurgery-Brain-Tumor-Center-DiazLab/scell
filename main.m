@@ -22,7 +22,7 @@ function varargout = main(varargin)
 
 % Edit the above text to modify the response to help main
 
-% Last Modified by GUIDE v2.5 23-Feb-2015 14:14:26
+% Last Modified by GUIDE v2.5 07-Mar-2015 14:24:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -134,7 +134,7 @@ function save_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 main_data=get(handles.main_window,'UserData');
 d=main_data.d;
-[fname pname]=uiputfile('*.mat','Save data as...','my_session.txt');
+[fname pname]=uiputfile('*.mat','Save data as...','my_session');
 save(fullfile(pname,fname),'d');
 
 % --- Executes on button press in restore_button.
@@ -154,24 +154,24 @@ for i=1:length(d.slbls)
     ct_dat{i,2}=d.slbls{i};
     ct_dat{i,3}=sum(d.counts(:,i));
     ct_dat{i,4}=nnz(d.counts(:,i));
-    ct_dat{i,5}=d.simpson(i);
-    ct_dat{i,6}=d.preseq(i);
-    ct_dat{i,7}=d.turing(i);
-    ct_dat{i,8}=d.lorenz(i);
-    ct_dat{i,9}=d.pareto(i);
-    ct_dat{i,11}=d.preseq_mar(i);
+    if isfield(d,'simpson')&&~isempty(d.simpson),ct_dat{i,5}=d.simpson(i);end
+    if isfield(d,'preseq')&&~isempty(d.preseq),ct_dat{i,6}=d.preseq(i);end
+    if isfield(d,'turing')&&~isempty(d.turing),ct_dat{i,7}=d.turing(i);end
+    if isfield(d,'lorenz')&&~isempty(d.lorenz),ct_dat{i,8}=d.lorenz(i);end
+    if isfield(d,'pareto')&&~isempty(d.simpson),ct_dat{i,9}=d.pareto(i);end
+    if isfield(d,'preseq_mar')&&~isempty(d.preseq_mar),ct_dat{i,11}=d.preseq_mar(i);end
 end
 set(handles.cell_table,'Data',ct_dat);
 m=get(handles.disp_table,'Data');
 m{1}=d.slbls{1};
 m{2}=sum(d.counts(:,1));
 m{3}=nnz(d.counts(:,1));
-m{4}=d.simpson(1);
-m{5}=d.preseq(1);
-m{6}=d.turing(1);
-m{7}=d.lorenz(1);
-m{8}=d.pareto(1);
-m{9}=d.preseq_mar(1);
+if isfield(d,'simpson')&&~isempty(d.simpson),m{4}=d.simpson(1);end
+if isfield(d,'preseq')&&~isempty(d.preseq),m{5}=d.preseq(1);end
+if isfield(d,'turing')&&~isempty(d.turing),m{6}=d.turing(1);end
+if isfield(d,'lorenz')&&~isempty(d.lorenz),m{7}=d.lorenz(1);end
+if isfield(d,'pareto')&&~isempty(d.simpson),m{8}=d.pareto(1);end
+if isfield(d,'preseq_mar')&&~isempty(d.preseq_mar),m{9}=d.preseq_mar(1);end
 set(handles.disp_table,'Data',m);
 
 
@@ -242,7 +242,8 @@ h=waitbar(0.5,'identifying outliers');
 %compute lorenz outlier detection
 [~,sf,~,lorenzh,pval,sidx,cxi,bak_idx]=normalize_samples(d.counts,[],1,d.slbls);
 waitbar(1,h,'done');
-d.lorenz=pval;d.lorenzh=lorenzh;d.sf=sf;d.bak_idx=bak_idx;
+[~,q]=mafdr(pval);
+d.lorenz=q;d.lorenzh=lorenzh;d.sf=sf;d.bak_idx=bak_idx;
 delete(h);
 figure
 set(gcf,'color','w');
@@ -414,16 +415,118 @@ catch me
     alert('String',['Error opening ' fullfile(pname,fname)]);
     return;
 end
-fprintf(f,'ID\tFragments\tGenes_tagged\tSimpson_diversity\tPRESEQ_coverage\tTuring_coverage\tLorenz_outlier_test\tPareto_rank\tMarginal_return\n');
-for i=1:d.slbls
-    fprintf(f,'%s\t',d.slbls{i});
-    fprintf(f,'%i\t',sum(d.counts(:,i)));
-    fprintf(f,'%i\t',nnz(d.counts(:,i)));
-    fprintf(f,'%g\t',d.simpson(i));
-    fprintf(f,'%g\t',d.preseq(i));
-    fprintf(f,'%g\t',d.turing(i));
-    fprintf(f,'%g\t',d.lorenz(i));
-    fprintf(f,'%g\t',d.pareto(i));
-    fprintf(f,'%g\n',d.preseq_mar(i));
+if ~isfield(d,'mapped')
+    fprintf(f,'ID\tTag_count\tGenes_tagged\tSimpson_diversity\tPRESEQ_coverage\tTuring_coverage\tLorenz_outlier_test\tOutlier_PASS-FAIL\tMarginal_return\n');
+    for i=1:length(d.slbls)
+        fprintf(f,'%s\t',d.slbls{i});
+        fprintf(f,'%i\t',sum(d.counts(:,i)));
+        fprintf(f,'%i\t',nnz(d.counts(:,i)));
+        fprintf(f,'%g\t',d.simpson(i));
+        fprintf(f,'%g\t',d.preseq(i));
+        fprintf(f,'%g\t',d.turing(i));
+        fprintf(f,'%g\t',d.lorenz(i));
+        if d.lorenz(i)<0.05,fprintf(f,'FAIL\t');else,fprintf(f,'PASS\t');end
+        fprintf(f,'%g\n',d.preseq_mar(i));
+    end
+    fclose(f);
+else
+    fprintf(f,'ID\tReads_mapped\tReads_unmapped\tMapping_rate\tTag_count\tGenes_tagged\tSimpson_diversity\tPRESEQ_coverage\tTuring_coverage\tLorenz_outlier_test\tOutlier_PASS-FAIL\tMarginal_return\n');
+    for i=1:length(d.slbls)
+        fprintf(f,'%s\t',d.slbls{i});
+        fprintf(f,'%i\t',d.mapped(i));
+        fprintf(f,'%i\t',d.unmapped(i));
+        fprintf(f,'%g\t',d.mapped(i)/(d.mapped(i)+d.unmapped(i)));
+        fprintf(f,'%i\t',sum(d.counts(:,i)));
+        fprintf(f,'%i\t',nnz(d.counts(:,i)));
+        fprintf(f,'%g\t',d.simpson(i));
+        fprintf(f,'%g\t',d.preseq(i));
+        fprintf(f,'%g\t',d.turing(i));
+        fprintf(f,'%g\t',d.lorenz(i));
+        if d.lorenz(i)<0.05,fprintf(f,'FAIL\t');else,fprintf(f,'PASS\t');end
+        fprintf(f,'%g\n',d.preseq_mar(i));
+    end
+    fclose(f);
 end
-fclose(f);
+
+
+% --- Executes on selection change in filter_menu.
+function filter_menu_Callback(hObject, eventdata, handles)
+% hObject    handle to filter_menu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns filter_menu contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from filter_menu
+
+
+% --- Executes during object creation, after setting all properties.
+function filter_menu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to filter_menu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+    set(hObject,'String',{'Lorenz','PRESEQ'});
+    set(hObject,'Value',1);
+end
+
+
+
+function filter_edit_Callback(hObject, eventdata, handles)
+% hObject    handle to filter_edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of filter_edit as text
+%        str2double(get(hObject,'String')) returns contents of filter_edit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function filter_edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to filter_edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in filter_button.
+function filter_button_Callback(hObject, eventdata, handles)
+% hObject    handle to filter_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+main_data=get(handles.main_window,'UserData');
+d=main_data.d;
+thr=str2num(get(handles.filter_edit,'String'));
+if isempty(thr), alert('title','Error...','String','Enter a numeric threshold'); end
+ct_dat=get(handles.cell_table,'Data');
+fltr_str=get(handles.filter_menu,'String');
+fltr_str=fltr_str{get(handles.filter_menu,'Value')};
+switch fltr_str
+    case 'Lorenz'
+        x=d.lorenz; %threshold on Lorenz p-value
+        f=@gt; %threshold less than thr
+    case 'PRESEQ'
+end
+for i=1:size(ct_dat,1)
+    t=find(strcmp(ct_dat{i,2},d.slbls));
+    if f(x(t),thr)
+        ct_dat{i,1}=true;
+        d.cidx(t)=1;
+    else
+        ct_dat{i,1}=false;
+        d.cidx(t)=0;
+    end
+end
+main_data.d=d;
+set(handles.main_window,'UserData',main_data);
+set(handles.cell_table,'Data',ct_dat);
+        
