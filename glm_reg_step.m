@@ -42,17 +42,20 @@ Y=d.counts(d.gidx,:)';
 var_tot=zeros(size(Y,1),1);
 VE=zeros(length(fac_idx),size(Y,2));
 R=zeros(size(Y));
-parfor i=1:size(Y,2)
+for i=1:size(Y,2)
     mdl=fitglm(X,Y(:,i),'linear','Distribution','poisson','DispersionFlag',true,'Offset',log(d.sf));
     R(:,i)=exp(mdl.Residuals.LinearPredictor);
-    var_tot(i)=mdl.Rsquared.Adjusted;
+    var_tot(i)=mdl.Rsquared.AdjGeneralized;
     vt=zeros(length(fac_idx),1);
     for j=length(fac_idx):-1:2
-        terms=[0,zeros(1,sum(fac_lens(1:j)))];
-        terms((sum(fac_lens(1:(j-1)))+2):end)=1;
+        terms=['x' num2str(sum(fac_lens(1:(j-1)))+1)];
+        for k=(sum(fac_lens(1:(j-1)))+2):sum(fac_lens(1:j))
+            terms=[terms '+x' num2str(k)];
+        end
+        keyboard()
         mdl=removeTerms(mdl,terms);
-        vt(j)=var_tot(i)-mdl.Rsquared.Adjusted;
-        var_tot(i)=var_tot(i)-mdl.Rsquared.Adjusted;
+        vt(j)=var_tot(i)-mdl.Rsquared.AdjGeneralized;
+        var_tot(i)=var_tot(i)-mdl.Rsquared.AdjGeneralized;
     end
     vt(1)=var_tot(i);
     VE(:,i)=vt;

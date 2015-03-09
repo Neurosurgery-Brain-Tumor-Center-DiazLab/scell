@@ -305,8 +305,7 @@ if get(handles.cyclin_checkbox,'Value')
             rotateXLabels(ax,90);
             xlim([0 min(length(cln_scrs),20)+1]);
             %plot the top 20 most correlated genes
-%             gn_crs=mean(corr(X,V)');%correlations between cyclins and gene factors
-%             [gn_scrs,gn_cidx]=sort(abs(gn_crs),'descend');
+
 %             rdn=sum(mean(corr(X,V).^2));
 %             f2=figure;
 %             set(f2,'color','w');
@@ -347,6 +346,7 @@ if get(handles.cyclin_checkbox,'Value')
                 flag=false;
             end
             if flag
+                gn_crs=mean(corr(X,V)');%correlations between cyclins and gene factors
                 fprintf(f,'Gene\tMean_correlation_with_Cyclin-CDKs\tCOV\n');
                 cvs=var(X)./(mean(X).^2);%coefficient of variation
                 [scvs,cvidx]=sort(cvs,'descend');
