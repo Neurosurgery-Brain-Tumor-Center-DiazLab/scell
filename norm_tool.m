@@ -352,7 +352,7 @@ if get(handles.cyclin_checkbox,'Value')
                 [scvs,cvidx]=sort(cvs,'descend');
                 for i=1:length(cvidx)
                     fprintf(f,'%s\t',d.gsymb{d.non_cln_idx(cvidx(i))});
-                    fprintf(f,'%g\t',gn_crs(cvidx(i)));
+                    %fprintf(f,'%g\t',gn_crs(cvidx(i)));
                     fprintf(f,'%g\n',scvs(i));
                 end
                 fclose(f);
@@ -497,14 +497,17 @@ main_data=get(handles.norm_tool_root,'UserData');
 dnew=main_data.d;
 main_window_data=get(main_data.main_window_handle,'UserData');
 d=main_window_data.d;
+d.gidx=dnew.gidx;
 d.iod=dnew.iod;
 d.pnz=dnew.pnz;
 d.iod_fdr=dnew.iod_fdr;
 d.zinf_fdr=dnew.zinf_fdr;
-d.factor_ids=dnew.factor_ids;%string IDs for each factor in the regression model
-d.fac_varexp=dnew.fac_varexp;%vectors of variance explained per gene, per factor
-d.fac_counts=dnew.fac_counts;%matrices of counts, used to generate each factor, stored samples-by-genes
-d.factor=dnew.factor;
+if isfield(dnew,'factor_ids')&&~isempty(dnew.factor_ids)
+    d.factor_ids=dnew.factor_ids;%string IDs for each factor in the regression model
+    d.fac_varexp=dnew.fac_varexp;%vectors of variance explained per gene, per factor
+    d.fac_counts=dnew.fac_counts;%matrices of counts, used to generate each factor, stored samples-by-genes
+    d.factor=dnew.factor;
+end
 main_window_data.d=d;
 set(main_data.main_window_handle,'UserData',main_window_data);
 close(handles.norm_tool_root);
