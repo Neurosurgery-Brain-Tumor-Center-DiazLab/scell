@@ -299,7 +299,7 @@ else
     zinf_fdr_cut=t;
 end
 pl_iod=log(d.iod)/max(log(d.iod));
-idx1=find(d.iod_fdr<iod_fdr_cut&d.zinf_fdr>=zinf_fdr_cut|pl_iod>=(1-iod_cut)|d.pnz>=pnz_cut);
+idx1=find(d.iod_fdr<iod_fdr_cut&d.zinf_fdr>=zinf_fdr_cut|(pl_iod>=(1-iod_cut)&d.pnz>=pnz_cut));
 idx2=setdiff(1:length(pl_iod),idx1);
 gidx=cell(length(pl_iod),1);
 for i=1:length(idx1),gidx{idx1(i)}='Above thresholds';end

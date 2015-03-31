@@ -101,7 +101,7 @@ if show_plt
     xlabel('% of genome','FontSize',18);
     if exist('h2','var')
         legend([h1;h2;h3;h4],{'Acceptable quality','Low quality','Poisson noise','Geometric mean'},'Location','NorthWest');
-    else
+    elseif exist('h1','var')
         legend([h1;h3;h4],{'Acceptable quality','Poisson noise','Geometric mean'},'Location','NorthWest');
     end
 end

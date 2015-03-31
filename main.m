@@ -22,7 +22,7 @@ function varargout = main(varargin)
 
 % Edit the above text to modify the response to help main
 
-% Last Modified by GUIDE v2.5 07-Mar-2015 14:24:10
+% Last Modified by GUIDE v2.5 27-Mar-2015 16:54:32
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -107,10 +107,19 @@ else
     else
         d=load_counts(fullfile(pname,fname),'hum','ct');
     end
+    load name_chg.mat
+    for i=1:length(d.slbls)
+        t=find(strcmp(d.slbls{i},name_chg.old));
+        if isempty(t), keyboard(), end
+        d.slbls{i}=name_chg.new{t};
+    end
     d.qc=false;
     d.cidx=ones(size(d.slbls));%index of cells to include in analysis
     d.gidx=ones(size(d.gsymb));%index of genes to include in analysis
     d.ctype=cell(size(d.gsymb));
+    d.mapped=ones(size(d.slbls));%mapped reads
+    d.unmapped=ones(size(d.slbls));%unmapped reads
+    d.ld_call=cell(size(d.slbls));%live-dead call string
     for i=1:length(d.ctype),d.ctype{i}='';end
     main_data.d=d;
 end
@@ -120,7 +129,7 @@ for i=1:length(d.slbls)
     ct_dat{i,1}=true;
     ct_dat{i,2}=d.slbls{i};
     ct_dat{i,3}=sum(d.counts(:,i));
-    ct_dat{i,4}=nnz(d.counts(:,i));
+    ct_dat{i,7}=nnz(d.counts(:,i));
 end
 set(handles.cell_table,'Data',ct_dat);
 delete(h)
@@ -153,13 +162,13 @@ for i=1:length(d.slbls)
     ct_dat{i,1}=true;
     ct_dat{i,2}=d.slbls{i};
     ct_dat{i,3}=sum(d.counts(:,i));
-    ct_dat{i,4}=nnz(d.counts(:,i));
-    if isfield(d,'simpson')&&~isempty(d.simpson),ct_dat{i,5}=d.simpson(i);end
-    if isfield(d,'preseq')&&~isempty(d.preseq),ct_dat{i,6}=d.preseq(i);end
-    if isfield(d,'turing')&&~isempty(d.turing),ct_dat{i,7}=d.turing(i);end
-    if isfield(d,'lorenz')&&~isempty(d.lorenz),ct_dat{i,8}=d.lorenz(i);end
-    if isfield(d,'pareto')&&~isempty(d.simpson),ct_dat{i,9}=d.pareto(i);end
-    if isfield(d,'preseq_mar')&&~isempty(d.preseq_mar),ct_dat{i,11}=d.preseq_mar(i);end
+    ct_dat{i,7}=nnz(d.counts(:,i));
+    if isfield(d,'simpson')&&~isempty(d.simpson),ct_dat{i,8}=d.simpson(i);end
+    if isfield(d,'preseq')&&~isempty(d.preseq),ct_dat{i,9}=d.preseq(i);end
+    if isfield(d,'turing')&&~isempty(d.turing),ct_dat{i,10}=d.turing(i);end
+    if isfield(d,'lorenz')&&~isempty(d.lorenz),ct_dat{i,11}=d.lorenz(i);end
+    if isfield(d,'pareto')&&~isempty(d.simpson),ct_dat{i,12}=d.pareto(i);end
+    if isfield(d,'preseq_mar')&&~isempty(d.preseq_mar),ct_dat{i,14}=d.preseq_mar(i);end
 end
 set(handles.cell_table,'Data',ct_dat);
 m=get(handles.disp_table,'Data');
@@ -277,12 +286,12 @@ set(handles.main_window,'UserData',main_data);
 %update sample list
 ct_dat=get(handles.cell_table,'Data');
 for i=1:length(d.slbls)
-    ct_dat{i,5}=d.simpson(i);
-    ct_dat{i,6}=d.preseq(i);
-    ct_dat{i,7}=d.turing(i);
-    ct_dat{i,8}=d.lorenz(i);
-    ct_dat{i,9}=d.pareto(i);
-    ct_dat{i,11}=d.preseq_mar(i);
+    ct_dat{i,8}=d.simpson(i);
+    ct_dat{i,9}=d.preseq(i);
+    ct_dat{i,10}=d.turing(i);
+    ct_dat{i,11}=d.lorenz(i);
+    ct_dat{i,12}=d.pareto(i);
+    ct_dat{i,14}=d.preseq_mar(i);
 end
 set(handles.cell_table,'Data',ct_dat);
 m=get(handles.disp_table,'Data');
@@ -430,12 +439,13 @@ if ~isfield(d,'mapped')
     end
     fclose(f);
 else
-    fprintf(f,'ID\tReads_mapped\tReads_unmapped\tMapping_rate\tTag_count\tGenes_tagged\tSimpson_diversity\tPRESEQ_coverage\tTuring_coverage\tLorenz_outlier_test\tOutlier_PASS-FAIL\tMarginal_return\n');
+    fprintf(f,'ID\tReads_mapped\tReads_unmapped\tMapping_rate\tLive-dead_call\tTag_count\tGenes_tagged\tSimpson_diversity\tPRESEQ_coverage\tTuring_coverage\tLorenz_outlier_test\tOutlier_PASS-FAIL\tMarginal_return\n');
     for i=1:length(d.slbls)
         fprintf(f,'%s\t',d.slbls{i});
         fprintf(f,'%i\t',d.mapped(i));
         fprintf(f,'%i\t',d.unmapped(i));
         fprintf(f,'%g\t',d.mapped(i)/(d.mapped(i)+d.unmapped(i)));
+        fprintf(f,'%s\t',d.ld_call{i});
         fprintf(f,'%i\t',sum(d.counts(:,i)));
         fprintf(f,'%i\t',nnz(d.counts(:,i)));
         fprintf(f,'%g\t',d.simpson(i));
@@ -530,3 +540,46 @@ main_data.d=d;
 set(handles.main_window,'UserData',main_data);
 set(handles.cell_table,'Data',ct_dat);
         
+
+
+% --- Executes on button press in load_meta_button.
+function load_meta_button_Callback(hObject, eventdata, handles)
+% hObject    handle to load_meta_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+main_data=get(handles.main_window,'UserData');
+d=main_data.d;
+if ~isfield(main_data,'last_dir')
+    [fname, pname]=uigetfile('*.*','Select meta-data file...');
+else
+    [fname, pname]=uigetfile([main_data.last_dir,'*.*'],'Select meta-data file...');
+end
+if ~isstr(fname),return;
+else
+    main_data.last_dir=pname;
+    set(handles.main_window,'UserData',main_data);
+    h=waitbar(.5,['Loading ' strrep(fname,'_','\_')]);
+    f=fopen(fullfile(pname,fname));
+    D=textscan(f,'%s%n%n%s','HeaderLines',1,'Delimiter',char(9));
+    not_found={};
+    for i=1:length(D{1})
+        t=find(strcmp(D{1}{i},d.slbls));
+        if isempty(t)
+            not_found{end+1}=D{1}{i};
+            continue;
+        end
+        d.mapped(t)=D{2}(i);
+        d.unmapped(t)=D{3}(i);
+        d.ld_call{t}=D{4}{i};
+    end 
+    main_data.d=d;
+end
+set(handles.main_window,'UserData',main_data);
+ct_dat=get(handles.cell_table,'Data');
+for i=1:length(d.slbls)
+    ct_dat{i,4}=d.mapped(i);
+    ct_dat{i,5}=d.unmapped(i);
+    ct_dat{i,6}=d.ld_call{i};
+end
+set(handles.cell_table,'Data',ct_dat);
+delete(h)

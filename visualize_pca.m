@@ -15,7 +15,7 @@ function [coeff,score,tsq,explained]=visualize_pca(nS,U,pca_ax,gn_ax,pcs)
 %     tsq : Hotelling's t-square statistic
 %     explained : is variance explained
 
-[coeff,score,latent,tsq,explained]=pca(nS);
+[coeff,score,latent,tsq,explained]=pca(nS');
 gstr=cell(length(U),1);
 for i=1:length(U)
     if U(i)<0, gstr{i}='Not clustered';
@@ -25,18 +25,20 @@ bm=brewermap(7,'Dark2');
 %plot the pca scores
 axes(pca_ax);
 if U==-1
-    scatter(coeff(:,pcs(1)),coeff(:,pcs(2))),
+    scatter(score(:,pcs(1)),score(:,pcs(2))),
 else
-    gscatter(coeff(:,pcs(1)),coeff(:,pcs(2)),U,bm,'o',10);
+    gscatter(score(:,pcs(1)),score(:,pcs(2)),U,bm,'o',10);
 end
-xlabel(['PCA' num2str(pcs(1)) ': ' num2str(explained(pcs(1))) '% of variance explained.'],'FontSize',20);
-ylabel(['PCA' num2str(pcs(2)) ': ' num2str(explained(pcs(2))) '% of variance explained.'],'FontSize',20);
-title('PCA','FontSize',24);
+xlabel(['PCA' num2str(pcs(1)) ': ' num2str(explained(pcs(1))) '% of variance explained.'],'FontSize',18);
+ylabel(['PCA' num2str(pcs(2)) ': ' num2str(explained(pcs(2))) '% of variance explained.'],'FontSize',18);
+title('PCA sample scores','FontSize',18);
 axis tight;
+set(gcf,'color','w');
 %plot the gene loadings
 axes(gn_ax)
-scatter(score(:,pcs(1)),score(:,pcs(2)));
-xlabel(['PCA' num2str(pcs(1))],'FontSize',10);
-ylabel(['PCA' num2str(pcs(2))],'FontSize',10);
-title('PCA','FontSize',24);
+scatter(coeff(:,pcs(1)),coeff(:,pcs(2)));
+xlabel(['PCA' num2str(pcs(1))],'FontSize',18);
+ylabel(['PCA' num2str(pcs(2))],'FontSize',18);
+title('Gene loadings','FontSize',18);
 axis tight;
+set(gcf,'color','w');
