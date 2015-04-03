@@ -56,7 +56,7 @@ parfor i=1:m
     [lmbda(i),fval]=fminunc(@(x) abs(sum(y.*(y-1)./(x*(yb-y)+yb*y))-n),mean(y),options);
     zinf_stat(i)=(num0(i)*exp(lmbda(i))-n)^2/(n*exp(lmbda(i))-n-n*lmbda(i)*(lmbda(i)+2)/2);
 end
-zinfp=chi2cdf(zinf_stat,1,'upper');%score test for more zeros than expected under a Poisson model
+zinfp=chi2cdf(zinf_stat,1,'upper');%score test for more zeros than expected under a generalized Poisson model
 zinfp(pnz==1)=1;
 zinfp(pnz==0)=0;
 %[~,q]=mafdr(zinfp);%control for false discovery

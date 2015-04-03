@@ -290,9 +290,9 @@ if get(handles.cyclin_checkbox,'Value')
             d.factor{end+1}=V;
             d.cyclinU=U;d.cyclinV=V;
             %plot the top 20 most correlated Cyclins
-            cln_crs=mean(corr(U,Y)');%correlations between cyclins and gene factors
+            cln_crs=nanmean(corr(U,Y)');%correlations between cyclins and gene factors
             [cln_scrs,cln_cidx]=sort(abs(cln_crs),'descend');
-            rdn=sum(mean(corr(X,V).^2));
+            rdn=sum(nanmean(corr(X,V).^2));
             f1=figure;
             set(f1,'color','w');
             ax=gca;
@@ -346,14 +346,11 @@ if get(handles.cyclin_checkbox,'Value')
                 flag=false;
             end
             if flag
-                gn_crs=mean(corr(X,V)');%correlations between cyclins and gene factors
-                fprintf(f,'Gene\tMean_correlation_with_Cyclin-CDKs\tCOV\n');
-                cvs=var(X)./(mean(X).^2);%coefficient of variation
-                [scvs,cvidx]=sort(cvs,'descend');
-                for i=1:length(cvidx)
-                    fprintf(f,'%s\t',d.gsymb{d.non_cln_idx(cvidx(i))});
-                    %fprintf(f,'%g\t',gn_crs(cvidx(i)));
-                    fprintf(f,'%g\n',scvs(i));
+                gn_crs=nanmean(corr(X,V)');%correlations between cyclins and gene factors
+                fprintf(f,'Gene\tMean_correlation_with_Cyclin-CDKs\n');
+                for i=1:length(d.non_cln_idx)
+                    fprintf(f,'%s\t',d.gsymb{d.non_cln_idx(i)});
+                    fprintf(f,'%g\n',gn_crs(i));
                 end
                 fclose(f);
             end
