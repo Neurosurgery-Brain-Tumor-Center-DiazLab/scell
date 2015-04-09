@@ -270,7 +270,7 @@ waitbar(0.5,h,'Processing factors');
 %cyclins/CDKs
 if get(handles.cyclin_checkbox,'Value')
     if ~any(strcmp(d.factor_ids,'Cyclins'))
-        load cyclins.mat;
+        load cyclins2.mat;
         tgidx1=[];%find the cyclin/CDKs in the list, and in chosen gene panel
         for i=1:length(cln_gns)
             t=min(find(strcmpi(cln_gns{i},d.gsymb)));
@@ -331,6 +331,7 @@ if get(handles.cyclin_checkbox,'Value')
             if flag
                 fprintf(f,'Cyclin-CDK\tMean_correlation\n');
                 for i=1:length(cln_cidx)
+                    if isnan(cln_crs(cln_cidx(i))), continue;end
                     fprintf(f,'%s\t',d.gsymb{d.cyclin_idx(cln_cidx(i))});
                     fprintf(f,'%g\n',cln_crs(cln_cidx(i)));
                 end
@@ -349,6 +350,7 @@ if get(handles.cyclin_checkbox,'Value')
                 gn_crs=nanmean(corr(X,V)');%correlations between cyclins and gene factors
                 fprintf(f,'Gene\tMean_correlation_with_Cyclin-CDKs\n');
                 for i=1:length(d.non_cln_idx)
+                    if isnan(gn_crs(i)), continue;end
                     fprintf(f,'%s\t',d.gsymb{d.non_cln_idx(i)});
                     fprintf(f,'%g\n',gn_crs(i));
                 end

@@ -107,12 +107,12 @@ else
     else
         d=load_counts(fullfile(pname,fname),'hum','ct');
     end
-    load name_chg.mat
-    for i=1:length(d.slbls)
-        t=find(strcmp(d.slbls{i},name_chg.old));
-        if isempty(t), keyboard(), end
-        d.slbls{i}=name_chg.new{t};
-    end
+%     load name_chg.mat
+%     for i=1:length(d.slbls)
+%         t=find(strcmp(d.slbls{i},name_chg.old));
+%         if isempty(t), keyboard(), end
+%         d.slbls{i}=name_chg.new{t};
+%     end
     d.qc=false;
     d.cidx=ones(size(d.slbls));%index of cells to include in analysis
     d.gidx=ones(size(d.gsymb));%index of genes to include in analysis
