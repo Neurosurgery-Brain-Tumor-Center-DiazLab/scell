@@ -41,7 +41,8 @@ if strcmp(typ,'fc')
         t=D{i}{1};
         idx=strfind(t,'/');
         if ~isempty(idx)
-            d.slbls{i}=t(idx(end-1)+1:idx(end)-1);
+            ts=textscan(t(idx(end-1)+1:idx(end)-1),'Sample_%s');
+            d.slbls{i}=ts{1}{1};
         else
             d.slbls{i}=t;
         end
