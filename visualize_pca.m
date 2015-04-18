@@ -21,14 +21,14 @@ for i=1:length(U)
     if U(i)<0, gstr{i}='Not clustered';
     else, gstr{i}=['Cluster ' num2str(i)];end
 end
-bm=brewermap(7,'Dark2');
+bm=brewermap(8,'Accent');
 %plot the pca scores
 axes(pca_ax);
 if U==-1
     scatter(score(:,pcs(1)),score(:,pcs(2))),
 else
     pcs(1),pcs(2)
-    gscatter(score(:,pcs(1)),score(:,pcs(2)),U,bm,'o',10);
+    gscatter(score(:,pcs(1)),score(:,pcs(2)),U,bm,'.',20);
 end
 xlabel(['PCA' num2str(pcs(1)) ': ' num2str(explained(pcs(1))) '% of variance explained.'],'FontSize',18);
 ylabel(['PCA' num2str(pcs(2)) ': ' num2str(explained(pcs(2))) '% of variance explained.'],'FontSize',18);

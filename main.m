@@ -235,8 +235,10 @@ if comp_preseq
             D=textscan(result,'%n%n%n%n','Headerlines',1);
             if ~isempty(D)&&~isempty(D{2})
                 D=D{2};
-                preseq_mar(i)=D(3)-D(2);
-                preseq(i)=nnz(counts(:,i))/median(D(floor(length(D)*.75):end));
+                if numel(D)>2
+                    preseq_mar(i)=D(3)-D(2);
+                    preseq(i)=nnz(counts(:,i))/median(D(floor(length(D)*.75):end));
+                end
             end
         end
         fclose(f);
