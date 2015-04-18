@@ -28,7 +28,7 @@ if U==-1
     scatter(score(:,pcs(1)),score(:,pcs(2))),
 else
     pcs(1),pcs(2)
-    gscatter(score(:,pcs(1)),score(:,pcs(2)),U,bm,'o',10);
+    gscatter(score(:,pcs(1)),score(:,pcs(2)),U,bm,'.',20);
 end
 xlabel(['PCA' num2str(pcs(1)) ': ' num2str(explained(pcs(1))) '% of variance explained.'],'FontSize',18);
 ylabel(['PCA' num2str(pcs(2)) ': ' num2str(explained(pcs(2))) '% of variance explained.'],'FontSize',18);
