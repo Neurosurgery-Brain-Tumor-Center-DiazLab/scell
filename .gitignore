@@ -8,3 +8,5 @@ preseq
 old_analysis
 oRG_paper
 analysis*
+*.orig
+comp_*R
