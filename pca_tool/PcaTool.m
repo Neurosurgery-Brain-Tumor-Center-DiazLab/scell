@@ -2,7 +2,7 @@ classdef PcaTool < GuiBase
   %PCATOOL PCA tool
   %   Detailed explanation goes here
   
-  properties
+  properties (GetAccess = public, SetAccess = private)
     pcaFig
     scoreFig
     featureFig
@@ -57,15 +57,15 @@ classdef PcaTool < GuiBase
     function createScatterPlots(self)
     % Creates scatter plot windows
       % pca scores
-      fig = figure;
-      set(fig, 'Name', 'Scores', 'CloseRequestFcn', ...
-        @self.saveSettingsAndQuit);
-      self.scoreFig = fig;
-      % feature loadings
-      fig = figure;
-      set(fig, 'Name', 'Loadings', 'CloseRequestFcn', ...
-        @self.saveSettingsAndQuit);      
-      self.featureFig = fig;
+%       fig = figure;
+%       set(fig, 'Name', 'Scores', 'CloseRequestFcn', ...
+%         @self.saveSettingsAndQuit);
+%       self.scoreFig = fig;
+%       % feature loadings
+%       fig = figure;
+%       set(fig, 'Name', 'Loadings', 'CloseRequestFcn', ...
+%         @self.saveSettingsAndQuit);      
+%       self.featureFig = fig;
     end
     
     function saveSettings(self)
