@@ -22,7 +22,7 @@ function varargout = pca_tool2(varargin)
 
 % Edit the above text to modify the response to help pca_tool2
 
-% Last Modified by GUIDE v2.5 03-May-2015 15:30:52
+% Last Modified by GUIDE v2.5 14-May-2015 10:29:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -91,3 +91,17 @@ function pareto_plt_gui_root_CloseRequestFcn(hObject, eventdata, handles)
 
 % Hint: delete(hObject) closes the figure
 delete(hObject);
+
+
+% --- Executes on button press in findGeneButtonH.
+function findGeneButtonH_Callback(hObject, eventdata, handles)
+% hObject    handle to findGeneButtonH (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in refreshPcaButtonH.
+function refreshPcaButtonH_Callback(hObject, eventdata, handles)
+% hObject    handle to refreshPcaButtonH (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

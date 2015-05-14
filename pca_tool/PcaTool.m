@@ -1,101 +1,104 @@
-classdef PcaTool < GuiBase
-  %PCATOOL PCA tool
+classdef PcaTool < GuiBase & MObject
+  %PCATOOL Pca tool GUI
   %   Detailed explanation goes here
   
-  properties (GetAccess = public, SetAccess = private)
-    pcaFig
-    scoreFig
-    featureFig
+properties (GetAccess = public, SetAccess = private)
+  mainH % GUI figure
+  scores % scores ScatterSelect
+  loadings % loadings ScatterSelect  
+  pm % Presentation model
+end
+
+properties (Constant)
+  settingsFile = 'settings.mat'
+end
+
+methods
+  function self = PcaTool(computeObj)
+  % computeObj is an object derived from PcaComputeBase
+    self@MObject();
+    self@GuiBase();    
+    p = PcaToolPM(computeObj);
+    p.connectMe('all_changed', @self.refresh);
+    self.pm = p;
   end
-  
-  properties (Constant)
-    settingsFile = 'settings.mat'
-    figHandles = {'pcaFig', 'scoreFig', 'featureFig'};
-  end
-  
-  methods
-    function self = PcaTool()
-      self@GuiBase();
-    end
-    
-    function show(self)
-      if ishandle(self.pcaFig)
-        set(self.pcaFig, 'Visible', 'on');
-      else
-        self.registerCallbacks();
-        fig = pca_tool2();
-        % save callbacks
-        handles = guidata(fig);
-        handles.n = {self};
-        guidata(fig, handles);
-        self.pcaFig = fig;
-        self.createScatterPlots();
-        self.loadSettings();
-      end
-    end
-    
-    %*** Callbacks from GUI
-    function pareto_plt_gui_root_CloseRequestFcn(self)
-      self.saveSettingsAndQuit();
-    end
-    
-    %*** Other callbacks
-    function saveSettingsAndQuit(self, varargin)
-      self.saveSettings();
-      % Delete all figs
-      for nn = PcaTool.figHandles
-        n = nn{1};
-        if ishandle(self.(n))
-          delete(self.(n));
-        end
-      end
+
+  function show(self)
+    if ishandle(self.mainH)
+      set(self.mainH, 'Visible', 'on');
+    else
+      self.registerCallbacks();
+      fig = pca_tool2();
+      set(fig, 'CloserequestFcn', @self.saveSettingsAndQuit);
+      % save callbacks
+      handles = guidata(fig);
+      handles.n = {self};
+      guidata(fig, handles);
+      self.mainH = fig;
+      self.createScatterPlots();
+      self.loadSettings();
+      self.loadings.show();
+      self.scores.show();
     end
   end
-  
-  %*** Private implementation related stuff
-  methods (Access = private)
-    function createScatterPlots(self)
-    % Creates scatter plot windows
-      % pca scores
-%       fig = figure;
-%       set(fig, 'Name', 'Scores', 'CloseRequestFcn', ...
-%         @self.saveSettingsAndQuit);
-%       self.scoreFig = fig;
-%       % feature loadings
-%       fig = figure;
-%       set(fig, 'Name', 'Loadings', 'CloseRequestFcn', ...
-%         @self.saveSettingsAndQuit);      
-%       self.featureFig = fig;
-    end
-    
-    function saveSettings(self)
-    % Save settings, e.g, figure locations, etc., when closing the tool    
-      settings = struct;      
-      for i = 1:length(PcaTool.figHandles)
-        n = PcaTool.figHandles{i};
-        if ishandle(self.(n))
-          settings.(n).outerPosition = get(self.(n), 'OuterPosition');
-        end
-      end
-      save(PcaTool.settingsFile, 'settings')
-    end
-    
-    function loadSettings(self)
-    % Load settings when the tool is opened
-    % For some reason, setting the GUI window position does not work
-      if exist(PcaTool.settingsFile, 'file')
-        tmp = load(PcaTool.settingsFile);
-        settings = tmp.settings;
-        fn = fieldnames(settings);
-        for i = 1:length(fn)
-          n = fn{i};
-          if ishandle(self.(n))
-            set(self.(n), 'OuterPosition', settings.(n).outerPosition);
-          end
-        end
-      end
-    end
+
+  function refresh(self)
+    disp('ok')
   end
   
+  %*** Callbacks from GUI objects defined in GUIDE
+  function refreshPcaButtonH_Callback(self, varargin)
+    pm.updateCurrentPca();
+  end
+
+  %*** Other callbacks
+  function saveSettingsAndQuit(self, varargin)
+    self.saveSettings();
+    % Delete all figs
+    self.loadings.closeFigure();
+    self.scores.closeFigure();
+    delete(self.mainH);
+  end
+end
+
+%*** Private implementation related stuff
+methods (Access = private)
+  function createScatterPlots(self)
+  % Creates scatter plot windows
+    % pca scores
+    s = ScatterSelect();
+    s.title = 'PCA scores';
+    s.closeFcn = @self.saveSettingsAndQuit;
+    self.scores = s;
+    % pca loadings
+    s = ScatterSelect();
+    s.title = 'PCA loadings';
+    s.closeFcn = @self.saveSettingsAndQuit;
+    self.loadings = s;
+  end
+
+  function saveSettings(self)
+  % Save settings, e.g, figure locations, etc., when closing the tool    
+    settings = struct;      
+    settings.main = get(self.mainH, 'Position');
+    settings.loadings = self.loadings.getSettings();
+    settings.scores = self.scores.getSettings();
+    settings.pm = self.pm.getSettings();
+    save(PcaTool.settingsFile, 'settings');
+  end
+
+  function loadSettings(self)
+  % Load settings when the tool is opened
+  % For some reason, setting the GUI window position does not work
+    if exist(PcaTool.settingsFile, 'file')
+      tmp = load(PcaTool.settingsFile);
+      settings = tmp.settings;
+      set(self.mainH, 'Position', settings.main);
+      self.loadings.changeToSettings(settings.loadings);
+      self.scores.changeToSettings(settings.scores);
+      self.pm.changeToSettings(settings.pm);
+    end
+  end  
+end
 end
 
