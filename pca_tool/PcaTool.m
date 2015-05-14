@@ -7,6 +7,8 @@ properties (GetAccess = public, SetAccess = private)
   scores % scores ScatterSelect
   loadings % loadings ScatterSelect  
   pm % Presentation model
+  scoresIsIn = false
+  loadingsIsIn = false
 end
 
 properties (Constant)
@@ -26,9 +28,11 @@ methods
   function show(self)
     if ishandle(self.mainH)
       set(self.mainH, 'Visible', 'on');
+      self.registerCallbacks();
     else
       self.registerCallbacks();
       fig = pca_tool2();
+      self.mapUiControls(fig);
       set(fig, 'CloserequestFcn', @self.saveSettingsAndQuit);
       % save callbacks
       handles = guidata(fig);
@@ -43,14 +47,46 @@ methods
   end
 
   function refresh(self)
-    disp('ok')
+    self.refreshPcaButtonH_Callback();    
   end
   
   %*** Callbacks from GUI objects defined in GUIDE
   function refreshPcaButtonH_Callback(self, varargin)
-    pm.updateCurrentPca();
+    self.pm.updateCurrentPca();
+    self.scores.data = self.pm.coefXY;
+    self.loadings.data = self.pm.scoreXY;
   end
 
+  function pcaxEditH_Callback(self, varargin)
+    ind = str2double(get(self.pcaxEditH, 'String'));
+    self.pm.pcaxInd = ind;
+  end
+  
+  function pcayEditH_Callback(self, varargin)
+    ind = str2double(get(self.pcayEditH, 'String'));
+    self.pm.pcayInd = ind;
+  end
+  
+  function clusteringPopupH_Callback(self, varargin)
+    ind = get(self.clusteringPopupH, 'Value');
+    switch ind
+      case 1
+        self.pm.clustering = ClusteringMethod.KMeans;
+      case 2
+        self.pm.clustering = ClusteringMethod.Gaussian;
+      case 3
+        self.pm.clustering = ClusteringMethod.Minkowski;
+      case 4
+        self.pm.clustering = ClusteringMethod.User;        
+      otherwise
+        error('Bug found');
+    end
+  end
+  
+  function clusterCellsButtonH_Callback(self, varargin)
+    
+  end
+  
   %*** Other callbacks
   function saveSettingsAndQuit(self, varargin)
     self.saveSettings();
@@ -69,14 +105,62 @@ methods (Access = private)
     s = ScatterSelect();
     s.title = 'PCA scores';
     s.closeFcn = @self.saveSettingsAndQuit;
+    s.connectMe('is_in', @(x)self.registerIsIn('scores', x));
+    s.connectMe('highlight', @self.updateAnnotationInfo);
     self.scores = s;
     % pca loadings
     s = ScatterSelect();
     s.title = 'PCA loadings';
     s.closeFcn = @self.saveSettingsAndQuit;
+    s.connectMe('is_in', @(x)self.registerIsIn('loadings', x));
+    s.connectMe('highlight', @self.updateAnnotationInfo);
     self.loadings = s;
   end
 
+  function registerIsIn(self, from, isIn)
+    if strcmp(from, 'scores')
+      self.scoresIsIn = isIn;
+    else
+      self.loadingsIsIn = isIn;
+    end
+    if self.scoresIsIn == false && self.loadingsIsIn == false
+      self.updateAnnotationInfo(-1);
+    end
+  end
+  
+  function updateAnnotationInfo(self, ind)
+    self.updateGeneAnnotations(ind);
+    self.updateCellAnnotations(ind);
+  end
+  
+  function updateGeneAnnotations(self, ind)
+    if ind > 0
+       symbolText = self.pm.getAnnotation('symbol_text', ind);
+%        medianText = self.pm.getAnnotation('median_value', ind);
+      medianText = 'todo';
+      dispersionText = num2str(self.pm.getAnnotation(...
+        'dispersion_number', ind));
+    else
+      symbolText = '-';
+      medianText = '-';
+      dispersionText = '-';
+    end
+    set(self.symbolTextH, 'String', symbolText);
+    set(self.medianTextH, 'String', medianText);
+    set(self.dispersionTextH, 'String', dispersionText);
+  end
+  
+  function updateCellAnnotations(self, ind)
+    titleText = 'Cell annotations';
+    if ind > 0
+      titleText = [titleText ' (ID ' num2str(...
+        self.pm.getAnnotation('id_number', ind)) ')'];
+    else
+      
+    end
+    set(self.cellPanelH, 'Title', titleText);
+  end
+  
   function saveSettings(self)
   % Save settings, e.g, figure locations, etc., when closing the tool    
     settings = struct;      

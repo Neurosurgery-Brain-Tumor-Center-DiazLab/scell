@@ -3,9 +3,12 @@ classdef PcaComputeBase < handle & MObject
   %   Detailed explanation goes here
   
 properties (SetAccess = private, GetAccess = public)
+  d
+end
+
+properties (SetAccess = protected, GetAccess = public)
   coeff
   score
-  d
 end
 
 methods

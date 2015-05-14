@@ -3,9 +3,13 @@ classdef PcaToolPM < handle & MObject
   %   Presentation model represent the logical contents of an UI.
   %   See http://martinfowler.com/eaaDev/PresentationModel.html
   
-properties (SetAccess = private, GetAccess = public)
+properties
   pcaxInd % pca x index
   pcayInd % pca y index
+  clustering  % current ClusteringMethod
+end
+  
+properties (SetAccess = private, GetAccess = public)
   compute % PcaComputeBase derived object
   coefXY % current pca axes coeff values 
   scoreXY % current pca axes score values
@@ -21,21 +25,42 @@ methods
   
   function val = defaultSettings(self)
     val.pcaxInd = 1;
-    val.pcayInd = 2;    
+    val.pcayInd = 2;
+    val.clustering = ClusteringMethod.KMeans;
   end
   
   function val = getSettings(self)
     val.pcaxInd = self.pcaxInd;
     val.pcayInd = self.pcayInd;
+    val.clustering = self.clustering;
+  end
+  
+  function val = getAnnotation(self, name, ind)
+    if strcmp(name, 'symbol_text')
+      val = self.compute.d.gsymb{ind};
+    elseif strcmp(name, 'median_number')
+      error('todo');
+    elseif strcmp(name, 'dispersion_number')
+      val = self.compute.d.iod(ind);
+    elseif strcmp(name, 'id_number')
+      val = self.compute.d.ent(ind);      
+    else
+      error('Unknown name %s', name);
+    end
   end
   
   function changeToSettings(self, settings)
     self.pcaxInd = settings.pcaxInd;
     self.pcayInd = settings.pcayInd;
+    self.clustering = settings.clustering;
   end
   
   function updateCurrentPca(self)
-%     self.compute.computePca(
+    self.compute.computePca();
+    self.coefXY = [self.compute.coeff(:,self.pcaxInd) ...
+                    self.compute.coeff(:,self.pcayInd)];
+    self.scoreXY = [self.compute.score(:,self.pcaxInd) ...
+                    self.compute.score(:,self.pcayInd)];                  
   end
   
   function underlyingDataChanged(self)

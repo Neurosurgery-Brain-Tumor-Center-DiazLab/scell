@@ -12,7 +12,7 @@ end
 
 properties (GetAccess = public, SetAccess = private)
   figH     % handle to figure
-  figHAxH  % handle to figure axes
+  figAxH  % handle to figure axes
   scatterH % handle to scatter object
   highH % handle to higlight object
   highInd % index to highlight value
@@ -65,16 +65,16 @@ methods
       start(self.isInTimer);
     else
       f = figure();
+      self.figAxH = gca;
 %       xlim([0 2]);
 %       ylim([0 3]); % debugging
       set(f, 'Units', 'pixels', 'CloseRequestFcn', ...
         @self.windowAboutToClose, 'WindowButtonMotionFcn', ...
         @self.mouseMoved);        
       self.figH = f;
-      self.figHAxH = gca;
       % Keeping the units normalized allows axes to auto resize,
       % strange side effect of setting a property.
-      set(self.figHAxH, 'Unit', 'normalized');
+      set(self.figAxH, 'Unit', 'normalized');
       start(self.isInTimer);
       self.updatePlotToSettings(self.lastSettings);
     end            
@@ -103,7 +103,7 @@ end
 methods (Access = private)
   function windowAboutToClose(self, varargin)
     stop(self.isInTimer);    
-    if isa(self.closeFcn, 'function_handle')
+    if isa(self.closeFcn, 'function_handle')      
       self.closeFcn();
     else 
       delete(self.figH); % debugging
@@ -115,10 +115,11 @@ methods (Access = private)
       % find
       ind = self.closestDataToPointer();
       delete(self.highH);
-      hold on;
-      self.highH = plot(self.figHAxH, self.data(ind,1), self.data(ind,2), ...
+      hold(self.figAxH, 'on');
+      self.highH = plot(self.figAxH, self.data(ind,1), self.data(ind,2), ...
         'Marker', self.symbol, 'Color', self.highColor);
-      hold off;
+      hold(self.figAxH, 'off');
+      self.emit('highlight', ind);
     end
   end
   
@@ -149,8 +150,11 @@ methods (Access = private)
 %       set(self.figH, 'Name', 'Mouse OUT'); %debugging
     else
 %       set(self.figH, 'Name', 'Mouse IN'); %debugging
+    end    
+    if self.isInWindow ~= isIn
+      self.emit('is_in', isIn);
     end
-    self.isInWindow = isIn;    
+    self.isInWindow = isIn;
 %     [x,y]=self.pointerLocInCoord(); % debugging
 %     fprintf('(%f, %f)\n', x, y);    
   end
@@ -158,12 +162,15 @@ methods (Access = private)
   function updatePlot(self)
     if ishandle(self.figH)
       set(self.figH, 'Name', self.title);
-      if isempty(self.data)
-        clf(self.figH);
-      else
-        self.scatterH = scatter(self.figHAxH, self.data(:,1), self.data(:,2));
+      clf(self.figH);
+      self.figAxH = axes('Parent', self.figH);
+      if ~isempty(self.data)
+        self.scatterH = scatter(self.figAxH, self.data(:,1), ...
+          self.data(:,2));
+%         set(self.figAxH, 'XLimMode', 'manual', 'YLimMode', 'manua',...
+%           'ZLimMode', 'manual');
       end
-      drawnow;
+%       drawnow;
     end    
   end  
   
@@ -176,9 +183,9 @@ methods (Access = private)
   function xy = pointerLocInCoord(self)
     pl = get(groot, 'PointerLocation');
     fp = get(self.figH, 'Position');
-    ap = get_in_units(self.figHAxH, 'Position', 'Pixels');
-    xl = xlim(self.figHAxH);
-    yl = ylim(self.figHAxH);
+    ap = get_in_units(self.figAxH, 'Position', 'Pixels');
+    xl = xlim(self.figAxH);
+    yl = ylim(self.figAxH);
     pixToCoordXScale = (xl(2) - xl(1)) / ap(3);
     pixToCoordYScale = (yl(2) - yl(1)) / ap(4);    
     x = (pl(1) - (fp(1) + ap(1))) * pixToCoordXScale;

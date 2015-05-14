@@ -47,12 +47,13 @@ classdef GuiBase < dynamicprops
     
     function mapUiControls(self, parent)
     % Map matching user interface controls under 'parent' to properties 
-    % of this object
-    % 'parent' is usually a figure handle    
+    % of this object 'parent' is usually a figure handle.
+    % Only match handles ending with 'H' to prevent polluting this object
+    % with controls that are not needed.
       children = findall(parent);
       for i=1:length(children)
         tag = get(children(i), 'Tag');
-        if ~isempty(tag)
+        if ~isempty(tag) && tag(end) == 'H'
           if ~isprop(self, tag);
             addprop(self, tag);            
           end      

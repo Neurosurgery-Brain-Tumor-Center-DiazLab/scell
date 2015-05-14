@@ -9,7 +9,7 @@ classdef MObject < handle
   %
   
 properties (GetAccess = public, SetAccess = private)
-  signalToSlot
+  signalToSlots
 end
 
 methods (Static)
@@ -20,38 +20,46 @@ end
 
 methods
   function self = MObject()
-    self.signalToSlot = containers.Map();
+    self.signalToSlots = containers.Map();
   end
 
   function connectMe(self, signal, toFuncH)
-    self.signalToSlot(signal) = toFuncH;
+    if isKey(self.signalToSlots, signal)
+      tmp = self.signalToSlots(signal);
+      self.signalToSlots(signal) = [tmp {toFunch}];
+    else      
+      self.signalToSlots(signal) = {toFuncH};
+    end
+    
   end
   
   function emit(self, signal, varargin)
-    vals = self.signalToSlot(signal);
-    N = length(varargin);
-    for i=1:length(vals)
-      toFuncH = vals(i);          
-      copyArgs = cell(N,1);
-      for j=1:N
-        obj = varargin{j};
-        if isa(obj, 'handle')
-          copyArgs{j} = copy(obj);
-        else
-          copyArgs{j} = obj;
+    if isKey(self.signalToSlots, signal)
+      slots = self.signalToSlots(signal);
+      N = length(varargin);
+      for i=1:length(slots)
+        toFuncH = slots{i};      
+        copyArgs = cell(N,1);
+        for j=1:N
+          obj = varargin{j};
+          if isa(obj, 'handle')
+            copyArgs{j} = copy(obj);
+          else
+            copyArgs{j} = obj;
+          end
         end
-      end
-      % call the object method
-      toFuncH(copyArgs{:});
-    end    
+        % call the object method
+        toFuncH(copyArgs{:});
+      end    
+    end
   end  
   
 %   function connectMe(self, signal, toObj, slot)
-%     self.signalToSlot(signal) = {toObj, slot};
+%     self.signalToSlots(signal) = {toObj, slot};
 %   end
 %   
 %   function emit(self, signal, varargin)
-%     vals = self.signalToSlot(signal);
+%     vals = self.signalToSlots(signal);
 %     N = length(varargin);
 %     for i=1:size(vals,1)
 %       toObj = vals{i,1};

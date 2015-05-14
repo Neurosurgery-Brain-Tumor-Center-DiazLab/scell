@@ -6,18 +6,20 @@ classdef PcaComputeMock < PcaComputeBase
     scoresXY
   end
   
-%   properties (SetAccess = private, GetAccess = public)
-%     n
-%   end
+  properties (SetAccess = private, GetAccess = public)
+    n
+  end
   
   methods
     function self = PcaComputeMock()      
     end
     
     function computePca(self)
-      n = size(self.d.nrmC, 2);
-      self.coeff = rand(n,n);
-      self.score = rand(n,n);
+      if isempty(self.coeff)
+        n = size(self.d.nrmC, 2);
+        self.coeff = rand(n,n);
+        self.score = rand(n,n);
+      end
     end   
     
   end
