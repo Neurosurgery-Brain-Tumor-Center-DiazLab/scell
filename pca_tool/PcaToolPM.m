@@ -69,10 +69,12 @@ methods
   
   function updateCurrentPca(self)
     self.compute.computePca();
-    self.coefXY = [self.compute.coeff(:,self.pcaxInd) ...
-                    self.compute.coeff(:,self.pcayInd)];
-    self.scoreXY = [self.compute.score(:,self.pcaxInd) ...
-                    self.compute.score(:,self.pcayInd)];                  
+    if ~isempty(self.compute.coeff)
+      self.coefXY = [self.compute.coeff(:,self.pcaxInd) ...
+                      self.compute.coeff(:,self.pcayInd)];
+      self.scoreXY = [self.compute.score(:,self.pcaxInd) ...
+                      self.compute.score(:,self.pcayInd)];                  
+    end
   end
   
   function underlyingDataChanged(self)

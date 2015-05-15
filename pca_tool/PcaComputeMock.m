@@ -11,7 +11,7 @@ classdef PcaComputeMock < PcaComputeBase
     end
     
     function computePca(self)
-      if isempty(self.coeff)
+      if isempty(self.coeff) && ~isempty(self.d)
         n = size(self.d.nrmC, 2);
         self.coeff = rand(n,n);
         self.score = rand(n,n);
