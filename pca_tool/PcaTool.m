@@ -175,7 +175,7 @@ methods (Access = private)
     titleText = 'Cell annotations';
     if ind > 0
       titleText = [titleText ' (ID ' ...
-        self.pm.getAnnotation('symbol_text', ind) ')'];
+        self.pm.getAnnotation('id_text', ind) ')'];
       tagsText = num2str(self.pm.getAnnotation('tags_number', ind));
       genesText = num2str(self.pm.getAnnotation('genes_number', ind)); 
       preseqText = num2str(self.pm.getAnnotation('preseq_number', ind)); 

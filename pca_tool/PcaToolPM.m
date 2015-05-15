@@ -38,8 +38,10 @@ methods
   function val = getAnnotation(self, name, ind)
     if strcmp(name, 'symbol_text')
       val = self.compute.d.gsymb{ind};
+    elseif strcmp(name, 'id_text')
+      val = self.compute.d.slbls{ind};
     elseif strcmp(name, 'median_number')
-      val = -1234;
+      val = median(self.compute.d.cpm(ind,:));
     elseif strcmp(name, 'dispersion_number')
       val = self.compute.d.iod(ind);
     elseif strcmp(name, 'expressing_number')
