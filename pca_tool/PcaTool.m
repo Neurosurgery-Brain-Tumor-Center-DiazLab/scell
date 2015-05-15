@@ -41,12 +41,29 @@ methods
       self.mainH = fig;
       self.createScatterPlots();
       self.loadSettings();
+      self.refresh();
       self.loadings.show();
       self.scores.show();
     end
   end
 
   function refresh(self)
+    set(self.pcaxEditH, 'String', num2str(self.pm.pcaxInd));
+    set(self.pcayEditH, 'String', num2str(self.pm.pcayInd));
+    ind = -1;
+    switch self.pm.clustering
+      case ClusteringMethod.KMeans
+        ind = 1;
+      case ClusteringMethod.Gaussian
+        ind = 2;
+      case ClusteringMethod.Minkowski
+        ind = 3;
+      case ClusteringMethod.User
+        ind = 4;      
+      otherwise
+        error('Bug found');
+    end    
+    set(self.clusteringPopupH, 'Value', ind);
     self.refreshPcaButtonH_Callback();    
   end
   
@@ -136,29 +153,48 @@ methods (Access = private)
   function updateGeneAnnotations(self, ind)
     if ind > 0
        symbolText = self.pm.getAnnotation('symbol_text', ind);
-%        medianText = self.pm.getAnnotation('median_value', ind);
-      medianText = 'todo';
+       medianText = num2str(self.pm.getAnnotation(...
+         'median_number', ind));
       dispersionText = num2str(self.pm.getAnnotation(...
         'dispersion_number', ind));
+      expressingText = num2str(self.pm.getAnnotation(...
+        'expressing_number', ind));      
     else
       symbolText = '-';
       medianText = '-';
       dispersionText = '-';
+      expressingText = '-';
     end
     set(self.symbolTextH, 'String', symbolText);
     set(self.medianTextH, 'String', medianText);
     set(self.dispersionTextH, 'String', dispersionText);
+    set(self.expressingTextH, 'String', expressingText);    
   end
   
   function updateCellAnnotations(self, ind)
     titleText = 'Cell annotations';
     if ind > 0
-      titleText = [titleText ' (ID ' num2str(...
-        self.pm.getAnnotation('id_number', ind)) ')'];
+      titleText = [titleText ' (ID ' ...
+        self.pm.getAnnotation('symbol_text', ind) ')'];
+      tagsText = num2str(self.pm.getAnnotation('tags_number', ind));
+      genesText = num2str(self.pm.getAnnotation('genes_number', ind)); 
+      preseqText = num2str(self.pm.getAnnotation('preseq_number', ind)); 
+      simpsonText = num2str(self.pm.getAnnotation('simpson_number', ind)); 
+      binomialText = num2str(self.pm.getAnnotation(...
+                                              'binomial_number', ind)); 
     else
-      
+      tagsText = '-';
+      genesText = '-';
+      preseqText = '-';
+      simpsonText = '-';
+      binomialText = '-';
     end
     set(self.cellPanelH, 'Title', titleText);
+    set(self.tagsTextH, 'String', tagsText);
+    set(self.genesTextH, 'String', genesText);
+    set(self.preseqTextH, 'String', preseqText);
+    set(self.simpsonTextH, 'String', simpsonText);
+    set(self.binomialTextH, 'String', binomialText);
   end
   
   function saveSettings(self)

@@ -6,8 +6,10 @@ properties
   data % Nx2 matrix of data points, each row = [x y]
   title = 'Unnamed' % figHure title
   closeFcn % function handle is called when the figHure is closed
-  symbol = 'O' % current plot symbol  
+  marker = 'O' % current plot marker
+  color = [0 0.4470 0.7410] % default Matlab color
   highColor = 'red' % highligh color
+  highMarker = '*'  
 end
 
 properties (GetAccess = public, SetAccess = private)
@@ -65,13 +67,19 @@ methods
       start(self.isInTimer);
     else
       f = figure();
-      self.figAxH = gca;
+      self.figAxH = axes;
 %       xlim([0 2]);
 %       ylim([0 3]); % debugging
       set(f, 'Units', 'pixels', 'CloseRequestFcn', ...
         @self.windowAboutToClose, 'WindowButtonMotionFcn', ...
         @self.mouseMoved);        
-      self.figH = f;
+      self.figH = f;      
+      hold(self.figAxH, 'on');
+      self.highH = plot(0, 0, 'Visible', 'off', 'Parent', self.figAxH,...
+        'Color', self.highColor, 'Marker', self.highMarker);
+      self.scatterH = scatter(0, 0, 'Visible', 'off', 'Parent', ...
+        self.figAxH, 'MarkerEdgeColor', self.color, 'Marker', self.marker);
+      hold(self.figAxH, 'off');
       % Keeping the units normalized allows axes to auto resize,
       % strange side effect of setting a property.
       set(self.figAxH, 'Unit', 'normalized');
@@ -111,14 +119,11 @@ methods (Access = private)
   end  
   
   function mouseMoved(self, varargin)
-    if ~isempty(self.data)
+    if ~isempty(self.data) && self.isInWindow
       % find
       ind = self.closestDataToPointer();
-      delete(self.highH);
-      hold(self.figAxH, 'on');
-      self.highH = plot(self.figAxH, self.data(ind,1), self.data(ind,2), ...
-        'Marker', self.symbol, 'Color', self.highColor);
-      hold(self.figAxH, 'off');
+      set(self.highH, 'XData', self.data(ind,1), 'YData', ...
+        self.data(ind,2), 'Visible', 'on', 'Color', self.highColor);
       self.emit('highlight', ind);
     end
   end
@@ -146,9 +151,11 @@ methods (Access = private)
       isIn = true;
     end
     if ~isIn
-      delete(self.highH);
+      set(self.highH, 'Visible', 'off');
+%       delete(self.highH);
 %       set(self.figH, 'Name', 'Mouse OUT'); %debugging
     else
+      set(self.highH, 'Visible', 'on');
 %       set(self.figH, 'Name', 'Mouse IN'); %debugging
     end    
     if self.isInWindow ~= isIn
@@ -161,14 +168,14 @@ methods (Access = private)
   
   function updatePlot(self)
     if ishandle(self.figH)
-      set(self.figH, 'Name', self.title);
-      clf(self.figH);
-      self.figAxH = axes('Parent', self.figH);
+      set(self.figH, 'Name', self.title); 
       if ~isempty(self.data)
-        self.scatterH = scatter(self.figAxH, self.data(:,1), ...
-          self.data(:,2));
-%         set(self.figAxH, 'XLimMode', 'manual', 'YLimMode', 'manua',...
-%           'ZLimMode', 'manual');
+        set(self.figAxH, 'XLimMode', 'auto', 'YLimMode', 'auto');        
+        set(self.scatterH, 'XData', self.data(:,1), 'YData', ...
+          self.data(:,2), 'Visible', 'on');
+%         self.scatterH = scatter(self.figAxH, self.data(:,1), ...
+%           self.data(:,2));
+        set(self.figAxH, 'XLimMode', 'manual', 'YLimMode', 'manual');
       end
 %       drawnow;
     end    

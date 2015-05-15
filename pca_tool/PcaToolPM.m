@@ -39,11 +39,21 @@ methods
     if strcmp(name, 'symbol_text')
       val = self.compute.d.gsymb{ind};
     elseif strcmp(name, 'median_number')
-      error('todo');
+      val = -1234;
     elseif strcmp(name, 'dispersion_number')
       val = self.compute.d.iod(ind);
-    elseif strcmp(name, 'id_number')
-      val = self.compute.d.ent(ind);      
+    elseif strcmp(name, 'expressing_number')
+      val = -1234;      
+    elseif strcmp(name, 'tags_number')
+      val = sum(self.compute.d.counts(:,ind));      
+    elseif strcmp(name, 'genes_number')
+      val = -1234;
+    elseif strcmp(name, 'preseq_number')
+      val = -1234;
+    elseif strcmp(name, 'simpson_number')
+      val = -1234;
+    elseif strcmp(name, 'binomial_number')
+      val = -1234;      
     else
       error('Unknown name %s', name);
     end
