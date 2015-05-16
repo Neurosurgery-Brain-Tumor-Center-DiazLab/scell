@@ -126,6 +126,8 @@ methods (Access = private)
     % pca scores
     s = ScatterSelect();
     s.title = 'PCA scores';
+    s.selectingEnabled = true;
+    s.highMarker = '*';
     s.closeFcn = @self.saveSettingsAndQuit;
     s.connectMe('is_in', @(x)self.registerIsIn('scores', x));
     s.connectMe('highlight', @self.updateAnnotationInfo);
@@ -133,6 +135,8 @@ methods (Access = private)
     % pca loadings
     s = ScatterSelect();
     s.title = 'PCA loadings';
+    s.selectingEnabled = false;
+    s.highMarker = 'diamond';
     s.closeFcn = @self.saveSettingsAndQuit;
     s.connectMe('is_in', @(x)self.registerIsIn('loadings', x));
     s.connectMe('highlight', @self.updateAnnotationInfo);

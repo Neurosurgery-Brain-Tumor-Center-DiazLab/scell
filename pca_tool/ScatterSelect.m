@@ -9,30 +9,33 @@ properties
   color = [0 0.4470 0.7410] % default Matlab color
   highColor = 'red' % highligh color
   highMarker = '*'  
+  selectingEnabled = true
 end
 
 properties (GetAccess = public, SetAccess = private)
   data % Nx2 matrix of data points, each row = [x y]
   cluster % empty or Nx1 vector of cluster tags (integers >= 1), 
           % each corresponds to data row
+  selData % selected data Mx2
+  selIndices % incides to self.data corresponding to the selected data  
+  currentIndex % index to data closest to the mouse button now, empty if
+               % mouse is not inside the figure
   figH     % handle to figure
   figAxH  % handle to figure axes
   scatterH % handle to scatter object
   highH % handle to higlight object
   highInd % index to highlight value
-  selecting = false
+  selH % handle to selected points
   isInWindow = false % whether mouse pointer is inside the window
   isInTimer % timer for checking if mouse pointer is inside the window
   lastSettings
   clusterCount = 1 % number of clusters
-  colorMap = brewermap(8,'Accent');
+  colorMap = brewermap(8,'Dark2');
 end
 
 methods
   function self = ScatterSelect()
     self@MObject();
-    self.isInTimer = timer('TimerFcn', @self.checkIsIn, 'Period', 0.1,...
-      'ExecutionMode', 'fixedSpacing');
     self.lastSettings = self.defaultSettings;
   end
 
@@ -95,32 +98,35 @@ methods
 %       ylim([0 3]); % debugging
       set(f, 'Units', 'pixels', 'CloseRequestFcn', ...
         @self.windowAboutToClose, 'WindowButtonMotionFcn', ...
-        @self.mouseMoved);        
+        @self.mouseMoved, 'WindowButtonDownFcn', @self.mouseClicked, ...
+        'KeyPressFcn', @self.keyPressed);        
       self.figH = f;      
       hold(self.figAxH, 'on');
+      self.selH = plot(0, 0, 'Visible', 'off', 'Parent', self.figAxH,...
+        'Color', self.highColor, 'Marker', self.highMarker, ...
+        'LineStyle', 'none');      
       self.highH = plot(0, 0, 'Visible', 'off', 'Parent', self.figAxH,...
         'Color', self.highColor, 'Marker', self.highMarker);
-%       self.scatterH = scatter(0, 0, 'Visible', 'off', 'Parent', ...
-%         self.figAxH, 'MarkerEdgeColor', self.color, 'Marker', self.marker);
       self.scatterH = scatter(0, 0, 'Visible', 'off', 'Parent', ...
         self.figAxH, 'Marker', self.marker);
       hold(self.figAxH, 'off');
       % Keeping the units normalized allows axes to auto resize,
       % strange side effect of setting a property.
       set(self.figAxH, 'Unit', 'normalized');
+      self.isInTimer = timer('TimerFcn', @self.checkIsIn, 'Period', 0.1,...
+      'ExecutionMode', 'fixedSpacing');      
       start(self.isInTimer);
       self.updatePlotToSettings(self.lastSettings);
     end            
     self.updatePlot();
   end
 
-  function selectBegin(self)
-    self.selecting = true;
+  function clearSelection(self)
+    self.selData = [];
+    self.selIndices = [];
+    set(self.selH, 'Visible', 'off', 'XData', [], 'YData', []);
   end
 
-  function selectEnd(self)
-    self.selecting = false;
-  end
   
   function closeFigure(self)
   % Closes figure without invoking the closing callback
@@ -161,6 +167,28 @@ methods (Access = private)
       set(self.highH, 'XData', self.data(ind,1), 'YData', ...
         self.data(ind,2), 'Visible', 'on', 'Color', self.highColor);
       self.emit('highlight', ind);
+      self.currentIndex = ind;
+    end
+  end
+  
+  function mouseClicked(self, varargin)
+    if self.selectingEnabled
+      if ~ismember(self.currentIndex, self.selIndices)
+        self.selIndices(end+1) = self.currentIndex;
+        self.selData = self.data(self.selIndices, :);
+        self.updatePlotSelection();
+        self.emit('selection_changed');
+      end
+    end
+  end
+  
+  function keyPressed(self, varargin)
+    ch = get(self.figH, 'CurrentCharacter');
+    % escape pressed ?
+    if self.selectingEnabled && uint16(ch) == 27
+      self.selIndices = self.selIndices(1:end-1);
+      self.selData = self.data(self.selIndices, :);
+      self.updatePlotSelection();
     end
   end
   
@@ -188,8 +216,7 @@ methods (Access = private)
     end
     if ~isIn
       set(self.highH, 'Visible', 'off');
-    else
-      set(self.highH, 'Visible', 'on');
+      self.currentIndex = [];
     end    
     if self.isInWindow ~= isIn
       self.emit('is_in', isIn);
@@ -209,9 +236,18 @@ methods (Access = private)
 %           self.data(:,2));
         set(self.figAxH, 'XLimMode', 'manual', 'YLimMode', 'manual');
       end
-%       drawnow;
+      self.updatePlotSelection();
     end    
   end  
+  
+  function updatePlotSelection(self)
+    if ~isempty(self.selData)
+      set(self.selH, 'XData', self.selData(:,1), 'YData', ...
+        self.selData(:,2), 'Visible', 'on');      
+    else
+      set(self.selH, 'Visible', 'off');
+    end
+  end
   
   function cmap = computeClusterColors(self)
     if self.clusterCount > 1      
