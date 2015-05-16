@@ -6,9 +6,7 @@ properties (GetAccess = public, SetAccess = private)
   mainH % GUI figure
   scores % scores ScatterSelect
   loadings % loadings ScatterSelect  
-  pm % Presentation model
-  scoresIsIn = false
-  loadingsIsIn = false
+  pm % Presentation model  
   settingsFile
 end
 
@@ -18,8 +16,12 @@ methods
   % computeObj is an object derived from PcaComputeBase
     self@MObject();
     self@GuiBase();    
+    % wire presentation model signals 
     p = PcaToolPM(computeObj);
     p.connectMe('all_changed', @self.refresh);
+    p.connectMe('highlight_changed', @self.updateAnnotationInfo);
+%     p.connectMe('no_highlight_changed', @()updateAnnotationInfo(self, -1));
+    p.connectMe('selection_changed', @self.updateLists);
     self.pm = p;
     self.settingsFile = fullfile(pwd, 'settings.mat');
   end
@@ -49,7 +51,6 @@ methods
   function refresh(self)
     set(self.pcaxEditH, 'String', num2str(self.pm.pcaxInd));
     set(self.pcayEditH, 'String', num2str(self.pm.pcayInd));
-    ind = -1;
     switch self.pm.clusterMethod
       case ClusteringMethod.KMeans
         ind = 1;
@@ -63,14 +64,15 @@ methods
         error('Bug found');
     end    
     set(self.clusteringPopupH, 'Value', ind);
-    self.refreshPcaButtonH_Callback();    
+    self.refreshPcaButtonH_Callback();
+    self.updateAnnotationInfo();
   end
   
   %*** Callbacks from GUI objects defined in GUIDE
   function refreshPcaButtonH_Callback(self, varargin)
     self.pm.updateCurrentPca();
-    self.scores.updateData(self.pm.coefXY, self.pm.cluster);
-    self.loadings.updateData(self.pm.scoreXY, self.pm.cluster);
+    self.scores.updateData(self.pm.scoreXY, self.pm.cluster);
+    self.loadings.updateData(self.pm.coefXY, self.pm.cluster);
   end
 
   function pcaxEditH_Callback(self, varargin)
@@ -122,45 +124,47 @@ methods (Access = private)
   end
   
   function createScatterPlots(self)
-  % Creates scatter plot windows
+  % Creates scatter plot windows, signals are fed to the presentation
+  % model which handles the UI logic
     % pca scores
     s = ScatterSelect();
     s.title = 'PCA scores';
     s.selectingEnabled = true;
     s.highMarker = '*';
     s.closeFcn = @self.saveSettingsAndQuit;
-    s.connectMe('is_in', @(x)self.registerIsIn('scores', x));
-    s.connectMe('highlight', @self.updateAnnotationInfo);
+    s.connectMe('is_in', @(x)registerIsIn(self.pm, 'sample', x));
+    s.connectMe('highlight', @(x)highlightChanged(self.pm, 'sample', x));
+    s.connectMe('selection', ...
+       @(x,y)self.pm.selectionChanged('sample', x,y));
     self.scores = s;
     % pca loadings
     s = ScatterSelect();
     s.title = 'PCA loadings';
-    s.selectingEnabled = false;
-    s.highMarker = 'diamond';
+    s.selectingEnabled = true;
+    s.highMarker = '*';
     s.closeFcn = @self.saveSettingsAndQuit;
-    s.connectMe('is_in', @(x)self.registerIsIn('loadings', x));
-    s.connectMe('highlight', @self.updateAnnotationInfo);
+    s.connectMe('is_in', @(x)registerIsIn(self.pm, 'gene', x));
+    s.connectMe('highlight', @(x)highlightChanged(self.pm, 'gene', x));
+    s.connectMe('selection', ...
+       @(x,y)selectionChanged(self.pm, 'gene', x,y));    
     self.loadings = s;
   end
 
-  function registerIsIn(self, from, isIn)
-    if strcmp(from, 'scores')
-      self.scoresIsIn = isIn;
-    else
-      self.loadingsIsIn = isIn;
-    end
-    if self.scoresIsIn == false && self.loadingsIsIn == false
-      self.updateAnnotationInfo(-1);
-    end
-  end
   
-  function updateAnnotationInfo(self, ind)
-    self.updateGeneAnnotations(ind);
-    self.updateCellAnnotations(ind);
+  %****
+  
+%   function clearAnnotation(self)
+%     self.updateGeneAnnotations(-1);
+%     self.updateCellAnnotations(-1);    
+%   end
+  
+  function updateAnnotationInfo(self)
+    self.updateGeneAnnotations(self.pm.geneHighInd);
+    self.updateCellAnnotations(self.pm.sampleHighInd);
   end
   
   function updateGeneAnnotations(self, ind)
-    if ind > 0
+    if ~isempty(ind)
        symbolText = self.pm.getAnnotation('symbol_text', ind);
        medianText = num2str(self.pm.getAnnotation(...
          'median_number', ind));
@@ -182,7 +186,7 @@ methods (Access = private)
   
   function updateCellAnnotations(self, ind)
     titleText = 'Cell annotations';
-    if ind > 0
+    if ~isempty(ind)
       titleText = [titleText ' (ID ' ...
         self.pm.getAnnotation('id_text', ind) ')'];
       tagsText = num2str(self.pm.getAnnotation('tags_number', ind));
@@ -204,6 +208,20 @@ methods (Access = private)
     set(self.preseqTextH, 'String', preseqText);
     set(self.simpsonTextH, 'String', simpsonText);
     set(self.binomialTextH, 'String', binomialText);
+  end
+  
+  function updateLists(self)
+    self.updateGeneList();
+  end
+  
+  function updateGeneList(self)    
+    ind = self.pm.geneSelIndices;
+    N = length(ind);
+    list = cell(N, 1);
+    for i = 1:N
+      list{i} = self.pm.getAnnotation('symbol_text', ind(i));
+    end
+    set(self.geneListboxH, 'String', list);
   end
   
   function saveSettings(self)

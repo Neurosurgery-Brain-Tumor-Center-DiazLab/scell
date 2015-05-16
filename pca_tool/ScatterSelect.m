@@ -177,7 +177,7 @@ methods (Access = private)
         self.selIndices(end+1) = self.currentIndex;
         self.selData = self.data(self.selIndices, :);
         self.updatePlotSelection();
-        self.emit('selection_changed');
+        self.emit('selection', self.selData, self.selIndices);
       end
     end
   end
@@ -189,6 +189,7 @@ methods (Access = private)
       self.selIndices = self.selIndices(1:end-1);
       self.selData = self.data(self.selIndices, :);
       self.updatePlotSelection();
+      self.emit('selection', self.selData, self.selIndices);
     end
   end
   

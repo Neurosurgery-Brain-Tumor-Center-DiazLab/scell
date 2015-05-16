@@ -3,7 +3,7 @@ classdef PcaComputeMock < PcaComputeBase
   %   Detailed explanation goes here
   
   properties (SetAccess = private, GetAccess = public)
-    n
+    
   end
   
   methods
@@ -12,9 +12,10 @@ classdef PcaComputeMock < PcaComputeBase
     
     function computePca(self)
       if isempty(self.coeff) && ~isempty(self.d)
-        n = size(self.d.nrmC, 2);
-        self.coeff = rand(n,n);
-        self.score = rand(n,n);
+        geneCount = round(size(self.d.nrmC, 1)/10);
+        sampleCount = size(self.d.nrmC, 2);
+        self.coeff = rand(geneCount, geneCount);
+        self.score = rand(sampleCount, sampleCount);
       end
     end   
     

@@ -14,6 +14,14 @@ properties (SetAccess = private, GetAccess = public)
   coefXY % current pca axes coeff values 
   scoreXY % current pca axes score values
   cluster % cluster tags
+  geneHighInd % current gene highlight index, empty if no highlight
+  sampleHighInd % 
+  sampleIsIn = false
+  geneIsIn = false  
+  geneSelData  % gene selection data Mx2
+  geneSelIndices % gene selection indices Mx1
+  sampleSelData
+  sampleSelIndices
 end
 
 methods
@@ -87,6 +95,60 @@ methods
   
   function underlyingDataChanged(self)
     self.emit('all_changed');
+  end
+  
+  %**** Handlers for changes in the UI 
+  function registerIsIn(self, from, isIn)
+    doEmit = false;
+    if strcmp(from, 'sample')
+      if self.sampleIsIn ~= isIn
+        doEmit = true;
+      end
+      self.sampleIsIn = isIn;
+    elseif strcmp(from, 'gene')
+      if self.geneIsIn ~= isIn
+        doEmit = true;
+      end
+      self.geneIsIn = isIn;
+    else
+      error('Bug found');
+    end
+    if ~self.sampleIsIn
+      self.sampleHighInd = [];
+    end
+    if ~self.geneIsIn
+      self.geneHighInd = [];
+    end
+    if doEmit
+      self.emit('highlight_changed');  
+    end
+%     if self.sampleIsIn == false && self.geneIsIn == false
+%       self.emit('no_highlight_changed');
+%     end
+  end  
+  
+  function highlightChanged(self, type, ind)
+    if strcmp(type, 'gene')
+      self.geneHighInd = ind;
+    elseif strcmp(type, 'sample')
+      self.sampleHighInd = ind;
+    else
+      error('Bug found');
+    end    
+    self.emit('highlight_changed');
+  end
+  
+  function selectionChanged(self, type, data, indices)
+    if strcmp(type, 'gene')
+      self.geneSelData = data;
+      self.geneSelIndices = indices;      
+    elseif strmp(type, 'sample')
+      self.sampleSelData = data;
+      self.sampleSelIndices = indices;
+    else
+      error('Bug found');
+    end
+    self.emit('selection_changed')
   end
   
 end
