@@ -5,14 +5,15 @@ classdef PcaToolPM < handle & MObject
   
 properties
   pcaxInd % pca x index
-  pcayInd % pca y index
-  clustering  % current ClusteringMethod
+  pcayInd % pca y index  
+  clusterMethod  % current ClusteringMethod
 end
   
 properties (SetAccess = private, GetAccess = public)
   compute % PcaComputeBase derived object
   coefXY % current pca axes coeff values 
   scoreXY % current pca axes score values
+  cluster % cluster tags
 end
 
 methods
@@ -26,13 +27,13 @@ methods
   function val = defaultSettings(self)
     val.pcaxInd = 1;
     val.pcayInd = 2;
-    val.clustering = ClusteringMethod.KMeans;
+    val.clusterMethod = ClusteringMethod.KMeans;
   end
   
   function val = getSettings(self)
     val.pcaxInd = self.pcaxInd;
     val.pcayInd = self.pcayInd;
-    val.clustering = self.clustering;
+    val.clusterMethod = self.clusterMethod;
   end
   
   function val = getAnnotation(self, name, ind)
@@ -49,13 +50,14 @@ methods
     elseif strcmp(name, 'tags_number')
       val = sum(self.compute.d.counts(:,ind));      
     elseif strcmp(name, 'genes_number')
-      val = -1234;
+      val = -4444;
+%       val = self.compute.d.nnz(ind,self.compute.d.counts(:,ind));
     elseif strcmp(name, 'preseq_number')
-      val = -1234;
+      val = self.compute.d.preseq(ind);
     elseif strcmp(name, 'simpson_number')
-      val = -1234;
+      val = self.compute.d.simpson(ind);
     elseif strcmp(name, 'binomial_number')
-      val = -1234;      
+      val = self.compute.d.lorenz(ind);
     else
       error('Unknown name %s', name);
     end
@@ -64,7 +66,7 @@ methods
   function changeToSettings(self, settings)
     self.pcaxInd = settings.pcaxInd;
     self.pcayInd = settings.pcayInd;
-    self.clustering = settings.clustering;
+    self.clusterMethod = settings.clusterMethod;
   end
   
   function updateCurrentPca(self)
@@ -74,6 +76,12 @@ methods
                       self.compute.coeff(:,self.pcayInd)];
       self.scoreXY = [self.compute.score(:,self.pcaxInd) ...
                       self.compute.score(:,self.pcayInd)];                  
+    end
+  end
+  
+  function updateCurrentClustering(self)
+    if ~isempty(self.coefXY)
+      self.cluster = randi(double(self.clusterMethod), size(self.coefXY,1));
     end
   end
   

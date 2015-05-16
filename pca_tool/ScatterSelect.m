@@ -3,7 +3,6 @@ classdef ScatterSelect < handle & MObject
   %   Detailed explanation goes here
   
 properties
-  data % Nx2 matrix of data points, each row = [x y]
   title = 'Unnamed' % figHure title
   closeFcn % function handle is called when the figHure is closed
   marker = 'O' % current plot marker
@@ -13,6 +12,9 @@ properties
 end
 
 properties (GetAccess = public, SetAccess = private)
+  data % Nx2 matrix of data points, each row = [x y]
+  cluster % empty or Nx1 vector of cluster tags (integers >= 1), 
+          % each corresponds to data row
   figH     % handle to figure
   figAxH  % handle to figure axes
   scatterH % handle to scatter object
@@ -22,6 +24,8 @@ properties (GetAccess = public, SetAccess = private)
   isInWindow = false % whether mouse pointer is inside the window
   isInTimer % timer for checking if mouse pointer is inside the window
   lastSettings
+  clusterCount = 1 % number of clusters
+  colorMap = brewermap(8,'Accent');
 end
 
 methods
@@ -37,11 +41,30 @@ methods
     self.updatePlot();
   end
 
-  function set.data(self, value)
-    self.data = value;
+%   function set.data(self, value)
+%     self.data = value;
+%     self.updatePlot();
+%   end
+
+  function updateData(self, data, cluster)
+    self.data = data;
+    self.clusterCount = 1;
+    self.cluster = cluster;
+    if ~isempty(cluster)
+      tags = [];
+      for i=1:length(cluster)
+        if ~ismember(cluster(i), tags)
+          tags(end+1) = cluster(i); %#ok<AGROW>
+        end
+      end
+      self.clusterCount = length(tags);
+    end
+    if self.clusterCount > size(self.colorMap,1)
+      warning('Specified more clusters than there are different colors');
+    end
     self.updatePlot();
   end
-
+  
   function val = defaultSettings(self)
     val = [86 344 672  504];
   end
@@ -66,8 +89,8 @@ methods
       stop(self.isInTimer);
       start(self.isInTimer);
     else
-      f = figure();
-      self.figAxH = axes;
+      f = figure('HandleVisibility', 'off');
+      self.figAxH = axes('Parent', f);
 %       xlim([0 2]);
 %       ylim([0 3]); % debugging
       set(f, 'Units', 'pixels', 'CloseRequestFcn', ...
@@ -77,8 +100,10 @@ methods
       hold(self.figAxH, 'on');
       self.highH = plot(0, 0, 'Visible', 'off', 'Parent', self.figAxH,...
         'Color', self.highColor, 'Marker', self.highMarker);
+%       self.scatterH = scatter(0, 0, 'Visible', 'off', 'Parent', ...
+%         self.figAxH, 'MarkerEdgeColor', self.color, 'Marker', self.marker);
       self.scatterH = scatter(0, 0, 'Visible', 'off', 'Parent', ...
-        self.figAxH, 'MarkerEdgeColor', self.color, 'Marker', self.marker);
+        self.figAxH, 'Marker', self.marker);
       hold(self.figAxH, 'off');
       % Keeping the units normalized allows axes to auto resize,
       % strange side effect of setting a property.
@@ -101,20 +126,31 @@ methods
   % Closes figure without invoking the closing callback
     if ishandle(self.figH)
       set(self.figH, 'CloseRequestFcn', '');
-      stop(self.isInTimer);
+      if isvalid(self.isInTimer)
+        stop(self.isInTimer);
+        delete(self.isInTimer);
+        clear self.isInTimer;
+      end
       delete(self.figH);
     end
   end    
-  
+    
 end
 
+%*** Private 
 methods (Access = private)
   function windowAboutToClose(self, varargin)
-    stop(self.isInTimer);    
+    if isvalid(self.isInTimer)
+      stop(self.isInTimer);  
+      delete(self.isInTimer);
+      clear self.isInTimer;
+    end
     if isa(self.closeFcn, 'function_handle')      
       self.closeFcn();
     else 
-      delete(self.figH); % debugging
+      if ishandle(self.figH)
+        delete(self.figH); % debugging
+      end
     end
   end  
   
@@ -152,27 +188,23 @@ methods (Access = private)
     end
     if ~isIn
       set(self.highH, 'Visible', 'off');
-%       delete(self.highH);
-%       set(self.figH, 'Name', 'Mouse OUT'); %debugging
     else
       set(self.highH, 'Visible', 'on');
-%       set(self.figH, 'Name', 'Mouse IN'); %debugging
     end    
     if self.isInWindow ~= isIn
       self.emit('is_in', isIn);
     end
     self.isInWindow = isIn;
-%     [x,y]=self.pointerLocInCoord(); % debugging
-%     fprintf('(%f, %f)\n', x, y);    
   end
   
   function updatePlot(self)
     if ishandle(self.figH)
       set(self.figH, 'Name', self.title); 
       if ~isempty(self.data)
-        set(self.figAxH, 'XLimMode', 'auto', 'YLimMode', 'auto');        
+        set(self.figAxH, 'XLimMode', 'auto', 'YLimMode', 'auto');   
+        cmap = self.computeClusterColors();
         set(self.scatterH, 'XData', self.data(:,1), 'YData', ...
-          self.data(:,2), 'Visible', 'on');
+          self.data(:,2), 'Visible', 'on', 'CData', cmap);
 %         self.scatterH = scatter(self.figAxH, self.data(:,1), ...
 %           self.data(:,2));
         set(self.figAxH, 'XLimMode', 'manual', 'YLimMode', 'manual');
@@ -180,6 +212,19 @@ methods (Access = private)
 %       drawnow;
     end    
   end  
+  
+  function cmap = computeClusterColors(self)
+    if self.clusterCount > 1      
+      cmap = zeros(size(self.data,1), 3);
+      colorCount = size(self.colorMap,1);
+      for i = 1:size(self.data,1)
+        ind = mod(self.cluster(i), colorCount) + 1;
+        cmap(i,:) = self.colorMap(ind,:);
+      end      
+    else
+      cmap = self.color;    
+    end
+  end
   
   function updatePlotToSettings(self, settings)
     if ishandle(self.figH)
