@@ -26,7 +26,14 @@ methods
   function connectMe(self, signal, toFuncH)
     if isKey(self.signalToSlots, signal)
       tmp = self.signalToSlots(signal);
-      self.signalToSlots(signal) = [tmp {toFunch}];
+      for i = 1:length(tmp)
+        if strcmp(func2str(toFuncH), func2str(tmp{i}))
+        warning(['Connecting signal ''%s'' to slot ''%s'' multiple '...
+          'times'], signal, func2str(toFuncH));
+        end
+      end
+      tmp = self.signalToSlots(signal);
+      self.signalToSlots(signal) = [tmp {toFuncH}];
     else      
       self.signalToSlots(signal) = {toFuncH};
     end
@@ -56,30 +63,6 @@ methods
         'slots'], signal);
     end
   end  
-  
-%   function connectMe(self, signal, toObj, slot)
-%     self.signalToSlots(signal) = {toObj, slot};
-%   end
-%   
-%   function emit(self, signal, varargin)
-%     vals = self.signalToSlots(signal);
-%     N = length(varargin);
-%     for i=1:size(vals,1)
-%       toObj = vals{i,1};
-%       slot = vals{i,2};          
-%       copyArgs = cell(N,1);
-%       for j=1:N
-%         obj = varargin{j};
-%         if isa(obj, 'handle')
-%           copyArgs{j} = copy(obj);
-%         else
-%           copyArgs{j} = obj;
-%         end
-%       end
-%       % call the object method
-%       toObj.(slot)(copyArgs{:});
-%     end    
-%   end
 end
 
 end

@@ -20,7 +20,6 @@ methods
     p = PcaToolPM(computeObj);
     p.connectMe('all_changed', @self.refresh);
     p.connectMe('highlight_changed', @self.updateAnnotationInfo);
-%     p.connectMe('no_highlight_changed', @()updateAnnotationInfo(self, -1));
     p.connectMe('selection_changed', @self.updateLists);
     self.pm = p;
     self.settingsFile = fullfile(pwd, 'settings.mat');
@@ -43,6 +42,7 @@ methods
       self.createScatterPlots();
       self.loadSettings();
       self.refresh();
+      self.updateAvailableFeatures();
       self.loadings.show();
       self.scores.show();
     end
@@ -66,6 +66,7 @@ methods
     set(self.clusteringPopupH, 'Value', ind);
     self.refreshPcaButtonH_Callback();
     self.updateAnnotationInfo();
+    self.updateLists();
   end
   
   %*** Callbacks from GUI objects defined in GUIDE
@@ -106,6 +107,22 @@ methods
     self.refreshPcaButtonH_Callback();
   end
   
+  function sampleListboxH_Callback(self, varargin)
+    self.pm.sampleListInd = get(self.sampleListboxH, 'Value');
+  end
+  
+  function geneListboxH_Callback(self, varargin)
+    self.pm.geneListInd = get(self.geneListboxH, 'Value');
+  end
+  
+  function clearGeneListButtonH_Callback(self, varargin)
+    self.pm.selectionChanged('gene', [], []);
+  end
+  
+  function clearSampleListButtonH_Callback(self, varargin)
+    self.pm.selectionChanged('sample', [], []);
+  end
+  
   %*** 
   function saveSettingsAndQuit(self)
     self.saveSettings();
@@ -119,6 +136,19 @@ end
 
 %*** Private implementation related stuff
 methods (Access = private)
+  function updateAvailableFeatures(self)
+    tags ={'saveGeneListButtonH', 'addTopGenesButtonH', ...
+      'selectGenesButtonH', 'deleteGeneButtonH', 'ontologyButtonH',...
+      'cutoffEditH', 'pc1PopupH', 'posPopupH', 'findGeneButtonH', ...
+      'geneSymbolEditH', 'selectSamplesButtonH', 'deleteSampleButtonH', ...
+      'refreshPcaUsingSamplesButtonH', 'findSampleButtonH', ...
+      'sampleSymbolEditH', 'saveSampleListButtonH', 'tracePopupH', ...
+      'runTraceButtonH'};
+    for i = 1:length(tags)
+      set(self.(tags{i}), 'Enable', 'off');
+    end
+  end
+  
   function windowAboutToClose(self, varargin)
     self.saveSettingsAndQuit();
   end
@@ -212,6 +242,7 @@ methods (Access = private)
   
   function updateLists(self)
     self.updateGeneList();
+    self.updateSampleList();
   end
   
   function updateGeneList(self)    
@@ -221,7 +252,29 @@ methods (Access = private)
     for i = 1:N
       list{i} = self.pm.getAnnotation('symbol_text', ind(i));
     end
-    set(self.geneListboxH, 'String', list);
+    ind = self.pm.geneListInd;
+    if isempty(ind)
+      set(self.geneListboxH, 'String', 'Add genes to the list', ...
+        'Value', 1);
+    else
+      set(self.geneListboxH, 'String', list, 'Value', ind);
+    end
+  end
+  
+  function updateSampleList(self)
+    ind = self.pm.sampleSelIndices;
+    N = length(ind);
+    list = cell(N, 1);
+    for i = 1:N
+      list{i} = self.pm.getAnnotation('id_text', ind(i));
+    end
+    ind = self.pm.sampleListInd;
+    if isempty(ind)
+      set(self.sampleListboxH, 'String', 'Add samples to the list', ...
+        'Value', 1);
+    else
+      set(self.sampleListboxH, 'String', list, 'Value', ind);
+    end
   end
   
   function saveSettings(self)

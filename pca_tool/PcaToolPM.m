@@ -7,6 +7,8 @@ properties
   pcaxInd % pca x index
   pcayInd % pca y index  
   clusterMethod  % current ClusteringMethod
+  geneListInd
+  sampleListInd  
 end
   
 properties (SetAccess = private, GetAccess = public)
@@ -141,10 +143,24 @@ methods
   function selectionChanged(self, type, data, indices)
     if strcmp(type, 'gene')
       self.geneSelData = data;
-      self.geneSelIndices = indices;      
-    elseif strmp(type, 'sample')
+      self.geneSelIndices = indices;
+      if isempty(indices)
+        self.geneListInd = [];
+      elseif isempty(self.geneListInd) && ~isempty(indices)
+        self.geneListInd = 1;
+      elseif self.geneListInd > length(indices)
+        self.geneListInd = length(indices);
+      end
+    elseif strcmp(type, 'sample')
       self.sampleSelData = data;
       self.sampleSelIndices = indices;
+      if isempty(indices)
+        self.sampleListInd = [];
+      elseif isempty(self.sampleListInd) && ~isempty(indices)
+        self.sampleListInd = 1;        
+      elseif self.sampleListInd > length(indices)
+        self.sampleListInd = length(indices);
+      end      
     else
       error('Bug found');
     end
