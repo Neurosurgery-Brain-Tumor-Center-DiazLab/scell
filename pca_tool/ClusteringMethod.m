@@ -1,5 +1,5 @@
 classdef ClusteringMethod < int32
-  %CLUSTERINGMETHOD Enumeration for clusterin method
+  %CLUSTERINGMETHOD Enumeration for clustering method
   %   Detailed explanation goes here
   
 enumeration

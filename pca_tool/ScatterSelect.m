@@ -31,12 +31,14 @@ properties (GetAccess = public, SetAccess = private)
   lastSettings
   clusterCount = 1 % number of clusters
   colorMap = brewermap(8,'Dark2');
+  uiState % current ui state
 end
+
 
 methods
   function self = ScatterSelect()
     self@MObject();
-    self.lastSettings = self.defaultSettings;
+    self.lastSettings = self.defaultSettings;    
   end
 
   function set.title(self, value)
@@ -184,8 +186,13 @@ methods (Access = private)
   
   function keyPressed(self, varargin)
     ch = get(self.figH, 'CurrentCharacter');
+    if ~isempty(ch) && (uint16(ch) == 27)
+      isEsc = true;
+    else
+      isEsc = false;
+    end
     % escape pressed ?
-    if self.selectingEnabled && uint16(ch) == 27
+    if self.selectingEnabled && isEsc
       self.selIndices = self.selIndices(1:end-1);
       self.selData = self.data(self.selIndices, :);
       self.updatePlotSelection();

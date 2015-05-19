@@ -23,15 +23,17 @@ properties (SetAccess = private, GetAccess = public)
   geneSelData  % gene selection data Mx2
   geneSelIndices % gene selection indices Mx1
   sampleSelData
-  sampleSelIndices
+  sampleSelIndices    
+  uiState
 end
 
 methods
   function self = PcaToolPM(computeObj)
     self@MObject();
-    computeObj.connectMe('d_changed', @self.underlyingDataChanged);
+    computeObj.connectMe('d_changed', @self.reset);
     self.compute = computeObj;
-    self.changeToSettings(self.defaultSettings);    
+    self.uiState = UiState();
+    self.changeToSettings(self.defaultSettings);     
   end
   
   function val = defaultSettings(self)
@@ -73,6 +75,11 @@ methods
     end
   end
   
+  function reset(self)
+    self.uiState = UiState();
+    self.emit('reset_changed');
+  end 
+  
   function changeToSettings(self, settings)
     self.pcaxInd = settings.pcaxInd;
     self.pcayInd = settings.pcayInd;
@@ -93,11 +100,7 @@ methods
     if ~isempty(self.coefXY)
       self.cluster = randi(double(self.clusterMethod), size(self.coefXY,1));
     end
-  end
-  
-  function underlyingDataChanged(self)
-    self.emit('all_changed');
-  end
+  end 
   
   %**** Handlers for changes in the UI 
   function registerIsIn(self, from, isIn)
@@ -151,6 +154,11 @@ methods
       elseif self.geneListInd > length(indices)
         self.geneListInd = length(indices);
       end
+      if isempty(self.geneListInd)
+        self.uiState.updateGenesSelected(false);
+      else
+        self.uiState.updateGenesSelected(true);
+      end
     elseif strcmp(type, 'sample')
       self.sampleSelData = data;
       self.sampleSelIndices = indices;
@@ -160,13 +168,22 @@ methods
         self.sampleListInd = 1;        
       elseif self.sampleListInd > length(indices)
         self.sampleListInd = length(indices);
-      end      
+      end
+      if isempty(self.sampleListInd)
+        self.uiState.updateSamplesSelected(false);
+      else
+        self.uiState.updateSamplesSelected(true);
+      end
     else
       error('Bug found');
     end
     self.emit('selection_changed')
   end
   
+end
+
+methods (Access = private)
+
 end
   
 end

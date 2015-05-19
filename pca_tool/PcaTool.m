@@ -7,7 +7,9 @@ properties (GetAccess = public, SetAccess = private)
   scores % scores ScatterSelect
   loadings % loadings ScatterSelect  
   pm % Presentation model  
-  settingsFile
+  settingsFile % mat-file where settings are stored
+  lastSaveGenes % last save filename for genes
+  lastSaveSamples % lastfilename for  samples
 end
 
 
@@ -18,11 +20,13 @@ methods
     self@GuiBase();    
     % wire presentation model signals 
     p = PcaToolPM(computeObj);
-    p.connectMe('all_changed', @self.refresh);
+    p.connectMe('reset_changed', @self.refresh);
     p.connectMe('highlight_changed', @self.updateAnnotationInfo);
     p.connectMe('selection_changed', @self.updateLists);
     self.pm = p;
     self.settingsFile = fullfile(pwd, 'settings.mat');
+    self.lastSaveGenes = '';
+    self.lastSaveSamples = '';
   end
 
   function show(self)
@@ -123,6 +127,22 @@ methods
     self.pm.selectionChanged('sample', [], []);
   end
   
+  function saveSampleListButtonH_Callback(self, varargin)
+    savedAs = self.openDialogAndSaveAsText('Save samples', ...
+      self.lastSaveSamples, get(self.sampleListboxH, 'String'));
+    if ~isempty(savedAs)
+      self.lastSaveSamples = savedAs;
+    end
+  end
+  
+  function saveGeneListButtonH_Callback(self, varargin)
+    savedAs = self.openDialogAndSaveAsText('Save genes', ...
+      self.lastSaveGenes, get(self.geneListboxH, 'String'));
+    if ~isempty(savedAs)
+      self.lastSaveGenes = savedAs;
+    end    
+  end
+  
   %*** 
   function saveSettingsAndQuit(self)
     self.saveSettings();
@@ -137,15 +157,31 @@ end
 %*** Private implementation related stuff
 methods (Access = private)
   function updateAvailableFeatures(self)
-    tags ={'saveGeneListButtonH', 'addTopGenesButtonH', ...
-      'selectGenesButtonH', 'deleteGeneButtonH', 'ontologyButtonH',...
-      'cutoffEditH', 'pc1PopupH', 'posPopupH', 'findGeneButtonH', ...
-      'geneSymbolEditH', 'selectSamplesButtonH', 'deleteSampleButtonH', ...
-      'refreshPcaUsingSamplesButtonH', 'findSampleButtonH', ...
-      'sampleSymbolEditH', 'saveSampleListButtonH', 'tracePopupH', ...
-      'runTraceButtonH'};
+%     tags ={'saveGeneListButtonH', 'addTopGenesButtonH', ...
+%       'deleteGeneButtonH', 'ontologyButtonH',...
+%       'cutoffEditH', 'pc1PopupH', 'posPopupH', 'findGeneButtonH', ...
+%       'geneSymbolEditH', 'deleteSampleButtonH', ...
+%       'refreshPcaUsingSamplesButtonH', 'findSampleButtonH', ...
+%       'sampleSymbolEditH', 'saveSampleListButtonH', 'tracePopupH', ...
+%       'runTraceButtonH'};
+    tags ={ 'tracePopupH', 'runTraceButtonH', 'ontologyButtonH'};
     for i = 1:length(tags)
       set(self.(tags{i}), 'Enable', 'off');
+    end
+  end
+  
+  function savedAs = openDialogAndSaveAsText(self, title, lastSave, data)
+  % data is a cell array of strings
+    [fname, pname, ~] = uiputfile(lastSave, title);
+    if fname ~= 0
+      savedAs = fullfile(pname, fname);
+      fid = fopen(savedAs, 'w', 'n', 'UTF-8');
+      for i=1:length(data)
+        fprintf(fid, '%s\n', data{i});
+      end
+      fclose(fid);
+    else
+      savedAs = [];
     end
   end
   
@@ -179,15 +215,29 @@ methods (Access = private)
        @(x,y)selectionChanged(self.pm, 'gene', x,y));    
     self.loadings = s;
   end
+  
+  function updateButtons(self)
+    tags = {'deleteGeneButtonH', 'clearGeneListButtonH', ...
+      'saveGeneListButtonH', 'deleteSampleButtonH', ...
+      'clearSampleListButtonH', 'saveSampleListButtonH',...
+      'refreshPcaUsingSamplesButtonH'};
+    props = {'deleteGeneEnable', 'clearGeneListEnable', ...
+      'saveGeneListEnable', 'deleteSampleEnable', ...
+      'clearSampleListEnable', 'saveSampleListEnable', ...
+      'refreshPcaUsingSamplesEnable'};
+    state = self.pm.uiState;
+    for i = 1:length(tags)
+      tag = tags{i};
+      prop = props{i};
+      if state.(prop)
+        onOff = 'on';
+      else
+        onOff = 'off';
+      end
+      set(self.(tag), 'Enable', onOff);
+    end
+  end
 
-  
-  %****
-  
-%   function clearAnnotation(self)
-%     self.updateGeneAnnotations(-1);
-%     self.updateCellAnnotations(-1);    
-%   end
-  
   function updateAnnotationInfo(self)
     self.updateGeneAnnotations(self.pm.geneHighInd);
     self.updateCellAnnotations(self.pm.sampleHighInd);
@@ -259,6 +309,7 @@ methods (Access = private)
     else
       set(self.geneListboxH, 'String', list, 'Value', ind);
     end
+    self.updateButtons();
   end
   
   function updateSampleList(self)
@@ -284,6 +335,8 @@ methods (Access = private)
     settings.loadings = self.loadings.getSettings();
     settings.scores = self.scores.getSettings();
     settings.pm = self.pm.getSettings();
+    settings.lastSaveGenes = self.lastSaveGenes;
+    settings.lastSaveSamples = self.lastSaveSamples;
     save(self.settingsFile, 'settings');
   end
 
@@ -297,6 +350,8 @@ methods (Access = private)
       self.loadings.changeToSettings(settings.loadings);
       self.scores.changeToSettings(settings.scores);
       self.pm.changeToSettings(settings.pm);
+      self.lastSaveGenes = settings.lastSaveGenes;
+      self.lastSaveSamples = settings.lastSaveSamples;      
     end
   end  
 end
