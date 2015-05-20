@@ -18,9 +18,10 @@ methods
   % computeObj is an object derived from PcaComputeBase
     self@MObject();
     self@GuiBase();    
+    self.createScatterPlots();
     % wire presentation model signals 
-    p = PcaToolPM(computeObj);
-    p.connectMe('reset_changed', @self.refresh);
+    p = PcaToolPM(computeObj, self.scores.pm, self.loadings.pm);
+    p.connectMe('reset', @self.refresh);
     p.connectMe('highlight_changed', @self.updateAnnotationInfo);
     p.connectMe('selection_changed', @self.updateLists);
     self.pm = p;
@@ -43,7 +44,6 @@ methods
       handles.n = {self};
       guidata(fig, handles);
       self.mainH = fig;
-      self.createScatterPlots();
       self.loadSettings();
       self.refresh();
       self.updateAvailableFeatures();
@@ -120,11 +120,11 @@ methods
   end
   
   function clearGeneListButtonH_Callback(self, varargin)
-    self.pm.selectionChanged('gene', [], []);
+    self.pm.deselectAllGenes();
   end
   
   function clearSampleListButtonH_Callback(self, varargin)
-    self.pm.selectionChanged('sample', [], []);
+    self.pm.deselectAllSamples();
   end
   
   function saveSampleListButtonH_Callback(self, varargin)
@@ -141,6 +141,16 @@ methods
     if ~isempty(savedAs)
       self.lastSaveGenes = savedAs;
     end    
+  end
+  
+  function deleteSampleButtonH_Callback(self, varargin)
+    ind = get(self.sampleListboxH, 'Value');
+    self.pm.deselectSample(ind);
+  end
+  
+  function deleteGeneButtonH_Callback(self, varargin)
+    ind = get(self.geneListboxH, 'Value');
+    self.pm.deselectGene(ind)
   end
   
   %*** 
@@ -198,10 +208,10 @@ methods (Access = private)
     s.selectingEnabled = true;
     s.highMarker = '*';
     s.closeFcn = @self.saveSettingsAndQuit;
-    s.connectMe('is_in', @(x)registerIsIn(self.pm, 'sample', x));
-    s.connectMe('highlight', @(x)highlightChanged(self.pm, 'sample', x));
-    s.connectMe('selection', ...
-       @(x,y)self.pm.selectionChanged('sample', x,y));
+%     s.connectMe('is_in', @(x)registerIsIn(self.pm, 'sample', x));
+%     s.connectMe('highlight', @(x)highlightChanged(self.pm, 'sample', x));
+%     s.connectMe('selection', ...
+%        @(x,y)self.pm.selectionChanged('sample', x,y));
     self.scores = s;
     % pca loadings
     s = ScatterSelect();
@@ -209,10 +219,10 @@ methods (Access = private)
     s.selectingEnabled = true;
     s.highMarker = '*';
     s.closeFcn = @self.saveSettingsAndQuit;
-    s.connectMe('is_in', @(x)registerIsIn(self.pm, 'gene', x));
-    s.connectMe('highlight', @(x)highlightChanged(self.pm, 'gene', x));
-    s.connectMe('selection', ...
-       @(x,y)selectionChanged(self.pm, 'gene', x,y));    
+%     s.connectMe('is_in', @(x)registerIsIn(self.pm, 'gene', x));
+%     s.connectMe('highlight', @(x)highlightChanged(self.pm, 'gene', x));
+%     s.connectMe('selection', ...
+%        @(x,y)selectionChanged(self.pm, 'gene', x,y));    
     self.loadings = s;
   end
   
