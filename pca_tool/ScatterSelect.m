@@ -32,6 +32,7 @@ properties (GetAccess = public, SetAccess = private)
   lastSettings
 %   clusterCount = 1 % number of clusters
   colorMap = brewermap(8,'Dark2');
+  plotBorder = 0.05; % fraction of free space (border) around xy plot
 end
 
 
@@ -48,13 +49,6 @@ methods
   function set.title(self, value)
     self.title = value;
     self.updatePlot();
-  end
-
-  function updateData(self, data, cluster)
-    self.pm.updateData(data, cluster);
-    if self.pm.clusterCount > size(self.colorMap,1)
-      warning('Specified more clusters than there are different colors');
-    end    
   end
   
   function val = defaultSettings(self)
@@ -103,7 +97,7 @@ methods
       % strange side effect of setting a property.
       set(self.figAxH, 'Unit', 'normalized');
       self.isInTimer = timer('TimerFcn', @self.checkIsIn, 'Period', 0.1,...
-      'ExecutionMode', 'fixedSpacing');      
+      'ExecutionMode', 'fixedSpacing', 'Name', 'is_in_timer');      
       start(self.isInTimer);
       self.updatePlotToSettings(self.lastSettings);
     end            
@@ -207,23 +201,37 @@ methods (Access = private)
       set(self.highH, 'Visible', 'off');
       self.pm.updateCurrentIndex([]);
     end    
-    if self.isInWindow ~= isIn
+    if self.isInWindow ~= isIn      
       self.emit('is_in', isIn);
     end
     self.isInWindow = isIn;
   end
   
   function updatePlot(self)
+    if self.pm.clusterCount > size(self.colorMap,1)
+      warning('Specified more clusters than there are different colors');
+    end
     if ishandle(self.figH)
       set(self.figH, 'Name', self.title); 
       if ~isempty(self.pm.data)
-        set(self.figAxH, 'XLimMode', 'auto', 'YLimMode', 'auto');   
+%         set(self.figAxH, 'XLimMode', 'auto', 'YLimMode', 'auto');   
         cmap = self.computeClusterColors();
         set(self.scatterH, 'XData', self.pm.data(:,1), 'YData', ...
           self.pm.data(:,2), 'Visible', 'on', 'CData', cmap);
-        set(self.figAxH, 'XLimMode', 'manual', 'YLimMode', 'manual');
+        minX = min(self.pm.data(:,1));
+        maxX = max(self.pm.data(:,1));
+        dx = maxX(1) - minX(1);
+        minY = min(self.pm.data(:,2));
+        maxY = max(self.pm.data(:,2));
+        dy = maxY(1) - minY(1);
+        offX = self.plotBorder * dx;
+        offY = self.plotBorder * dy;
+        set(self.figAxH, 'XLimMode', 'manual', 'YLimMode', 'manual',...
+          'XLim', [minX(1)-offX maxX(1)+offX], 'YLim', ...
+          [minY(1)-offY maxY(1)+offY]);
       end
       self.updatePlotSelection();
+      drawnow;
     end    
   end  
   
@@ -265,7 +273,7 @@ methods (Access = private)
     pixToCoordYScale = (yl(2) - yl(1)) / ap(4);    
     x = (pl(1) - (fp(1) + ap(1))) * pixToCoordXScale;
     y = (pl(2) - (fp(2) + ap(2))) * pixToCoordYScale;
-    xy = [x y];
+    xy = [x y] + [xl(1) yl(1)];
   end
   
   function tf = pointInRect(self, rect, x,y)

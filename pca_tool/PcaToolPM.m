@@ -4,8 +4,8 @@ classdef PcaToolPM < MObject
   %   See http://martinfowler.com/eaaDev/PresentationModel.html
   
 properties
-  pcaxInd % pca x index
-  pcayInd % pca y index  
+  pcaxInd % pca x index, i.e., left side PC in the GUI
+  pcayInd % pca y index, i.e., right side PC in the GUI 
   clusterMethod  % current ClusteringMethod
   geneListInd % current selected index in gene list
   sampleListInd % current selected index in sample list 
@@ -13,13 +13,26 @@ end
   
 properties (SetAccess = private, GetAccess = public)
   compute % PcaComputeBase derived object
-  coefXY % current pca axes coeff values 
-  scoreXY % current pca axes score values
+  coefXY % current pca axes coeff values, i.e., genes
+  scoreXY % current pca axes score values, i.e., samples
   cluster % cluster tags
   samplePm % presentation model for samples, i.e., scores window 
   genePm % presentation model for genes, i.e., loadings window
- 
+  nBins = 20 % number of bins in gene histogram
+  geneBinCountPosX % positive gene counts in the histogram for pcaxInd
+  geneBinCountPosY % positive gene counts in the histogram for pcayInd
+  geneBinCountNegX % negative gene counts in the histogram for pcaxInd
+  geneBinCountNegY % negavite gene counts in the histogram for pcayInd  
+  geneCumSumPosX % cumulative sum of geneBinCountPosX
+  geneCumSumPosY % cumulative sum of geneBinCountPosY
+  geneCumSumNegX % cumulative sum of geneBinCountNegX
+  geneCumSumNegY % cumulative sum of geneBinCountNegY
+  geneEdgesPosX % bin edges
+  geneEdgesPosY
+  geneEdgesNegX
+  geneEdgesNegY
   uiState
+  enableSelectionChanged = true % helper boolean
 end
 
 properties (Dependent)
@@ -116,7 +129,9 @@ methods
   
   function reset(self)
     self.uiState = UiState();
-    self.emit('reset');
+    self.pcaxInd = 1;
+    self.pcayInd = 2;    
+    self.updateCurrentPca();
   end 
   
   function changeToSettings(self, settings)
@@ -131,7 +146,35 @@ methods
       self.coefXY = [self.compute.coeff(:,self.pcaxInd) ...
                       self.compute.coeff(:,self.pcayInd)];
       self.scoreXY = [self.compute.score(:,self.pcaxInd) ...
-                      self.compute.score(:,self.pcayInd)];                  
+                      self.compute.score(:,self.pcayInd)];   
+      self.samplePm.updateData(self.scoreXY, self.cluster);
+      self.genePm.updateData(self.coefXY, self.cluster);
+      
+      ind = self.coefXY(:,self.pcaxInd) >= 0;
+      self.geneBinCountPosX = histcounts(self.coefXY(ind,self.pcaxInd), ...
+        self.nBins);
+      
+      ind = self.coefXY(:,self.pcayInd) >= 0;
+      self.geneBinCountPosY = histcounts(self.coefXY(ind,self.pcayInd), ...
+        self.nBins);
+      
+      ind = self.coefXY(:,self.pcaxInd) < 0;
+      self.geneBinCountNegX = histcounts(self.coefXY(ind,self.pcaxInd), ...
+        self.nBins);
+      
+      ind = self.coefXY(:,self.pcayInd) < 0;
+      self.geneBinCountNegY = histcounts(self.coefXY(ind,self.pcayInd), ...
+        self.nBins);
+      
+      self.geneCumSumPosX = cumsum(self.geneBinCountPosX);
+      self.geneCumSumPosY = cumsum(self.geneBinCountPosY);      
+      self.geneCumSumNegX = cumsum(self.geneBinCountNegX);
+      self.geneCumSumNegY = cumsum(self.geneBinCountNegY);      
+      self.enableSelectionChanged = false;
+      self.genePm.deselectAll();
+      self.samplePm.deselectAll();
+      self.enableSelectionChanged = true;
+      self.emit('reset');
     end
   end
   
@@ -158,10 +201,12 @@ methods
     else
       self.uiState.updateSamplesSelected(true);
     end    
-    self.emit('selection_changed');
+    if self.enableSelectionChanged
+      self.emit('selection_changed')
+    end;
   end
   
-  function geneSelectionChanged(self)
+  function geneSelectionChanged(self)    
     % move the current selected index in the list, if needed
     indices = self.geneSelIndices;
     if isempty(indices)
@@ -177,7 +222,9 @@ methods
     else
       self.uiState.updateGenesSelected(true);
     end    
-    self.emit('selection_changed');
+    if self.enableSelectionChanged
+      self.emit('selection_changed');
+    end
   end
   
   function deselectSample(self, index)
@@ -196,84 +243,90 @@ methods
     self.genePm.deselectAll();
   end
   
-%   function registerIsIn(self, from, isIn)
-%     doEmit = false;
-%     if strcmp(from, 'sample')
-%       if self.sampleIsIn ~= isIn
-%         doEmit = true;
-%       end
-%       self.sampleIsIn = isIn;
-%     elseif strcmp(from, 'gene')
-%       if self.geneIsIn ~= isIn
-%         doEmit = true;
-%       end
-%       self.geneIsIn = isIn;
-%     else
-%       error('Bug found');
-%     end
-%     if ~self.sampleIsIn
-%       self.sampleHighInd = [];
-%     end
-%     if ~self.geneIsIn
-%       self.geneHighInd = [];
-%     end
-%     if doEmit
-%       self.emit('highlight_changed');  
-%     end
-%     if self.sampleIsIn == false && self.geneIsIn == false
-%       self.emit('no_highlight_changed');
-%     end
-%   end  
+  function tf = findGene(self, name)
+    tf = false;
+    % loop all gene symbols, break on first match
+    for i = 1:self.compute.geneCount
+      if strcmp(name, self.getAnnotation('symbol_text', i))
+        tf = true;
+        break;
+      end
+    end
+    if tf
+      % If the index was not already in the selection list, add it
+      % there. This which causes selection_changed signal, but we don't
+      % want to re-emit it yet, so it's temporarily disabled.
+      % After the index addtion, find a new list index and emit 
+      % selection change.
+      listInd = find(i == self.geneSelIndices);
+      if isempty(listInd)
+        self.enableSelectionChanged = false;
+        self.genePm.selectIndex(i);
+        self.enableSelectionChanged = true;
+        listInd = find(i == self.geneSelIndices);
+      end
+      self.geneListInd = listInd;
+      self.emit('selection_changed');
+    end    
+  end
   
-%   function highlightChanged(self, type, ind)
-%     if strcmp(type, 'gene')
-%       self.geneHighInd = ind;
-%     elseif strcmp(type, 'sample')
-%       self.sampleHighInd = ind;
-%     else
-%       error('Bug found');
-%     end    
-%     self.emit('highlight_changed');
-%   end
-%   
-
-%   function selectionChanged(self, type, data, indices)
-%     if strcmp(type, 'gene')
-%       self.geneSelData = data;
-%       self.geneSelIndices = indices;
-%       if isempty(indices)
-%         self.geneListInd = [];
-%       elseif isempty(self.geneListInd) && ~isempty(indices)
-%         self.geneListInd = 1;
-%       elseif self.geneListInd > length(indices)
-%         self.geneListInd = length(indices);
-%       end
-%       if isempty(self.geneListInd)
-%         self.uiState.updateGenesSelected(false);
-%       else
-%         self.uiState.updateGenesSelected(true);
-%       end
-%     elseif strcmp(type, 'sample')
-%       self.sampleSelData = data;
-%       self.sampleSelIndices = indices;
-%       if isempty(indices)
-%         self.sampleListInd = [];
-%       elseif isempty(self.sampleListInd) && ~isempty(indices)
-%         self.sampleListInd = 1;        
-%       elseif self.sampleListInd > length(indices)
-%         self.sampleListInd = length(indices);
-%       end
-%       if isempty(self.sampleListInd)
-%         self.uiState.updateSamplesSelected(false);
-%       else
-%         self.uiState.updateSamplesSelected(true);
-%       end
+  function tf = findSample(self, name)
+    % see findGene for comments
+    tf = false;
+    for i = 1:self.compute.sampleCount
+      if strcmp(name, self.getAnnotation('id_text', i))
+        tf = true;
+        break;
+      end
+    end
+    if tf
+      listInd = find(i == self.sampleSelIndices);
+      if isempty(listInd)
+        self.enableSelectionChanged = false;
+        self.samplePm.selectIndex(i);
+        self.enableSelectionChanged = true;
+        listInd = find(i == self.sampleSelIndices);
+      end
+      self.sampleListInd = listInd;
+      self.emit('selection_changed');
+    end   
+  end
+    
+  function selectTopGenes(self, cutoff, xOrY, posOrNeg)
+  % 0<= cutoff <= 1
+    if ~ismember(xOrY, {'x', 'y'}) || ~ismember(posOrNeg, {'pos', 'neg'})
+      error('Bug found');
+    end
+    % threshold
+    if strcmp(posOrNeg, 'pos')
+      thr = (1-cutoff) * self.geneCumSumPosX(end);
+      if strcmp(xOrY, 'x')      
+        pc = self.coefXY(self.coefXY(:,1) >= 0, :);
+      elseif strcmp(xOrY, 'y')
+        pc = self.coefXY(self.coefXY(:,2) >= 0, :);
+      end
+    elseif strcmp(posOrNeg, 'neg')
+      thr = (1-cutoff) * self.geneCumSumNegX(end);
+      if strcmp(xOrY, 'x')      
+        pc = self.coefXY(self.coefXY(:,1) < 0, :);
+      elseif strcmp(xOrY, 'y')
+        pc = self.coefXY(self.coefXY(:,2) < 0, :);
+      end
+    end
+    % select axis
+%     if strcmp(xOrY, 'x')      
+%       pc = self.coefXY(:,1);
+%     elseif strcmp(xOrY, 'y')
+%       pc = self.coefXY(:,2);
 %     else
 %       error('Bug found');
 %     end
-%     self.emit('selection_changed')
-%   end
-  
+    % select indices
+    ind = find(abs(pc) >= thr);
+    % merge with current indices
+    ind = unique([ind self.geneSelIndices]);
+    self.genePm.setSelection(ind);  
+  end
 end
 
 methods (Access = private)

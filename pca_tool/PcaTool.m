@@ -46,9 +46,10 @@ methods
       self.mainH = fig;
       self.loadSettings();
       self.refresh();
-      self.updateAvailableFeatures();
+      self.updateAvailableFeatures();      
       self.loadings.show();
-      self.scores.show();
+      self.scores.show();      
+      self.pm.updateCurrentPca();
     end
   end
 
@@ -68,7 +69,6 @@ methods
         error('Bug found');
     end    
     set(self.clusteringPopupH, 'Value', ind);
-    self.refreshPcaButtonH_Callback();
     self.updateAnnotationInfo();
     self.updateLists();
   end
@@ -76,8 +76,6 @@ methods
   %*** Callbacks from GUI objects defined in GUIDE
   function refreshPcaButtonH_Callback(self, varargin)
     self.pm.updateCurrentPca();
-    self.scores.updateData(self.pm.scoreXY, self.pm.cluster);
-    self.loadings.updateData(self.pm.coefXY, self.pm.cluster);
   end
 
   function pcaxEditH_Callback(self, varargin)
@@ -153,6 +151,61 @@ methods
     self.pm.deselectGene(ind)
   end
   
+  function findGeneButtonH_Callback(self, varargin)
+    name = strtrim(get(self.geneSymbolEditH, 'String'));
+    if ~self.pm.findGene(name)
+      errordlg(sprintf('Can''t find gene ''%s''', name));
+    end
+  end
+  
+  function findSampleButtonH_Callback(self, varargin)
+    name = strtrim(get(self.sampleSymbolEditH, 'String'));
+    if ~self.pm.findSample(name)
+      errordlg(sprintf('Can''t find sample ''%s''', name));
+    end
+  end
+  
+  function addTopGenesButtonH_Callback(self, varargin)
+    cutoff = str2double(get(self.cutoffEditH, 'String'))/100;
+    pc = get(self.pcPopupH, 'Value');
+    pos = get(self.posPopupH, 'Value');
+    if pc == 1
+      xOrY = 'x';
+    elseif pc == 2
+      xOrY = 'y';
+    else
+      error('Bug found');
+    end
+    if pos == 1
+      posOrNeg = 'pos';
+    elseif pos == 2
+      posOrNeg = 'neg';
+    else
+      error('Bug found');
+    end
+    self.pm.selectTopGenes(cutoff, xOrY, posOrNeg);
+  end
+  
+  function geneSymbolEditH_Callback(self, varargin)
+    % nothing to do
+  end
+  
+  function sampleSymbolEditH_Callback(self, varargin)
+    % nothing to do
+  end
+  
+  function cutoffEditH_Callback(self, varargin)
+    % nothing to do
+  end
+  
+  function pcPopupH_Callback(self, varargin)
+    % nothing to do
+  end
+  
+  function posPopupH_Callback(self, varargin)
+    % nothing to do
+  end
+  
   %*** 
   function saveSettingsAndQuit(self)
     self.saveSettings();
@@ -202,27 +255,19 @@ methods (Access = private)
   function createScatterPlots(self)
   % Creates scatter plot windows, signals are fed to the presentation
   % model which handles the UI logic
-    % pca scores
+    % pca scores, i.e. samples
     s = ScatterSelect();
     s.title = 'PCA scores';
     s.selectingEnabled = true;
     s.highMarker = '*';
     s.closeFcn = @self.saveSettingsAndQuit;
-%     s.connectMe('is_in', @(x)registerIsIn(self.pm, 'sample', x));
-%     s.connectMe('highlight', @(x)highlightChanged(self.pm, 'sample', x));
-%     s.connectMe('selection', ...
-%        @(x,y)self.pm.selectionChanged('sample', x,y));
     self.scores = s;
-    % pca loadings
+    % pca loadings, i.e., genes
     s = ScatterSelect();
     s.title = 'PCA loadings';
     s.selectingEnabled = true;
     s.highMarker = '*';
     s.closeFcn = @self.saveSettingsAndQuit;
-%     s.connectMe('is_in', @(x)registerIsIn(self.pm, 'gene', x));
-%     s.connectMe('highlight', @(x)highlightChanged(self.pm, 'gene', x));
-%     s.connectMe('selection', ...
-%        @(x,y)selectionChanged(self.pm, 'gene', x,y));    
     self.loadings = s;
   end
   
@@ -319,6 +364,10 @@ methods (Access = private)
     else
       set(self.geneListboxH, 'String', list, 'Value', ind);
     end
+    list = cell(2,1);
+    list{1} = sprintf('PC%d', self.pm.pcaxInd);
+    list{2} = sprintf('PC%d', self.pm.pcayInd);
+    set(self.pcPopupH, 'String', list);
     self.updateButtons();
   end
   

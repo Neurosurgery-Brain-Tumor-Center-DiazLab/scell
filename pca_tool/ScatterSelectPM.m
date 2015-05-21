@@ -40,11 +40,15 @@ methods
   end  
   
   function selectCurrentIndex(self)
-    if ~ismember(self.currentIndex, self.selIndices)
-      self.selIndices(end+1) = self.currentIndex;
+    self.selectIndex(self.currentIndex);
+  end
+  
+  function selectIndex(self, index)
+    if ~ismember(index, self.selIndices)
+      self.selIndices(end+1) = index;
       self.selData = self.data(self.selIndices, :);
       self.emit('selection_changed');
-    end    
+    end
   end
   
   function deselectIndex(self, index)
@@ -57,6 +61,12 @@ methods
     if ~isempty(self.selIndices)
       self.deselectIndex(length(self.selIndices));
     end
+  end
+  
+  function setSelection(self, indices)
+    self.selIndices = indices;
+    self.selData = self.data(indices,:);
+    self.emit('selection_changed');
   end
   
   function deselectAll(self)

@@ -14,7 +14,7 @@ classdef PcaComputeMock < PcaComputeBase
       if isempty(self.coeff) && ~isempty(self.d)
         geneCount = round(size(self.d.nrmC, 1)/10);
         sampleCount = size(self.d.nrmC, 2);
-        self.coeff = rand(geneCount, geneCount);
+        self.coeff = 2*(rand(geneCount, geneCount)-0.5);
         self.score = rand(sampleCount, sampleCount);
       end
     end   
