@@ -10,7 +10,7 @@ properties
   geneListInd % current selected index in gene list
   sampleListInd % current selected index in sample list 
 end
-  
+
 properties (SetAccess = private, GetAccess = public)
   compute % PcaComputeBase derived object
   coefXY % current pca axes coeff values, i.e., genes
@@ -19,28 +19,20 @@ properties (SetAccess = private, GetAccess = public)
   samplePm % presentation model for samples, i.e., scores window 
   genePm % presentation model for genes, i.e., loadings window
   nBins = 20 % number of bins in gene histogram
-  geneBinCountPosX % positive gene counts in the histogram for pcaxInd
-  geneBinCountPosY % positive gene counts in the histogram for pcayInd
-  geneBinCountNegX % negative gene counts in the histogram for pcaxInd
-  geneBinCountNegY % negavite gene counts in the histogram for pcayInd  
-  geneCumSumPosX % cumulative sum of geneBinCountPosX
-  geneCumSumPosY % cumulative sum of geneBinCountPosY
-  geneCumSumNegX % cumulative sum of geneBinCountNegX
-  geneCumSumNegY % cumulative sum of geneBinCountNegY
-  geneEdgesPosX % bin edges
-  geneEdgesPosY
-  geneEdgesNegX
-  geneEdgesNegY
+  geneCumProbPosX % Nx2 cumulative probability function for positive genes
+                 % each row is [loading cumulative_prob]
+  geneCumProbNegX % as above, but for negative value, each row is
+                 % [abs(loading) cumulative_prob]
+  geneCumProbPosY
+  geneCumProbNegY
   uiState
   enableSelectionChanged = true % helper boolean
 end
 
 properties (Dependent)
-  % dep
+  maxPcInd % maximum PC index, i.e, number of colums in the coeff
   geneHighInd % current gene highlight index, empty if no highlight
   sampleHighInd % 
-%   sampleIsIn = false
-%   geneIsIn = false  
   geneSelData  % gene selection data Mx2
   geneSelIndices % gene selection indices Mx1
   sampleSelData
@@ -65,6 +57,13 @@ methods
     self.changeToSettings(self.defaultSettings);     
   end
 
+  function val = get.maxPcInd(self)
+    val = [];
+    if ~isempty(self.compute.coeff)
+      val = size(self.compute.coeff,2);
+    end
+  end
+  
   function val = get.geneHighInd(self)
     val = self.genePm.currentIndex;
   end
@@ -143,37 +142,42 @@ methods
   function updateCurrentPca(self)
     self.compute.computePca();
     if ~isempty(self.compute.coeff)
+      self.uiState.updateHasData(true);
       self.coefXY = [self.compute.coeff(:,self.pcaxInd) ...
                       self.compute.coeff(:,self.pcayInd)];
       self.scoreXY = [self.compute.score(:,self.pcaxInd) ...
                       self.compute.score(:,self.pcayInd)];   
       self.samplePm.updateData(self.scoreXY, self.cluster);
       self.genePm.updateData(self.coefXY, self.cluster);
-      
+            
+      % calculate cumulative probability function from positive genes X
       ind = self.coefXY(:,self.pcaxInd) >= 0;
-      self.geneBinCountPosX = histcounts(self.coefXY(ind,self.pcaxInd), ...
+      [n, edges] = histcounts(self.coefXY(ind,self.pcaxInd), ...
         self.nBins);
-      
-      ind = self.coefXY(:,self.pcayInd) >= 0;
-      self.geneBinCountPosY = histcounts(self.coefXY(ind,self.pcayInd), ...
-        self.nBins);
-      
+      ncum = cumsum(n);
+      binCenters = edges(1:end-1) + diff(edges);
+      self.geneCumProbPosX = [binCenters(:) ncum(:)/ncum(end)];
+      % the same for negatives X
       ind = self.coefXY(:,self.pcaxInd) < 0;
-      self.geneBinCountNegX = histcounts(self.coefXY(ind,self.pcaxInd), ...
+      [n, edges] = histcounts(abs(self.coefXY(ind,self.pcaxInd)), ...
         self.nBins);
-      
+      ncum = cumsum(n);
+      binCenters = edges(1:end-1) + diff(edges);
+      self.geneCumProbNegX = [binCenters(:) ncum(:)/ncum(end)];      
+      % posive Y
+      ind = self.coefXY(:,self.pcayInd) >= 0;
+      [n, edges] = histcounts(self.coefXY(ind,self.pcayInd), ...
+        self.nBins);
+      ncum = cumsum(n);
+      binCenters = edges(1:end-1) + diff(edges);
+      self.geneCumProbPosY = [binCenters(:) ncum(:)/ncum(end)];
+      % negative Y
       ind = self.coefXY(:,self.pcayInd) < 0;
-      self.geneBinCountNegY = histcounts(self.coefXY(ind,self.pcayInd), ...
+      [n, edges] = histcounts(abs(self.coefXY(ind,self.pcayInd)), ...
         self.nBins);
-      
-      self.geneCumSumPosX = cumsum(self.geneBinCountPosX);
-      self.geneCumSumPosY = cumsum(self.geneBinCountPosY);      
-      self.geneCumSumNegX = cumsum(self.geneBinCountNegX);
-      self.geneCumSumNegY = cumsum(self.geneBinCountNegY);      
-      self.enableSelectionChanged = false;
-      self.genePm.deselectAll();
-      self.samplePm.deselectAll();
-      self.enableSelectionChanged = true;
+      ncum = cumsum(n);
+      binCenters = edges(1:end-1) + diff(edges);
+      self.geneCumProbNegY = [binCenters(:) ncum(:)/ncum(end)];         
       self.emit('reset');
     end
   end
@@ -291,40 +295,61 @@ methods
       self.emit('selection_changed');
     end   
   end
-    
+  
+  function limit = solveLoadingLimit(self, geneCumProb, prob)
+    if prob <= eps 
+      limit = geneCumProb(1,1);
+    elseif prob >= 1-eps
+      limit = geneCumProb(end,1);
+    else
+      % function whose root is to be found
+      f = @(x)(interp1(geneCumProb(:,1), geneCumProb(:,2),x) - prob);
+      % solution is to be found within this limit
+      init = [geneCumProb(1,1) geneCumProb(end,1)];
+      % find the root
+      limit = fzero(f, init);
+    end
+  end
+  
   function selectTopGenes(self, cutoff, xOrY, posOrNeg)
   % 0<= cutoff <= 1
     if ~ismember(xOrY, {'x', 'y'}) || ~ismember(posOrNeg, {'pos', 'neg'})
       error('Bug found');
     end
-    % threshold
-    if strcmp(posOrNeg, 'pos')
-      thr = (1-cutoff) * self.geneCumSumPosX(end);
-      if strcmp(xOrY, 'x')      
-        pc = self.coefXY(self.coefXY(:,1) >= 0, :);
-      elseif strcmp(xOrY, 'y')
-        pc = self.coefXY(self.coefXY(:,2) >= 0, :);
-      end
-    elseif strcmp(posOrNeg, 'neg')
-      thr = (1-cutoff) * self.geneCumSumNegX(end);
-      if strcmp(xOrY, 'x')      
-        pc = self.coefXY(self.coefXY(:,1) < 0, :);
-      elseif strcmp(xOrY, 'y')
-        pc = self.coefXY(self.coefXY(:,2) < 0, :);
-      end
+
+    % select cum prob distribution
+    if strcmp(posOrNeg, 'pos') && strcmp(xOrY, 'x')
+      geneCumProb = self.geneCumProbPosX;     
+    elseif strcmp(posOrNeg, 'pos') && strcmp(xOrY, 'y')
+      geneCumProb = self.geneCumProbPosY;
+    elseif strcmp(posOrNeg, 'neg') && strcmp(xOrY, 'x')      
+      geneCumProb = self.geneCumProbNegX;
+    elseif strcmp(posOrNeg, 'neg') && strcmp(xOrY, 'y')
+      geneCumProb = self.geneCumProbNegY;
+    else
+      error('Bug found');
     end
     % select axis
-%     if strcmp(xOrY, 'x')      
-%       pc = self.coefXY(:,1);
-%     elseif strcmp(xOrY, 'y')
-%       pc = self.coefXY(:,2);
-%     else
-%       error('Bug found');
-%     end
+    if strcmp(xOrY, 'x')
+      pc = self.coefXY(:,1);
+    elseif strcmp(xOrY, 'y')
+      pc = self.coefXY(:,2);
+    else
+      error('Bug found');
+    end
+    % threshold
+    thr = (1-cutoff);    
+    limit = self.solveLoadingLimit(geneCumProb, thr);        
     % select indices
-    ind = find(abs(pc) >= thr);
+    if strcmp(posOrNeg, 'pos')
+      ind = find(pc >= limit);
+    elseif strcmp(posOrNeg, 'neg')
+      ind = find(pc <= -limit);
+    else
+      error('Bug found');
+    end
     % merge with current indices
-    ind = unique([ind self.geneSelIndices]);
+    ind = unique([ind(:)' self.geneSelIndices(:)']);
     self.genePm.setSelection(ind);  
   end
 end

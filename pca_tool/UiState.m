@@ -4,10 +4,13 @@ classdef UiState < handle
   
   
 properties (SetAccess = private, GetAccess = public)
-  % toggle states
-  genesSelected = false
-  samplesSelected = false
-  % buttons enabled based on UI state
+  % pca and clusterin
+  pcxAxisEnable = false;
+  pcyAxisEnable = false;
+  refreshPcaEnable = false;
+  clusteringMenuEnable = false;
+  clusteringButtonEnable = false;  
+  % gene and sample lists
   deleteGeneEnable = false
   clearGeneListEnable = false
   saveGeneListEnable = false
@@ -21,15 +24,21 @@ methods
   function self = UiState()
   end
   
+  function updateHasData(self, value)
+    self.pcxAxisEnable = value;
+    self.pcyAxisEnable = value;
+    self.refreshPcaEnable = value;
+    self.clusteringMenuEnable = value;
+    self.clusteringButtonEnable = value;    
+  end
+  
   function updateGenesSelected(self, value)
-    self.genesSelected = value;
     self.deleteGeneEnable = value;
     self.clearGeneListEnable = value;
     self.saveGeneListEnable = value;       
   end
   
   function updateSamplesSelected(self, value)
-    self.samplesSelected = value;
     self.deleteSampleEnable = value;
     self.clearSampleListEnable = value;
     self.saveSampleListEnable = value; 

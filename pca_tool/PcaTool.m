@@ -79,13 +79,23 @@ methods
   end
 
   function pcaxEditH_Callback(self, varargin)
-    ind = str2double(get(self.pcaxEditH, 'String'));
-    self.pm.pcaxInd = ind;
+    [tf, ind] = self.validatePcInput(get(self.pcaxEditH, 'String'));
+    if tf
+      self.pm.pcaxInd = ind;
+    else
+      set(self.pcaxEditH, 'String', num2str(self.pm.pcaxInd));
+    end
   end
   
   function pcayEditH_Callback(self, varargin)
-    ind = str2double(get(self.pcayEditH, 'String'));
-    self.pm.pcayInd = ind;
+    [tf, ind] = self.validatePcInput(get(self.pcayEditH, 'String'));
+    if tf
+      self.pm.pcayInd = ind;
+    else
+      set(self.pcayEditH, 'String', num2str(self.pm.pcayInd));
+    end    
+%     ind = str2double(get(self.pcayEditH, 'String'));
+%     self.pm.pcayInd = ind;
   end
   
   function clusteringPopupH_Callback(self, varargin)
@@ -167,23 +177,29 @@ methods
   
   function addTopGenesButtonH_Callback(self, varargin)
     cutoff = str2double(get(self.cutoffEditH, 'String'))/100;
-    pc = get(self.pcPopupH, 'Value');
-    pos = get(self.posPopupH, 'Value');
-    if pc == 1
-      xOrY = 'x';
-    elseif pc == 2
-      xOrY = 'y';
+    if isnan(cutoff)
+      uiwait(errordlg('Cutoff must be numeric'));
+    elseif cutoff < 0 || cutoff > 1
+      uiwait(errordlg('Cutoff must be between 0 and 100'));
     else
-      error('Bug found');
+      pc = get(self.pcPopupH, 'Value');
+      pos = get(self.posPopupH, 'Value');
+      if pc == 1
+        xOrY = 'x';
+      elseif pc == 2
+        xOrY = 'y';
+      else
+        error('Bug found');
+      end
+      if pos == 1
+        posOrNeg = 'pos';
+      elseif pos == 2
+        posOrNeg = 'neg';
+      else
+        error('Bug found');
+      end
+      self.pm.selectTopGenes(cutoff, xOrY, posOrNeg);
     end
-    if pos == 1
-      posOrNeg = 'pos';
-    elseif pos == 2
-      posOrNeg = 'neg';
-    else
-      error('Bug found');
-    end
-    self.pm.selectTopGenes(cutoff, xOrY, posOrNeg);
   end
   
   function geneSymbolEditH_Callback(self, varargin)
@@ -233,6 +249,20 @@ methods (Access = private)
     end
   end
   
+  
+  function [tf, ind] = validatePcInput(self, str)
+    ind = str2double(str);
+    tf = false;
+    if isnan(ind)    
+      uiwait(errordlg('PC axis must be numeric'));
+    elseif ind < 1 || ind > self.pm.maxPcInd
+      uiwait(errordlg(sprintf('PC axis must be between 1 and %d', ...
+        self.pm.maxPcInd)));
+    else
+      tf = true;
+    end
+  end
+  
   function savedAs = openDialogAndSaveAsText(self, title, lastSave, data)
   % data is a cell array of strings
     [fname, pname, ~] = uiputfile(lastSave, title);
@@ -269,17 +299,20 @@ methods (Access = private)
     s.highMarker = '*';
     s.closeFcn = @self.saveSettingsAndQuit;
     self.loadings = s;
-  end
+  end  
   
-  function updateButtons(self)
+  function updateFromUiState(self)
     tags = {'deleteGeneButtonH', 'clearGeneListButtonH', ...
       'saveGeneListButtonH', 'deleteSampleButtonH', ...
       'clearSampleListButtonH', 'saveSampleListButtonH',...
-      'refreshPcaUsingSamplesButtonH'};
+      'refreshPcaUsingSamplesButtonH', 'pcaxEditH', 'pcayEditH', ....
+      'refreshPcaButtonH', 'clusteringPopupH', 'clusterCellsButtonH'};
     props = {'deleteGeneEnable', 'clearGeneListEnable', ...
       'saveGeneListEnable', 'deleteSampleEnable', ...
       'clearSampleListEnable', 'saveSampleListEnable', ...
-      'refreshPcaUsingSamplesEnable'};
+      'refreshPcaUsingSamplesEnable', 'pcxAxisEnable', 'pcyAxisEnable', ...
+      'refreshPcaEnable', 'refreshPcaEnable', 'clusteringMenuEnable', ...
+      'clusteringButtonEnable'};
     state = self.pm.uiState;
     for i = 1:length(tags)
       tag = tags{i};
@@ -368,7 +401,7 @@ methods (Access = private)
     list{1} = sprintf('PC%d', self.pm.pcaxInd);
     list{2} = sprintf('PC%d', self.pm.pcayInd);
     set(self.pcPopupH, 'String', list);
-    self.updateButtons();
+    self.updateFromUiState();
   end
   
   function updateSampleList(self)
