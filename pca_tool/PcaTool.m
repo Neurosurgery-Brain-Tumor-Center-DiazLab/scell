@@ -7,7 +7,9 @@ properties (GetAccess = public, SetAccess = private)
   scores % scores ScatterSelect
   loadings % loadings ScatterSelect  
   pm % Presentation model  
-  settingsFile
+  settingsFile % mat-file where settings are stored
+  lastSaveGenes % last save filename for genes
+  lastSaveSamples % lastfilename for  samples
 end
 
 
@@ -16,13 +18,16 @@ methods
   % computeObj is an object derived from PcaComputeBase
     self@MObject();
     self@GuiBase();    
+    self.createScatterPlots();
     % wire presentation model signals 
-    p = PcaToolPM(computeObj);
-    p.connectMe('all_changed', @self.refresh);
+    p = PcaToolPM(computeObj, self.scores.pm, self.loadings.pm);
+    p.connectMe('reset', @self.refresh);
     p.connectMe('highlight_changed', @self.updateAnnotationInfo);
     p.connectMe('selection_changed', @self.updateLists);
     self.pm = p;
     self.settingsFile = fullfile(pwd, 'settings.mat');
+    self.lastSaveGenes = '';
+    self.lastSaveSamples = '';
   end
 
   function show(self)
@@ -39,12 +44,12 @@ methods
       handles.n = {self};
       guidata(fig, handles);
       self.mainH = fig;
-      self.createScatterPlots();
       self.loadSettings();
       self.refresh();
-      self.updateAvailableFeatures();
+      self.updateAvailableFeatures();      
       self.loadings.show();
-      self.scores.show();
+      self.scores.show();      
+      self.pm.updateCurrentPca();
     end
   end
 
@@ -64,7 +69,6 @@ methods
         error('Bug found');
     end    
     set(self.clusteringPopupH, 'Value', ind);
-    self.refreshPcaButtonH_Callback();
     self.updateAnnotationInfo();
     self.updateLists();
   end
@@ -72,18 +76,26 @@ methods
   %*** Callbacks from GUI objects defined in GUIDE
   function refreshPcaButtonH_Callback(self, varargin)
     self.pm.updateCurrentPca();
-    self.scores.updateData(self.pm.scoreXY, self.pm.cluster);
-    self.loadings.updateData(self.pm.coefXY, self.pm.cluster);
   end
 
   function pcaxEditH_Callback(self, varargin)
-    ind = str2double(get(self.pcaxEditH, 'String'));
-    self.pm.pcaxInd = ind;
+    [tf, ind] = self.validatePcInput(get(self.pcaxEditH, 'String'));
+    if tf
+      self.pm.pcaxInd = ind;
+    else
+      set(self.pcaxEditH, 'String', num2str(self.pm.pcaxInd));
+    end
   end
   
   function pcayEditH_Callback(self, varargin)
-    ind = str2double(get(self.pcayEditH, 'String'));
-    self.pm.pcayInd = ind;
+    [tf, ind] = self.validatePcInput(get(self.pcayEditH, 'String'));
+    if tf
+      self.pm.pcayInd = ind;
+    else
+      set(self.pcayEditH, 'String', num2str(self.pm.pcayInd));
+    end    
+%     ind = str2double(get(self.pcayEditH, 'String'));
+%     self.pm.pcayInd = ind;
   end
   
   function clusteringPopupH_Callback(self, varargin)
@@ -116,11 +128,98 @@ methods
   end
   
   function clearGeneListButtonH_Callback(self, varargin)
-    self.pm.selectionChanged('gene', [], []);
+    self.pm.deselectAllGenes();
   end
   
   function clearSampleListButtonH_Callback(self, varargin)
-    self.pm.selectionChanged('sample', [], []);
+    self.pm.deselectAllSamples();
+  end
+  
+  function saveSampleListButtonH_Callback(self, varargin)
+    savedAs = self.openDialogAndSaveAsText('Save samples', ...
+      self.lastSaveSamples, get(self.sampleListboxH, 'String'));
+    if ~isempty(savedAs)
+      self.lastSaveSamples = savedAs;
+    end
+  end
+  
+  function saveGeneListButtonH_Callback(self, varargin)
+    savedAs = self.openDialogAndSaveAsText('Save genes', ...
+      self.lastSaveGenes, get(self.geneListboxH, 'String'));
+    if ~isempty(savedAs)
+      self.lastSaveGenes = savedAs;
+    end    
+  end
+  
+  function deleteSampleButtonH_Callback(self, varargin)
+    ind = get(self.sampleListboxH, 'Value');
+    self.pm.deselectSample(ind);
+  end
+  
+  function deleteGeneButtonH_Callback(self, varargin)
+    ind = get(self.geneListboxH, 'Value');
+    self.pm.deselectGene(ind)
+  end
+  
+  function findGeneButtonH_Callback(self, varargin)
+    name = strtrim(get(self.geneSymbolEditH, 'String'));
+    if ~self.pm.findGene(name)
+      errordlg(sprintf('Can''t find gene ''%s''', name));
+    end
+  end
+  
+  function findSampleButtonH_Callback(self, varargin)
+    name = strtrim(get(self.sampleSymbolEditH, 'String'));
+    if ~self.pm.findSample(name)
+      errordlg(sprintf('Can''t find sample ''%s''', name));
+    end
+  end
+  
+  function addTopGenesButtonH_Callback(self, varargin)
+    cutoff = str2double(get(self.cutoffEditH, 'String'))/100;
+    if isnan(cutoff)
+      uiwait(errordlg('Cutoff must be numeric'));
+    elseif cutoff < 0 || cutoff > 1
+      uiwait(errordlg('Cutoff must be between 0 and 100'));
+    else
+      pc = get(self.pcPopupH, 'Value');
+      pos = get(self.posPopupH, 'Value');
+      if pc == 1
+        xOrY = 'x';
+      elseif pc == 2
+        xOrY = 'y';
+      else
+        error('Bug found');
+      end
+      if pos == 1
+        posOrNeg = 'pos';
+      elseif pos == 2
+        posOrNeg = 'neg';
+      else
+        error('Bug found');
+      end
+      self.pm.selectTopGenes(cutoff, xOrY, posOrNeg);
+    end
+  end
+  
+  function geneSymbolEditH_Callback(self, varargin)
+    % nothing to do
+  end
+  
+  function sampleSymbolEditH_Callback(self, varargin)
+    % nothing to do
+  end
+  
+  function cutoffEditH_Callback(self, varargin)
+    % nothing to do
+  end
+  
+  function pcPopupH_Callback(self, varargin)
+    % nothing to do
+  end
+  
+  function posPopupH_Callback(self, varargin)
+    % nothing to do
   end
   
   %*** 
@@ -137,15 +236,45 @@ end
 %*** Private implementation related stuff
 methods (Access = private)
   function updateAvailableFeatures(self)
-    tags ={'saveGeneListButtonH', 'addTopGenesButtonH', ...
-      'selectGenesButtonH', 'deleteGeneButtonH', 'ontologyButtonH',...
-      'cutoffEditH', 'pc1PopupH', 'posPopupH', 'findGeneButtonH', ...
-      'geneSymbolEditH', 'selectSamplesButtonH', 'deleteSampleButtonH', ...
-      'refreshPcaUsingSamplesButtonH', 'findSampleButtonH', ...
-      'sampleSymbolEditH', 'saveSampleListButtonH', 'tracePopupH', ...
-      'runTraceButtonH'};
+%     tags ={'saveGeneListButtonH', 'addTopGenesButtonH', ...
+%       'deleteGeneButtonH', 'ontologyButtonH',...
+%       'cutoffEditH', 'pc1PopupH', 'posPopupH', 'findGeneButtonH', ...
+%       'geneSymbolEditH', 'deleteSampleButtonH', ...
+%       'refreshPcaUsingSamplesButtonH', 'findSampleButtonH', ...
+%       'sampleSymbolEditH', 'saveSampleListButtonH', 'tracePopupH', ...
+%       'runTraceButtonH'};
+    tags ={ 'tracePopupH', 'runTraceButtonH', 'ontologyButtonH'};
     for i = 1:length(tags)
       set(self.(tags{i}), 'Enable', 'off');
+    end
+  end
+  
+  
+  function [tf, ind] = validatePcInput(self, str)
+    ind = str2double(str);
+    tf = false;
+    if isnan(ind)    
+      uiwait(errordlg('PC axis must be numeric'));
+    elseif ind < 1 || ind > self.pm.maxPcInd
+      uiwait(errordlg(sprintf('PC axis must be between 1 and %d', ...
+        self.pm.maxPcInd)));
+    else
+      tf = true;
+    end
+  end
+  
+  function savedAs = openDialogAndSaveAsText(self, title, lastSave, data)
+  % data is a cell array of strings
+    [fname, pname, ~] = uiputfile(lastSave, title);
+    if fname ~= 0
+      savedAs = fullfile(pname, fname);
+      fid = fopen(savedAs, 'w', 'n', 'UTF-8');
+      for i=1:length(data)
+        fprintf(fid, '%s\n', data{i});
+      end
+      fclose(fid);
+    else
+      savedAs = [];
     end
   end
   
@@ -156,38 +285,47 @@ methods (Access = private)
   function createScatterPlots(self)
   % Creates scatter plot windows, signals are fed to the presentation
   % model which handles the UI logic
-    % pca scores
+    % pca scores, i.e. samples
     s = ScatterSelect();
     s.title = 'PCA scores';
     s.selectingEnabled = true;
     s.highMarker = '*';
     s.closeFcn = @self.saveSettingsAndQuit;
-    s.connectMe('is_in', @(x)registerIsIn(self.pm, 'sample', x));
-    s.connectMe('highlight', @(x)highlightChanged(self.pm, 'sample', x));
-    s.connectMe('selection', ...
-       @(x,y)self.pm.selectionChanged('sample', x,y));
     self.scores = s;
-    % pca loadings
+    % pca loadings, i.e., genes
     s = ScatterSelect();
     s.title = 'PCA loadings';
     s.selectingEnabled = true;
     s.highMarker = '*';
     s.closeFcn = @self.saveSettingsAndQuit;
-    s.connectMe('is_in', @(x)registerIsIn(self.pm, 'gene', x));
-    s.connectMe('highlight', @(x)highlightChanged(self.pm, 'gene', x));
-    s.connectMe('selection', ...
-       @(x,y)selectionChanged(self.pm, 'gene', x,y));    
     self.loadings = s;
+  end  
+  
+  function updateFromUiState(self)
+    tags = {'deleteGeneButtonH', 'clearGeneListButtonH', ...
+      'saveGeneListButtonH', 'deleteSampleButtonH', ...
+      'clearSampleListButtonH', 'saveSampleListButtonH',...
+      'refreshPcaUsingSamplesButtonH', 'pcaxEditH', 'pcayEditH', ....
+      'refreshPcaButtonH', 'clusteringPopupH', 'clusterCellsButtonH'};
+    props = {'deleteGeneEnable', 'clearGeneListEnable', ...
+      'saveGeneListEnable', 'deleteSampleEnable', ...
+      'clearSampleListEnable', 'saveSampleListEnable', ...
+      'refreshPcaUsingSamplesEnable', 'pcxAxisEnable', 'pcyAxisEnable', ...
+      'refreshPcaEnable', 'refreshPcaEnable', 'clusteringMenuEnable', ...
+      'clusteringButtonEnable'};
+    state = self.pm.uiState;
+    for i = 1:length(tags)
+      tag = tags{i};
+      prop = props{i};
+      if state.(prop)
+        onOff = 'on';
+      else
+        onOff = 'off';
+      end
+      set(self.(tag), 'Enable', onOff);
+    end
   end
 
-  
-  %****
-  
-%   function clearAnnotation(self)
-%     self.updateGeneAnnotations(-1);
-%     self.updateCellAnnotations(-1);    
-%   end
-  
   function updateAnnotationInfo(self)
     self.updateGeneAnnotations(self.pm.geneHighInd);
     self.updateCellAnnotations(self.pm.sampleHighInd);
@@ -259,6 +397,11 @@ methods (Access = private)
     else
       set(self.geneListboxH, 'String', list, 'Value', ind);
     end
+    list = cell(2,1);
+    list{1} = sprintf('PC%d', self.pm.pcaxInd);
+    list{2} = sprintf('PC%d', self.pm.pcayInd);
+    set(self.pcPopupH, 'String', list);
+    self.updateFromUiState();
   end
   
   function updateSampleList(self)
@@ -284,6 +427,8 @@ methods (Access = private)
     settings.loadings = self.loadings.getSettings();
     settings.scores = self.scores.getSettings();
     settings.pm = self.pm.getSettings();
+    settings.lastSaveGenes = self.lastSaveGenes;
+    settings.lastSaveSamples = self.lastSaveSamples;
     save(self.settingsFile, 'settings');
   end
 
@@ -297,6 +442,8 @@ methods (Access = private)
       self.loadings.changeToSettings(settings.loadings);
       self.scores.changeToSettings(settings.scores);
       self.pm.changeToSettings(settings.pm);
+      self.lastSaveGenes = settings.lastSaveGenes;
+      self.lastSaveSamples = settings.lastSaveSamples;      
     end
   end  
 end

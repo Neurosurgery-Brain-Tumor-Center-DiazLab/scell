@@ -1,4 +1,4 @@
-classdef ScatterSelect < handle & MObject
+classdef ScatterSelect < MObject
   %SCATTERSELECT Interactively select points from a scatterplot
   %   Detailed explanation goes here
   
@@ -13,13 +13,14 @@ properties
 end
 
 properties (GetAccess = public, SetAccess = private)
-  data % Nx2 matrix of data points, each row = [x y]
-  cluster % empty or Nx1 vector of cluster tags (integers >= 1), 
-          % each corresponds to data row
-  selData % selected data Mx2
-  selIndices % incides to self.data corresponding to the selected data  
-  currentIndex % index to data closest to the mouse button now, empty if
-               % mouse is not inside the figure
+%   data % Nx2 matrix of data points, each row = [x y]
+%   cluster % empty or Nx1 vector of cluster tags (integers >= 1), 
+%           % each corresponds to data row
+%   selData % selected data Mx2
+%   selIndices % incides to self.data corresponding to the selected data  
+%   currentIndex % index to data closest to the mouse button now, empty if
+%                % mouse is not inside the figure
+  pm % ScatterSelectPM presentation model
   figH     % handle to figure
   figAxH  % handle to figure axes
   scatterH % handle to scatter object
@@ -29,42 +30,24 @@ properties (GetAccess = public, SetAccess = private)
   isInWindow = false % whether mouse pointer is inside the window
   isInTimer % timer for checking if mouse pointer is inside the window
   lastSettings
-  clusterCount = 1 % number of clusters
+%   clusterCount = 1 % number of clusters
   colorMap = brewermap(8,'Dark2');
+  plotBorder = 0.05; % fraction of free space (border) around xy plot
 end
+
 
 methods
   function self = ScatterSelect()
     self@MObject();
-    self.lastSettings = self.defaultSettings;
+    s = ScatterSelectPM();
+    s.connectMe('selection_changed', @self.updatePlotSelection);
+    s.connectMe('data_changed', @self.updatePlot);
+    self.pm = s;
+    self.lastSettings = self.defaultSettings;    
   end
 
   function set.title(self, value)
     self.title = value;
-    self.updatePlot();
-  end
-
-%   function set.data(self, value)
-%     self.data = value;
-%     self.updatePlot();
-%   end
-
-  function updateData(self, data, cluster)
-    self.data = data;
-    self.clusterCount = 1;
-    self.cluster = cluster;
-    if ~isempty(cluster)
-      tags = [];
-      for i=1:length(cluster)
-        if ~ismember(cluster(i), tags)
-          tags(end+1) = cluster(i); %#ok<AGROW>
-        end
-      end
-      self.clusterCount = length(tags);
-    end
-    if self.clusterCount > size(self.colorMap,1)
-      warning('Specified more clusters than there are different colors');
-    end
     self.updatePlot();
   end
   
@@ -114,19 +97,12 @@ methods
       % strange side effect of setting a property.
       set(self.figAxH, 'Unit', 'normalized');
       self.isInTimer = timer('TimerFcn', @self.checkIsIn, 'Period', 0.1,...
-      'ExecutionMode', 'fixedSpacing');      
+      'ExecutionMode', 'fixedSpacing', 'Name', 'is_in_timer');      
       start(self.isInTimer);
       self.updatePlotToSettings(self.lastSettings);
     end            
     self.updatePlot();
   end
-
-  function clearSelection(self)
-    self.selData = [];
-    self.selIndices = [];
-    set(self.selH, 'Visible', 'off', 'XData', [], 'YData', []);
-  end
-
   
   function closeFigure(self)
   % Closes figure without invoking the closing callback
@@ -161,35 +137,41 @@ methods (Access = private)
   end  
   
   function mouseMoved(self, varargin)
-    if ~isempty(self.data) && self.isInWindow
+    if ~isempty(self.pm.data) && self.isInWindow
       % find
       ind = self.closestDataToPointer();
-      set(self.highH, 'XData', self.data(ind,1), 'YData', ...
-        self.data(ind,2), 'Visible', 'on', 'Color', self.highColor);
-      self.emit('highlight', ind);
-      self.currentIndex = ind;
+      set(self.highH, 'XData', self.pm.data(ind,1), 'YData', ...
+        self.pm.data(ind,2), 'Visible', 'on', 'Color', self.highColor);
+%       self.emit('highlight', ind);
+      self.pm.updateCurrentIndex(ind);
     end
   end
   
   function mouseClicked(self, varargin)
     if self.selectingEnabled
-      if ~ismember(self.currentIndex, self.selIndices)
-        self.selIndices(end+1) = self.currentIndex;
-        self.selData = self.data(self.selIndices, :);
-        self.updatePlotSelection();
-        self.emit('selection', self.selData, self.selIndices);
-      end
+      self.pm.selectCurrentIndex();
     end
   end
   
   function keyPressed(self, varargin)
     ch = get(self.figH, 'CurrentCharacter');
-    % escape pressed ?
-    if self.selectingEnabled && uint16(ch) == 27
-      self.selIndices = self.selIndices(1:end-1);
-      self.selData = self.data(self.selIndices, :);
-      self.updatePlotSelection();
-      self.emit('selection', self.selData, self.selIndices);
+    isEsc = false;
+    isClear = false;
+    % capture buttons
+    if ~isempty(ch)
+      if uint16(ch) == 27
+        isEsc = true;
+      elseif lower(ch) == 'c'
+        isClear = true;
+      end
+    end
+    % actions
+    if self.selectingEnabled
+      if isEsc
+        self.pm.deselectLastIndex();
+      elseif isClear
+        self.pm.deselectAll();
+      end
     end
   end
   
@@ -197,9 +179,9 @@ methods (Access = private)
   % find index to the data point closest to the current mouse pointer
   % returns empty if not found
     ind = [];
-    if ~isempty(self.data)
+    if ~isempty(self.pm.data)
       xy = self.pointerLocInCoord();
-      vecdiff = self.data - repmat(xy, [length(self.data) 1]);
+      vecdiff = self.pm.data - repmat(xy, [length(self.pm.data) 1]);
       diff = zeros(1,length(vecdiff));
       for i=1:length(diff)
         diff(i) = norm(vecdiff(i,:));
@@ -217,45 +199,57 @@ methods (Access = private)
     end
     if ~isIn
       set(self.highH, 'Visible', 'off');
-      self.currentIndex = [];
+      self.pm.updateCurrentIndex([]);
     end    
-    if self.isInWindow ~= isIn
+    if self.isInWindow ~= isIn      
       self.emit('is_in', isIn);
     end
     self.isInWindow = isIn;
   end
   
   function updatePlot(self)
+    if self.pm.clusterCount > size(self.colorMap,1)
+      warning('Specified more clusters than there are different colors');
+    end
     if ishandle(self.figH)
       set(self.figH, 'Name', self.title); 
-      if ~isempty(self.data)
-        set(self.figAxH, 'XLimMode', 'auto', 'YLimMode', 'auto');   
+      if ~isempty(self.pm.data)
+%         set(self.figAxH, 'XLimMode', 'auto', 'YLimMode', 'auto');   
         cmap = self.computeClusterColors();
-        set(self.scatterH, 'XData', self.data(:,1), 'YData', ...
-          self.data(:,2), 'Visible', 'on', 'CData', cmap);
-%         self.scatterH = scatter(self.figAxH, self.data(:,1), ...
-%           self.data(:,2));
-        set(self.figAxH, 'XLimMode', 'manual', 'YLimMode', 'manual');
+        set(self.scatterH, 'XData', self.pm.data(:,1), 'YData', ...
+          self.pm.data(:,2), 'Visible', 'on', 'CData', cmap);
+        minX = min(self.pm.data(:,1));
+        maxX = max(self.pm.data(:,1));
+        dx = maxX(1) - minX(1);
+        minY = min(self.pm.data(:,2));
+        maxY = max(self.pm.data(:,2));
+        dy = maxY(1) - minY(1);
+        offX = self.plotBorder * dx;
+        offY = self.plotBorder * dy;
+        set(self.figAxH, 'XLimMode', 'manual', 'YLimMode', 'manual',...
+          'XLim', [minX(1)-offX maxX(1)+offX], 'YLim', ...
+          [minY(1)-offY maxY(1)+offY]);
       end
       self.updatePlotSelection();
+      drawnow;
     end    
   end  
   
   function updatePlotSelection(self)
-    if ~isempty(self.selData)
-      set(self.selH, 'XData', self.selData(:,1), 'YData', ...
-        self.selData(:,2), 'Visible', 'on');      
+    if ~isempty(self.pm.selData)
+      set(self.selH, 'XData', self.pm.selData(:,1), 'YData', ...
+        self.pm.selData(:,2), 'Visible', 'on');      
     else
       set(self.selH, 'Visible', 'off');
     end
   end
   
   function cmap = computeClusterColors(self)
-    if self.clusterCount > 1      
-      cmap = zeros(size(self.data,1), 3);
+    if self.pm.clusterCount > 1      
+      cmap = zeros(size(self.pm.data,1), 3);
       colorCount = size(self.colorMap,1);
-      for i = 1:size(self.data,1)
-        ind = mod(self.cluster(i), colorCount) + 1;
+      for i = 1:size(self.pm.data,1)
+        ind = mod(self.pm.cluster(i), colorCount) + 1;
         cmap(i,:) = self.colorMap(ind,:);
       end      
     else
@@ -279,7 +273,7 @@ methods (Access = private)
     pixToCoordYScale = (yl(2) - yl(1)) / ap(4);    
     x = (pl(1) - (fp(1) + ap(1))) * pixToCoordXScale;
     y = (pl(2) - (fp(2) + ap(2))) * pixToCoordYScale;
-    xy = [x y];
+    xy = [x y] + [xl(1) yl(1)];
   end
   
   function tf = pointInRect(self, rect, x,y)

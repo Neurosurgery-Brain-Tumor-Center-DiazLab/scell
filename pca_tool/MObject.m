@@ -59,8 +59,8 @@ methods
         toFuncH(copyArgs{:});
       end    
     else
-      warning(['Signal ''%s'' emitted, but there were no receiving '...
-        'slots'], signal);
+%       warning(['Signal ''%s'' emitted, but there were no receiving '...
+%         'slots'], signal);
     end
   end  
 end

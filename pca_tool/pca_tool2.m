@@ -22,7 +22,7 @@ function varargout = pca_tool2(varargin)
 
 % Edit the above text to modify the response to help pca_tool2
 
-% Last Modified by GUIDE v2.5 17-May-2015 09:32:43
+% Last Modified by GUIDE v2.5 21-May-2015 20:58:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -233,14 +233,14 @@ function cutoffEditH_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of cutoffEditH as a double
 
 
-% --- Executes on selection change in pc1PopupH.
-function pc1PopupH_Callback(hObject, eventdata, handles)
-% hObject    handle to pc1PopupH (see GCBO)
+% --- Executes on selection change in pcPopupH.
+function pcPopupH_Callback(hObject, eventdata, handles)
+% hObject    handle to pcPopupH (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns pc1PopupH contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from pc1PopupH
+% Hints: contents = cellstr(get(hObject,'String')) returns pcPopupH contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from pcPopupH
 
 
 % --- Executes on selection change in posPopupH.
