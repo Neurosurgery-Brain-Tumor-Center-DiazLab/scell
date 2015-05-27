@@ -10,7 +10,12 @@ classdef PcaCompute < PcaComputeBase
     end
     
     function computePca(self)
-    % call the pca.m from here and set properties as in PcaComputeMock
+            if isempty(self.coeff) && ~isempty(self.d)
+            [coeff,score,~,~,explained]=pca(self.d.nrmC');
+            self.coeff = coeff';
+            self.score = score';
+            %self.explained=explained;
+        end
     end
   end
   
