@@ -10,7 +10,9 @@ classdef PcaCompute < PcaComputeBase
     end
     
     function computePca(self)
-    % call the pca.m from here and set properties as in PcaComputeMock
+      if ~isempty(self.d)
+      % call the pca.m from here and set properties as in PcaComputeMock
+      end
     end
   end
   

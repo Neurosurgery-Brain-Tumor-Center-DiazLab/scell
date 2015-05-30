@@ -20,7 +20,10 @@ end
 
 methods (Abstract)
   % Compute PCA given a matrix of normalized feature counts nrmC
-  computePca(self)       
+  computePca(self, sampleIndices)       
+  % PCA is recomputed using the given sample
+  % indices. It's assumed that d exists
+  computePcaUsingSamples(self, sampleIndices)
 end
 
 methods 
