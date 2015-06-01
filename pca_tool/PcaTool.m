@@ -49,7 +49,7 @@ methods
       self.updateAvailableFeatures();      
       self.loadings.show();
       self.scores.show();      
-      self.pm.updateCurrentPca();
+      self.pm.updatePcaAxes();
     end
   end
 
@@ -68,6 +68,11 @@ methods
       otherwise
         error('Bug found');
     end    
+    str = 'Select PC axes';
+    if ~isempty(self.pm.maxPcInd)
+      str = [str sprintf(' (up to %d)', self.pm.maxPcInd)];
+    end
+    set(self.pcAxesPanelH, 'Title', str);
     set(self.clusteringPopupH, 'Value', ind);
     self.updateAnnotationInfo();
     self.updateLists();
@@ -75,7 +80,7 @@ methods
   
   %*** Callbacks from GUI objects defined in GUIDE
   function refreshPcaButtonH_Callback(self, varargin)
-    self.pm.updateCurrentPca();
+    self.pm.updatePcaAxes();
   end
 
   function pcaxEditH_Callback(self, varargin)
@@ -200,6 +205,10 @@ methods
       end
       self.pm.selectTopGenes(cutoff, xOrY, posOrNeg);
     end
+  end
+  
+  function refreshPcaUsingSamplesButtonH_Callback(self, varargin)
+    self.pm.newPcaUsingSamples();
   end
   
   function geneSymbolEditH_Callback(self, varargin)

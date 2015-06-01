@@ -25,7 +25,7 @@ properties (SetAccess = private, GetAccess = public)
                  % [abs(loading) cumulative_prob]
   geneCumProbPosY
   geneCumProbNegY
-  uiState
+  uiState % helper class to encapsulate UI state
   enableSelectionChanged = true % helper boolean
 end
 
@@ -59,8 +59,8 @@ methods
 
   function val = get.maxPcInd(self)
     val = [];
-    if ~isempty(self.compute.coeff)
-      val = size(self.compute.coeff,2);
+    if ~isempty(self.compute.score)
+      val = size(self.compute.score,2);
     end
   end
   
@@ -129,8 +129,11 @@ methods
   function reset(self)
     self.uiState = UiState();
     self.pcaxInd = 1;
-    self.pcayInd = 2;    
-    self.updateCurrentPca();
+    self.pcayInd = 2;
+    self.samplePm.deselectAll();
+    self.genePm.deselectAll();
+    self.compute.computePca();
+    self.updatePcaAxes();
   end 
   
   function changeToSettings(self, settings)
@@ -139,8 +142,11 @@ methods
     self.clusterMethod = settings.clusterMethod;
   end
   
-  function updateCurrentPca(self)
-    self.compute.computePca();
+  function newPcaUsingSamples(self)
+    self.compute.computePcaUsingSamples(self.sampleSelIndices);
+  end
+  
+  function updatePcaAxes(self)    
     if ~isempty(self.compute.coeff)
       self.uiState.updateHasData(true);
       self.coefXY = [self.compute.coeff(:,self.pcaxInd) ...
@@ -151,30 +157,27 @@ methods
       self.genePm.updateData(self.coefXY, self.cluster);
             
       % calculate cumulative probability function from positive genes X
-      ind = self.coefXY(:,self.pcaxInd) >= 0;
-      [n, edges] = histcounts(self.coefXY(ind,self.pcaxInd), ...
+      ind = self.coefXY(:, 1) >= 0;
+      [n, edges] = histcounts(self.coefXY(ind, 1), ...
         self.nBins);
       ncum = cumsum(n);
       binCenters = edges(1:end-1) + diff(edges);
       self.geneCumProbPosX = [binCenters(:) ncum(:)/ncum(end)];
       % the same for negatives X
-      ind = self.coefXY(:,self.pcaxInd) < 0;
-      [n, edges] = histcounts(abs(self.coefXY(ind,self.pcaxInd)), ...
-        self.nBins);
+      ind = self.coefXY(:, 1) < 0;
+      [n, edges] = histcounts(abs(self.coefXY(ind, 1)), self.nBins);
       ncum = cumsum(n);
       binCenters = edges(1:end-1) + diff(edges);
       self.geneCumProbNegX = [binCenters(:) ncum(:)/ncum(end)];      
       % posive Y
-      ind = self.coefXY(:,self.pcayInd) >= 0;
-      [n, edges] = histcounts(self.coefXY(ind,self.pcayInd), ...
-        self.nBins);
+      ind = self.coefXY(:, 2) >= 0;
+      [n, edges] = histcounts(self.coefXY(ind, 2), self.nBins);
       ncum = cumsum(n);
       binCenters = edges(1:end-1) + diff(edges);
       self.geneCumProbPosY = [binCenters(:) ncum(:)/ncum(end)];
       % negative Y
-      ind = self.coefXY(:,self.pcayInd) < 0;
-      [n, edges] = histcounts(abs(self.coefXY(ind,self.pcayInd)), ...
-        self.nBins);
+      ind = self.coefXY(:, 2) < 0;
+      [n, edges] = histcounts(abs(self.coefXY(ind, 2)), self.nBins);
       ncum = cumsum(n);
       binCenters = edges(1:end-1) + diff(edges);
       self.geneCumProbNegY = [binCenters(:) ncum(:)/ncum(end)];         
@@ -352,10 +355,6 @@ methods
     ind = unique([ind(:)' self.geneSelIndices(:)']);
     self.genePm.setSelection(ind);  
   end
-end
-
-methods (Access = private)
-
 end
   
 end

@@ -31,6 +31,7 @@ methods
       end
       self.clusterCount = length(tags);
     end
+    self.selData = self.data(self.selIndices,:);
     self.emit('data_changed');
   end
   
