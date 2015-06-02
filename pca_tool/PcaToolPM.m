@@ -60,7 +60,7 @@ methods
   function val = get.maxPcInd(self)
     val = [];
     if ~isempty(self.compute.score)
-      val = size(self.compute.score,2);
+      val = size(self.compute.score,1);
     end
   end
   
@@ -142,7 +142,10 @@ methods
     self.clusterMethod = settings.clusterMethod;
   end
   
-  function newPcaUsingSamples(self)
+  function newPcaUsingSamples(self)    
+%     self.genePm.deselectAll();
+%     indices = self.sampleSelIndices;
+%     self.samplePm.deselectAll();
     self.compute.computePcaUsingSamples(self.sampleSelIndices);
   end
   
