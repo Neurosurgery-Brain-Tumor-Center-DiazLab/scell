@@ -7,8 +7,10 @@ properties
   pcaxInd % pca x index, i.e., left side PC in the GUI
   pcayInd % pca y index, i.e., right side PC in the GUI 
   clusterMethod  % current ClusteringMethod
+  clusterUserInd % index to the current user defined cluster, if user
+                 % list is selected  
   geneListInd % current selected index in gene list
-  sampleListInd % current selected index in sample list 
+  sampleListInd % current selected index in sample list   
 end
 
 properties (SetAccess = private, GetAccess = public)
@@ -27,6 +29,8 @@ properties (SetAccess = private, GetAccess = public)
   geneCumProbNegY
   uiState % helper class to encapsulate UI state
   enableSelectionChanged = true % helper boolean
+  clusterUser = {} % cell array of user defined clusters
+  clusterUserNames = {}
 end
 
 properties (Dependent)
@@ -100,6 +104,28 @@ methods
     val.clusterMethod = self.clusterMethod;
   end
   
+  function parseUserLists(self, cluster)
+    fns = fieldnames(cluster);
+    N = length(fns);
+    self.clusterUser = {};
+    self.clusterUserNames = {};
+    if self.clusterMethod == ClusteringMethod.User
+      self.clusterMethod = ClusteringMethod.KMeans;
+    end
+    for i = 1:N
+      fn = fns{i};
+      tmp = cluster.(fn);
+      tmp = tmp(:);
+      if size(tmp,1) ~= size(self.scoreXY,1) || size(tmp,2) ~= 1
+        warning('Skipping cluster %s', fn);
+      else
+        self.clusterUser = [self.clusterUser {tmp}];
+        self.clusterUserNames = [self.clusterUserNames {fn}];
+      end
+    end
+    self.emit('reset');
+  end
+  
   function val = getAnnotation(self, name, ind)
     if strcmp(name, 'symbol_text')
       val = self.compute.d.gsymb{ind};
@@ -157,7 +183,7 @@ methods
       self.scoreXY = [self.compute.score(:,self.pcaxInd) ...
                       self.compute.score(:,self.pcayInd)];   
       self.samplePm.updateData(self.scoreXY, self.cluster);
-      self.genePm.updateData(self.coefXY, self.cluster);
+      self.genePm.updateData(self.coefXY, ones(size(self.coefXY,1),1));
             
       % calculate cumulative probability function from positive genes X
       ind = self.coefXY(:, 1) >= 0;
@@ -190,7 +216,9 @@ methods
   
   function updateCurrentClustering(self)
     if ~isempty(self.coefXY)
-      self.cluster = randi(double(self.clusterMethod), size(self.coefXY,1));
+      self.cluster = randi(double(self.clusterMethod), ...
+          size(self.coefXY,1),1);
+      self.updatePcaAxes();
     end
   end 
   

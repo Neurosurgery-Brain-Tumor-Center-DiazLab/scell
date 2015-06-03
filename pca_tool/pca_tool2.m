@@ -22,7 +22,7 @@ function varargout = pca_tool2(varargin)
 
 % Edit the above text to modify the response to help pca_tool2
 
-% Last Modified by GUIDE v2.5 21-May-2015 20:58:35
+% Last Modified by GUIDE v2.5 03-Jun-2015 22:31:11
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -311,5 +311,12 @@ function clearSampleListButtonH_Callback(hObject, eventdata, handles)
 % --- Executes on button press in refreshPcaUsingSamplesButtonH.
 function refreshPcaUsingSamplesButtonH_Callback(hObject, eventdata, handles)
 % hObject    handle to refreshPcaUsingSamplesButtonH (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in loadListsButtonH.
+function loadListsButtonH_Callback(hObject, eventdata, handles)
+% hObject    handle to loadListsButtonH (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
