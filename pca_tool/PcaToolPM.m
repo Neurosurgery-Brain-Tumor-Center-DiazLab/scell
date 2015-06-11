@@ -58,7 +58,11 @@ methods
     self.samplePm = samplePm;
     self.genePm = genePm;
     self.uiState = UiState();
-    self.changeToSettings(self.defaultSettings);     
+%     self.changeToSettings(self.defaultSettings);     
+    % default settings
+    self.pcaxInd = 1;
+    self.pcayInd = 2;
+    self.clusterMethod = ClusteringMethod.KMeans;
   end
 
   function val = get.maxPcInd(self)
@@ -92,16 +96,16 @@ methods
     val = self.samplePm.selIndices;
   end
   
-  function val = defaultSettings(self)
-    val.pcaxInd = 1;
-    val.pcayInd = 2;
-    val.clusterMethod = ClusteringMethod.KMeans;
-  end
+%   function val = defaultSettings(self)
+%     val.pcaxInd = 1;
+%     val.pcayInd = 2;
+%     val.clusterMethod = ClusteringMethod.KMeans;
+%   end
   
   function val = getSettings(self)
     val.pcaxInd = self.pcaxInd;
     val.pcayInd = self.pcayInd;
-    val.clusterMethod = self.clusterMethod;
+%     val.clusterMethod = self.clusterMethod;
   end
   
   function parseUserLists(self, cluster)
@@ -165,7 +169,7 @@ methods
   function changeToSettings(self, settings)
     self.pcaxInd = settings.pcaxInd;
     self.pcayInd = settings.pcayInd;
-    self.clusterMethod = settings.clusterMethod;
+%     self.clusterMethod = settings.clusterMethod;
   end
   
   function newPcaUsingSamples(self)    
@@ -176,7 +180,7 @@ methods
   end
   
   function updatePcaAxes(self)    
-    if ~isempty(self.compute.coeff)
+    if ~isempty(self.compute.coeff) && ~isempty(self.compute.d)
       self.uiState.updateHasData(true);
       self.coefXY = [self.compute.coeff(:,self.pcaxInd) ...
                       self.compute.coeff(:,self.pcayInd)];

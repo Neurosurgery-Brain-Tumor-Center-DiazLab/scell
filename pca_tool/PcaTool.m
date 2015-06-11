@@ -312,14 +312,14 @@ methods (Access = private)
   % model which handles the UI logic
     % pca scores, i.e. samples
     s = ScatterSelect();
-    s.title = 'PCA scores (genes)';
+    s.title = 'Sample scores';
     s.selectingEnabled = true;
     s.highMarker = '*';
     s.closeFcn = @self.saveSettingsAndQuit;
     self.scores = s;
     % pca loadings, i.e., genes
     s = ScatterSelect();
-    s.title = 'PCA loadings (samples)';
+    s.title = 'Gene loadings';
     s.selectingEnabled = true;
     s.highMarker = '*';
     s.closeFcn = @self.saveSettingsAndQuit;
