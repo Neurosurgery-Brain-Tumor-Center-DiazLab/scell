@@ -3,8 +3,8 @@ classdef ScatterSelect < MObject
   %   Detailed explanation goes here
   
 properties
-  title = 'Unnamed' % figHure title
-  closeFcn % function handle is called when the figHure is closed
+  title = 'Unnamed' % figure title
+  closeFcn % function handle is called when the figure is closed
   marker = 'O' % current plot marker
   color = [0 0.4470 0.7410] % default Matlab color
   highColor = 'red' % highligh color

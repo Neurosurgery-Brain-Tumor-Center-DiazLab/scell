@@ -9,15 +9,26 @@ properties (SetAccess = private, GetAccess = public)
   pcyAxisEnable = false;
   refreshPcaEnable = false;
   clusteringMenuEnable = false;
-  clusteringButtonEnable = false;  
-  % gene and sample lists
+  clusteringButtonEnable = false; 
+  customListEnable = false;
+  % gene lists
   deleteGeneEnable = false
   clearGeneListEnable = false
-  saveGeneListEnable = false
+  findGeneEnable = false
+  geneSymbolInputEnable = false
+  saveGeneListEnable = false  
+  addTopGenesEnable = false
+  cutoffEnable = false
+  cutoffAxisEnable = false
+  cutoffPosEnable = false
+  % sample list
   deleteSampleEnable = false
   clearSampleListEnable = false
+  findSampleEnable = false
+  sampleInputEnable = false;  
   saveSampleListEnable = false
   refreshPcaUsingSamplesEnable = false
+
 end
   
 methods
@@ -29,7 +40,18 @@ methods
     self.pcyAxisEnable = value;
     self.refreshPcaEnable = value;
     self.clusteringMenuEnable = value;
-    self.clusteringButtonEnable = value;    
+    self.clusteringButtonEnable = value;
+    self.customListEnable = value;
+    % gene list
+    self.findGeneEnable = value;
+    self.geneSymbolInputEnable = value;
+    self.addTopGenesEnable = value;
+    self.cutoffEnable = value;
+    self.cutoffAxisEnable = value;
+    self.cutoffPosEnable = value;
+    % sample list
+    self.findSampleEnable = value;
+    self.sampleInputEnable = value;
   end
   
   function updateGenesSelected(self, value)

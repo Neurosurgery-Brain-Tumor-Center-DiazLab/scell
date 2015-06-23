@@ -64,7 +64,7 @@ methods
       case ClusteringMethod.Minkowski
         ind = 3;
       case ClusteringMethod.User
-        ind = 4;      
+        ind = 3 + self.pm.clusterUserInd;
       otherwise
         error('Bug found');
     end    
@@ -73,7 +73,9 @@ methods
       str = [str sprintf(' (up to %d)', self.pm.maxPcInd)];
     end
     set(self.pcAxesPanelH, 'Title', str);
-    set(self.clusteringPopupH, 'Value', ind);
+    str = {'k-means', 'Gaussian mixture', 'Minkowski weighted k-means'};
+    str = [str self.pm.clusterUserNames];
+    set(self.clusteringPopupH, 'Value', ind, 'String', str);
     self.updateAnnotationInfo();
     self.updateLists();
   end
@@ -99,29 +101,41 @@ methods
     else
       set(self.pcayEditH, 'String', num2str(self.pm.pcayInd));
     end    
-%     ind = str2double(get(self.pcayEditH, 'String'));
-%     self.pm.pcayInd = ind;
   end
   
   function clusteringPopupH_Callback(self, varargin)
     ind = get(self.clusteringPopupH, 'Value');
-    switch ind
-      case 1
-        self.pm.clusterMethod = ClusteringMethod.KMeans;
-      case 2
-        self.pm.clusterMethod = ClusteringMethod.Gaussian;
-      case 3
-        self.pm.clusterMethod = ClusteringMethod.Minkowski;
-      case 4
-        self.pm.clusterMethod = ClusteringMethod.User;        
-      otherwise
-        error('Bug found');
+    if (ind <= 3)
+      switch ind
+        case 1
+          self.pm.clusterMethod = ClusteringMethod.KMeans;
+        case 2
+          self.pm.clusterMethod = ClusteringMethod.Gaussian;
+        case 3
+          self.pm.clusterMethod = ClusteringMethod.Minkowski;
+        otherwise
+          error('Bug found');
+      end
+    else
+      self.pm.clusterMethod = ClusteringMethod.User;
+      self.pm.clusterUserInd = ind-3;
+    end
+  end
+  
+  function loadListsButtonH_Callback(self, varargin)
+    [fname, pname, ~] = uigetfile('*.mat', 'Load lists struc');
+    if fname ~= 0
+      tmp = load(fullfile(pname, fname), 'cluster');
+      if isempty(tmp) || ~isstruct(tmp.cluster)
+        errordlg('Struct ''cluster'' not found');
+      else
+        self.pm.parseUserLists(tmp.cluster);
+      end
     end
   end
   
   function clusterCellsButtonH_Callback(self, varargin)
-    self.pm.updateCurrentClustering();
-    self.refreshPcaButtonH_Callback();
+    self.pm.updateCurrentClustering();    
   end
   
   function sampleListboxH_Callback(self, varargin)
@@ -245,13 +259,6 @@ end
 %*** Private implementation related stuff
 methods (Access = private)
   function updateAvailableFeatures(self)
-%     tags ={'saveGeneListButtonH', 'addTopGenesButtonH', ...
-%       'deleteGeneButtonH', 'ontologyButtonH',...
-%       'cutoffEditH', 'pc1PopupH', 'posPopupH', 'findGeneButtonH', ...
-%       'geneSymbolEditH', 'deleteSampleButtonH', ...
-%       'refreshPcaUsingSamplesButtonH', 'findSampleButtonH', ...
-%       'sampleSymbolEditH', 'saveSampleListButtonH', 'tracePopupH', ...
-%       'runTraceButtonH'};
     tags ={ 'tracePopupH', 'runTraceButtonH', 'ontologyButtonH'};
     for i = 1:length(tags)
       set(self.(tags{i}), 'Enable', 'off');
@@ -296,14 +303,14 @@ methods (Access = private)
   % model which handles the UI logic
     % pca scores, i.e. samples
     s = ScatterSelect();
-    s.title = 'PCA scores';
+    s.title = 'Sample scores';
     s.selectingEnabled = true;
     s.highMarker = '*';
     s.closeFcn = @self.saveSettingsAndQuit;
     self.scores = s;
     % pca loadings, i.e., genes
     s = ScatterSelect();
-    s.title = 'PCA loadings';
+    s.title = 'Gene loadings';
     s.selectingEnabled = true;
     s.highMarker = '*';
     s.closeFcn = @self.saveSettingsAndQuit;
@@ -311,17 +318,29 @@ methods (Access = private)
   end  
   
   function updateFromUiState(self)
-    tags = {'deleteGeneButtonH', 'clearGeneListButtonH', ...
-      'saveGeneListButtonH', 'deleteSampleButtonH', ...
-      'clearSampleListButtonH', 'saveSampleListButtonH',...
-      'refreshPcaUsingSamplesButtonH', 'pcaxEditH', 'pcayEditH', ....
-      'refreshPcaButtonH', 'clusteringPopupH', 'clusterCellsButtonH'};
-    props = {'deleteGeneEnable', 'clearGeneListEnable', ...
-      'saveGeneListEnable', 'deleteSampleEnable', ...
-      'clearSampleListEnable', 'saveSampleListEnable', ...
-      'refreshPcaUsingSamplesEnable', 'pcxAxisEnable', 'pcyAxisEnable', ...
-      'refreshPcaEnable', 'refreshPcaEnable', 'clusteringMenuEnable', ...
-      'clusteringButtonEnable'};
+    % Select PC axes
+    tags = {'pcaxEditH', 'pcayEditH'};
+    props = {'pcxAxisEnable', 'pcyAxisEnable'};
+    % Clustering
+    tags = [tags {'clusteringPopupH', 'loadListsButtonH', ...
+      'clusterCellsButtonH'}];
+    props = [props {'clusteringMenuEnable', 'customListEnable', ...
+      'clusteringButtonEnable'}];
+    % Working gene list
+    tags = [tags {'deleteGeneButtonH', 'clearGeneListButtonH', ...
+      'findGeneButtonH', 'geneSymbolEditH', 'saveGeneListButtonH', ...
+      'addTopGenesButtonH',  'cutoffEditH', 'pcPopupH', 'posPopupH'}];
+    props = [props {'deleteGeneEnable', 'clearGeneListEnable', ...
+      'findGeneEnable', 'geneSymbolInputEnable', 'saveGeneListEnable', ...
+      'addTopGenesEnable', 'cutoffEnable', 'cutoffAxisEnable', ...
+      'cutoffPosEnable'}];
+    % Working sample list
+    tags = [tags {'deleteSampleButtonH', 'clearSampleListButtonH', ...
+      'findSampleButtonH', 'sampleSymbolEditH', ...
+      'saveSampleListButtonH', 'refreshPcaUsingSamplesButtonH'}];
+    props = [props {'deleteSampleEnable', 'clearSampleListEnable', ...
+      'findSampleEnable', 'sampleInputEnable', 'saveSampleListEnable', ...
+      'refreshPcaUsingSamplesEnable'}];
     state = self.pm.uiState;
     for i = 1:length(tags)
       tag = tags{i};

@@ -7,8 +7,10 @@ properties
   pcaxInd % pca x index, i.e., left side PC in the GUI
   pcayInd % pca y index, i.e., right side PC in the GUI 
   clusterMethod  % current ClusteringMethod
+  clusterUserInd % index to the current user defined cluster, if user
+                 % list is selected  
   geneListInd % current selected index in gene list
-  sampleListInd % current selected index in sample list 
+  sampleListInd % current selected index in sample list   
 end
 
 properties (SetAccess = private, GetAccess = public)
@@ -27,6 +29,8 @@ properties (SetAccess = private, GetAccess = public)
   geneCumProbNegY
   uiState % helper class to encapsulate UI state
   enableSelectionChanged = true % helper boolean
+  clusterUser = {} % cell array of user defined clusters
+  clusterUserNames = {}
 end
 
 properties (Dependent)
@@ -54,7 +58,10 @@ methods
     self.samplePm = samplePm;
     self.genePm = genePm;
     self.uiState = UiState();
-    self.changeToSettings(self.defaultSettings);     
+    % default settings
+    self.pcaxInd = 1;
+    self.pcayInd = 2;
+    self.clusterMethod = ClusteringMethod.KMeans;
   end
 
   function val = get.maxPcInd(self)
@@ -88,16 +95,31 @@ methods
     val = self.samplePm.selIndices;
   end
   
-  function val = defaultSettings(self)
-    val.pcaxInd = 1;
-    val.pcayInd = 2;
-    val.clusterMethod = ClusteringMethod.KMeans;
-  end
-  
   function val = getSettings(self)
     val.pcaxInd = self.pcaxInd;
     val.pcayInd = self.pcayInd;
-    val.clusterMethod = self.clusterMethod;
+  end
+  
+  function parseUserLists(self, cluster)
+    fns = fieldnames(cluster);
+    N = length(fns);
+    self.clusterUser = {};
+    self.clusterUserNames = {};
+    if self.clusterMethod == ClusteringMethod.User
+      self.clusterMethod = ClusteringMethod.KMeans;
+    end
+    for i = 1:N
+      fn = fns{i};
+      tmp = cluster.(fn);
+      tmp = tmp(:);
+      if size(tmp,1) ~= size(self.scoreXY,1) || size(tmp,2) ~= 1
+        warning('Skipping cluster %s', fn);
+      else
+        self.clusterUser = [self.clusterUser {tmp}];
+        self.clusterUserNames = [self.clusterUserNames {fn}];
+      end
+    end
+    self.emit('reset');
   end
   
   function val = getAnnotation(self, name, ind)
@@ -139,25 +161,21 @@ methods
   function changeToSettings(self, settings)
     self.pcaxInd = settings.pcaxInd;
     self.pcayInd = settings.pcayInd;
-    self.clusterMethod = settings.clusterMethod;
   end
   
   function newPcaUsingSamples(self)    
-%     self.genePm.deselectAll();
-%     indices = self.sampleSelIndices;
-%     self.samplePm.deselectAll();
     self.compute.computePcaUsingSamples(self.sampleSelIndices);
   end
   
   function updatePcaAxes(self)    
-    if ~isempty(self.compute.coeff)
+    if ~isempty(self.compute.coeff) && ~isempty(self.compute.d)
       self.uiState.updateHasData(true);
       self.coefXY = [self.compute.coeff(:,self.pcaxInd) ...
                       self.compute.coeff(:,self.pcayInd)];
       self.scoreXY = [self.compute.score(:,self.pcaxInd) ...
                       self.compute.score(:,self.pcayInd)];   
       self.samplePm.updateData(self.scoreXY, self.cluster);
-      self.genePm.updateData(self.coefXY, self.cluster);
+      self.genePm.updateData(self.coefXY, ones(size(self.coefXY,1),1));
             
       % calculate cumulative probability function from positive genes X
       ind = self.coefXY(:, 1) >= 0;
@@ -190,7 +208,9 @@ methods
   
   function updateCurrentClustering(self)
     if ~isempty(self.coefXY)
-      self.cluster = randi(double(self.clusterMethod), size(self.coefXY,1));
+      self.cluster = randi(double(self.clusterMethod), ...
+          size(self.coefXY,1),1);
+      self.updatePcaAxes();
     end
   end 
   
