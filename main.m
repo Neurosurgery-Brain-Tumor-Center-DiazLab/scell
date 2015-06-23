@@ -22,7 +22,7 @@ function varargout = main(varargin)
 
 % Edit the above text to modify the response to help main
 
-% Last Modified by GUIDE v2.5 27-Mar-2015 16:54:32
+% Last Modified by GUIDE v2.5 20-Jun-2015 11:39:30
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -92,6 +92,7 @@ function load_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 main_data=get(handles.main_window,'UserData');
+if isempty(main_data), main_data=struct('d',[]); end
 if ~isfield(main_data,'last_dir')
     [fname pname]=uigetfile('*.*','Select FeatureCounts output...');
 else
@@ -153,15 +154,19 @@ function restore_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 main_data=get(handles.main_window,'UserData');
+if isempty(main_data), main_data=struct('d',[]); end
 [fname pname]=uigetfile('*.mat','Restore session from matfile...');
 load(fullfile(pname,fname));
 main_data.d=d;
 set(handles.main_window,'UserData',main_data);
 ct_dat=get(handles.cell_table,'Data');
 for i=1:length(d.slbls)
-    ct_dat{i,1}=true;
+    if d.cidx(i), ct_dat{i,1}=true; else, ct_dat{i,1}=false; end
     ct_dat{i,2}=d.slbls{i};
     ct_dat{i,3}=sum(d.counts(:,i));
+    if isfield(d,'mapped')&&~isempty(d.mapped),ct_dat{i,4}=d.mapped(i);end
+    if isfield(d,'unmapped')&&~isempty(d.unmapped),ct_dat{i,5}=d.mapped(i);end
+    if isfield(d,'ld_call')&&~isempty(d.ld_call),ct_dat{i,6}=d.ld_call{i};end
     ct_dat{i,7}=nnz(d.counts(:,i));
     if isfield(d,'simpson')&&~isempty(d.simpson),ct_dat{i,8}=d.simpson(i);end
     if isfield(d,'preseq')&&~isempty(d.preseq),ct_dat{i,9}=d.preseq(i);end
@@ -327,7 +332,46 @@ function analyze_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 main_data=get(handles.main_window,'UserData');
-pca_tool(main_data.d);
+if isempty(main_data)
+    alert('String','Load data first');
+    return;
+end
+d=main_data.d;
+sc=sum(d.counts+1)';
+for i=1:size(d.counts,2)
+    d.nrmC(:,i)=log2(1e6*(d.counts(:,i)+1)/sc(i));
+end
+d.nrmC=d.nrmC(d.gidx,find(d.cidx));
+d.gsymb=d.gsymb(d.gidx);
+d.counts=d.counts(d.gidx,find(d.cidx));
+d.cpm=d.cpm(d.gidx,find(d.cidx));
+d.ctype=d.ctype(find(d.cidx));
+d.ent=d.ent(d.gidx);
+d.ld_call=d.ld_call(find(d.cidx));
+d.lorenz=d.lorenz(find(d.cidx));
+d.lorenzh=d.lorenzh(find(d.cidx));
+d.mapped=d.mapped(find(d.cidx));
+d.unmapped=d.unmapped(find(d.cidx));
+d.preseq=d.preseq(find(d.cidx));
+d.preseq_mar=d.preseq_mar(find(d.cidx));
+d.sf=d.sf(find(d.cidx));
+d.simpson=d.simpson(find(d.cidx));
+d.slbls=d.slbls(find(d.cidx));
+d.turing=d.turing(find(d.cidx));
+d.pareto=d.pareto(find(d.cidx));
+d.iod=d.iod(d.gidx);
+d.iod_fdr=d.iod_fdr(d.gidx);
+d.zinf_fdr=d.zinf_fdr(d.gidx);
+d.sidx=d.sidx(find(d.cidx));
+d.pnz=d.pnz(d.gidx);
+d.bak_idx=intersect(d.gidx,d.bak_idx);
+d.cidx=ones(length(find(d.cidx)),1);
+d.gidx=ones(length(d.gidx),1);
+
+c=PcaCompute();
+p=PcaTool(c);
+p.show;
+c.changeD(d);
 
 % --- Executes during object creation, after setting all properties.
 function cell_info_table_CreateFcn(hObject, eventdata, handles)
@@ -585,3 +629,38 @@ for i=1:length(d.slbls)
 end
 set(handles.cell_table,'Data',ct_dat);
 delete(h)
+
+
+% --- Executes on button press in select_all.
+function select_all_Callback(hObject, eventdata, handles)
+% hObject    handle to select_all (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+main_data=get(handles.main_window,'UserData');
+d=main_data.d;
+ct_dat=get(handles.cell_table,'Data');
+for i=1:size(ct_dat,1)
+    ct_dat{i,1}=true;
+    d.cidx(i)=1;
+end
+main_data.d=d;
+set(handles.main_window,'UserData',main_data);
+set(handles.cell_table,'Data',ct_dat);
+
+
+
+% --- Executes on button press in unselect_all.
+function unselect_all_Callback(hObject, eventdata, handles)
+% hObject    handle to unselect_all (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+main_data=get(handles.main_window,'UserData');
+d=main_data.d;
+ct_dat=get(handles.cell_table,'Data');
+for i=1:size(ct_dat,1)
+    ct_dat{i,1}=false;
+    d.cidx(i)=0;
+end
+main_data.d=d;
+set(handles.main_window,'UserData',main_data);
+set(handles.cell_table,'Data',ct_dat);

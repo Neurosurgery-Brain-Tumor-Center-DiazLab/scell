@@ -60,6 +60,7 @@ guidata(hObject, handles);
 
 if strcmp(get(hObject,'Visible'),'off')
     main_data=get(handles.norm_tool_root,'UserData');
+    if isempty(main_data), main_data=struct('d',[]); end
     if length(varargin)>0
         d=varargin{1};
         main_window_handle=varargin{2};
@@ -197,7 +198,6 @@ function norm_button_Callback(hObject, eventdata, handles)
 
 main_data=get(handles.norm_tool_root,'UserData');
 d=main_data.d;
-length(d.gidx)
 if ~isfield(d,'gidx')
     alert('String','select genes for analysis first');
     return;
@@ -206,7 +206,7 @@ if ~isfield(d,'factor_ids')
     d.factor_ids={};%string IDs for each factor in the regression model
     d.fac_varexp={};%vectors of variance explained per gene, per factor
     d.fac_counts={};%matrices of counts, used to generate each factor, stored samples-by-genes
-    d.factor={};%matrices of the factors themselves, derived from d.fac_counts
+    d.factor={};%matrices of the factors themselves, derived from d.fac_counts, e.g. via SVD
 end
 h=waitbar(0,'Processing factors');
 %identify which factors to use
@@ -270,7 +270,7 @@ waitbar(0.5,h,'Processing factors');
 %cyclins/CDKs
 if get(handles.cyclin_checkbox,'Value')
     if ~any(strcmp(d.factor_ids,'Cyclins'))
-        load cyclins2.mat;
+        load cyclins.mat;
         tgidx1=[];%find the cyclin/CDKs in the list, and in chosen gene panel
         for i=1:length(cln_gns)
             t=min(find(strcmpi(cln_gns{i},d.gsymb)));
@@ -482,7 +482,6 @@ for i=1:length(d.fac_varexp)
     d.fac_varexp{i}=t;
 end
 d.norm_counts=R;
-keyboard()
 main_data.d=d;
 set(handles.norm_tool_root,'UserData',main_data);
 

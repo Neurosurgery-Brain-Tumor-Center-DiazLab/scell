@@ -62,6 +62,7 @@ guidata(hObject, handles);
 % uiwait(handles.gene_select_tool_root);
 if strcmp(get(hObject,'Visible'),'off')
     main_data=get(handles.gene_select_tool_root,'UserData');
+    if isempty(main_data), main_data=struct('d',[]); end
     if length(varargin)>0
         d=varargin{1};
         norm_tool_handle=varargin{2};
