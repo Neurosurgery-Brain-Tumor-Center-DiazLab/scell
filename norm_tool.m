@@ -60,6 +60,7 @@ guidata(hObject, handles);
 
 if strcmp(get(hObject,'Visible'),'off')
     main_data=get(handles.norm_tool_root,'UserData');
+    if isempty(main_data), main_data=struct('d',[]); end
     if length(varargin)>0
         d=varargin{1};
         main_window_handle=varargin{2};
@@ -197,7 +198,6 @@ function norm_button_Callback(hObject, eventdata, handles)
 
 main_data=get(handles.norm_tool_root,'UserData');
 d=main_data.d;
-length(d.gidx)
 if ~isfield(d,'gidx')
     alert('String','select genes for analysis first');
     return;
@@ -206,7 +206,7 @@ if ~isfield(d,'factor_ids')
     d.factor_ids={};%string IDs for each factor in the regression model
     d.fac_varexp={};%vectors of variance explained per gene, per factor
     d.fac_counts={};%matrices of counts, used to generate each factor, stored samples-by-genes
-    d.factor={};%matrices of the factors themselves, derived from d.fac_counts
+    d.factor={};%matrices of the factors themselves, derived from d.fac_counts, e.g. via SVD
 end
 h=waitbar(0,'Processing factors');
 %identify which factors to use
@@ -218,7 +218,7 @@ if get(handles.ercc_checkbox,'Value')&&~any(strcmp(d.factor_ids,'ERCCs'))
         [fname pname]=uigetfile([main_data.last_dir,'*.*'],'Select ERCCs readcounts...');
     end
     try
-        ercc_cts=load_fc_out(fullfile(pname,fname),'hum');
+        ercc_cts=load_counts(fullfile(pname,fname),'hum','ct');
         main_data.last_dir=pname;
     catch me
         alert('String','Error loading ERCCs');
@@ -235,12 +235,7 @@ if get(handles.ercc_checkbox,'Value')&&~any(strcmp(d.factor_ids,'ERCCs'))
     gk=cumsum(1./[p:-1:1])/p;%broken stick criterion to select singular values
     gk=gk(end:-1:1)';
     chk=diag(S)/sum(ds);
-    kpt=find(gk<chk);
-    d.factor{end+1}=W(:,kpt);
-    %[~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
-    %t=d.fac_varexp{end};
-    %t(d.gidx)=rsq;
-    %d.fac_varexp{end}=t;
+    d.factor{end+1}=W(:,gk<chk);
 end
 waitbar(0.25,h,'Processing factors');
 %mutual background
@@ -259,18 +254,13 @@ if get(handles.bak_checkbox,'Value')&&~any(strcmp(d.factor_ids,'Background'))
     gk=cumsum(1./[p:-1:1])/p;%broken stick criterion
     gk=gk(end:-1:1)';
     chk=diag(S)/sum(ds);
-    kpt=find(gk<chk);
-    d.factor{end+1}=W(:,kpt);
-    %[~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
-    %t=d.fac_varexp{end};
-    %t(d.gidx)=rsq;
-    %d.fac_varexp{end}=t;
+    d.factor{end+1}=W(:,gk<chk);
 end
 waitbar(0.5,h,'Processing factors');
 %cyclins/CDKs
 if get(handles.cyclin_checkbox,'Value')
     if ~any(strcmp(d.factor_ids,'Cyclins'))
-        load cyclins2.mat;
+        load cyclins.mat;
         tgidx1=[];%find the cyclin/CDKs in the list, and in chosen gene panel
         for i=1:length(cln_gns)
             t=min(find(strcmpi(cln_gns{i},d.gsymb)));
@@ -482,7 +472,6 @@ for i=1:length(d.fac_varexp)
     d.fac_varexp{i}=t;
 end
 d.norm_counts=R;
-keyboard()
 main_data.d=d;
 set(handles.norm_tool_root,'UserData',main_data);
 

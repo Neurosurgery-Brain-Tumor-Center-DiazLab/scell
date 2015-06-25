@@ -105,6 +105,7 @@ if show_plt
         legend([h1;h3;h4],{'Acceptable quality','Poisson noise','Geometric mean'},'Location','NorthWest');
     end
 end
+keyboard()
 %compute the scaling factors and the scaled samples
 md=min(didx);
 bak_idx=sidx(1:md);%the smallest common background fraction
