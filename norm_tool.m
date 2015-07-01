@@ -218,7 +218,7 @@ if get(handles.ercc_checkbox,'Value')&&~any(strcmp(d.factor_ids,'ERCCs'))
         [fname pname]=uigetfile([main_data.last_dir,'*.*'],'Select ERCCs readcounts...');
     end
     try
-        ercc_cts=load_fc_out(fullfile(pname,fname),'hum');
+        ercc_cts=load_counts(fullfile(pname,fname),'hum','ct');
         main_data.last_dir=pname;
     catch me
         alert('String','Error loading ERCCs');
@@ -235,12 +235,7 @@ if get(handles.ercc_checkbox,'Value')&&~any(strcmp(d.factor_ids,'ERCCs'))
     gk=cumsum(1./[p:-1:1])/p;%broken stick criterion to select singular values
     gk=gk(end:-1:1)';
     chk=diag(S)/sum(ds);
-    kpt=find(gk<chk);
-    d.factor{end+1}=W(:,kpt);
-    %[~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
-    %t=d.fac_varexp{end};
-    %t(d.gidx)=rsq;
-    %d.fac_varexp{end}=t;
+    d.factor{end+1}=W(:,gk<chk);
 end
 waitbar(0.25,h,'Processing factors');
 %mutual background
@@ -259,12 +254,7 @@ if get(handles.bak_checkbox,'Value')&&~any(strcmp(d.factor_ids,'Background'))
     gk=cumsum(1./[p:-1:1])/p;%broken stick criterion
     gk=gk(end:-1:1)';
     chk=diag(S)/sum(ds);
-    kpt=find(gk<chk);
-    d.factor{end+1}=W(:,kpt);
-    %[~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
-    %t=d.fac_varexp{end};
-    %t(d.gidx)=rsq;
-    %d.fac_varexp{end}=t;
+    d.factor{end+1}=W(:,gk<chk);
 end
 waitbar(0.5,h,'Processing factors');
 %cyclins/CDKs

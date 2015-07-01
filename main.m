@@ -367,9 +367,9 @@ d.pnz=d.pnz(d.gidx);
 d.bak_idx=intersect(d.gidx,d.bak_idx);
 d.cidx=ones(length(find(d.cidx)),1);
 d.gidx=ones(length(d.gidx),1);
-
-c=PcaCompute();
-p=PcaTool(c);
+[coeff,score]=pca(d.nrmC');
+c=PcaComputeMock2(coeff, score);
+p= PcaTool(c);
 p.show;
 c.changeD(d);
 
