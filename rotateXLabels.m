@@ -359,15 +359,15 @@ end
         % sure that they have the same life-span as the axes they are listening to.
         axh = handle( ax );
         listeners = [
-            handle.listener( axh, findprop( axh, 'FontName' ), 'PropertyPostSet', @onAxesFontChanged )
-            handle.listener( axh, findprop( axh, 'FontSize' ), 'PropertyPostSet', @onAxesFontChanged )
-            handle.listener( axh, findprop( axh, 'FontWeight' ), 'PropertyPostSet', @onAxesFontChanged )
-            handle.listener( axh, findprop( axh, 'FontAngle' ), 'PropertyPostSet', @onAxesFontChanged )
-            handle.listener( axh, findprop( axh, 'FontUnits' ), 'PropertyPostSet', @onAxesFontChanged )
-            handle.listener( axh, findprop( axh, 'OuterPosition' ), 'PropertyPostSet', @onAxesPositionChanged )
-            handle.listener( axh, findprop( axh, 'XLim' ), 'PropertyPostSet', @onAxesLimitsChanged )
-            handle.listener( axh, findprop( axh, 'YLim' ), 'PropertyPostSet', @onAxesLimitsChanged )
-            handle.listener( axh, findprop( axh, 'XAxisLocation' ), 'PropertyPostSet', @onXAxisLocationChanged )
+            addlistener( axh, findprop( axh, 'FontName' ), 'PostSet', @onAxesFontChanged )
+            addlistener( axh, findprop( axh, 'FontSize' ), 'PostSet', @onAxesFontChanged )
+            addlistener( axh, findprop( axh, 'FontWeight' ), 'PostSet', @onAxesFontChanged )
+            addlistener( axh, findprop( axh, 'FontAngle' ), 'PostSet', @onAxesFontChanged )
+            addlistener( axh, findprop( axh, 'FontUnits' ), 'PostSet', @onAxesFontChanged )
+            addlistener( axh, findprop( axh, 'OuterPosition' ), 'PostSet', @onAxesPositionChanged )
+            addlistener( axh, findprop( axh, 'XLim' ), 'PostSet', @onAxesLimitsChanged )
+            addlistener( axh, findprop( axh, 'YLim' ), 'PostSet', @onAxesLimitsChanged )
+            addlistener( axh, findprop( axh, 'XAxisLocation' ), 'PostSet', @onXAxisLocationChanged )
             ];
         setappdata( ax, 'RotateXLabelsListeners', listeners );
     end % addListeners

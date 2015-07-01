@@ -337,11 +337,11 @@ if isempty(main_data)
     return;
 end
 d=main_data.d;
-sc=sum(d.counts+1)';
-for i=1:size(d.counts,2)
-    d.nrmC(:,i)=log2(1e6*(d.counts(:,i)+1)/sc(i));
-end
-d.nrmC=d.nrmC(d.gidx,find(d.cidx));
+% sc=sum(d.counts+1)';
+% for i=1:size(d.counts,2)
+%     d.nrmC(:,i)=log2(1e6*(d.counts(:,i)+1)/sc(i));
+% end
+%d.nrmC=d.nrmC(d.gidx,find(d.cidx));
 d.gsymb=d.gsymb(d.gidx);
 d.counts=d.counts(d.gidx,find(d.cidx));
 d.cpm=d.cpm(d.gidx,find(d.cidx));
