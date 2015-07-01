@@ -258,7 +258,6 @@ h=waitbar(0.5,'identifying outliers');
 %compute lorenz outlier detection
 [~,sf,~,lorenzh,pval,sidx,cxi,bak_idx]=normalize_samples(d.counts,[],1,d.slbls);
 waitbar(1,h,'done');
-keyboard()
 [~,q]=mafdr(pval);
 d.lorenz=q;d.lorenzh=lorenzh;d.sf=sf;d.bak_idx=bak_idx;
 delete(h);
