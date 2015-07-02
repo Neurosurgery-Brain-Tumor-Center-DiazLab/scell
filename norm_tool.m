@@ -228,7 +228,7 @@ if get(handles.ercc_checkbox,'Value')&&~any(strcmp(d.factor_ids,'ERCCs'))
     d.fac_varexp{end+1}=zeros(length(d.gsymb),1);
     d.fac_counts{end+1}=ercc_cts.counts';
     d.factor{end+1}=[];
-    [U,S,~]=svd(ercc_cts.counts');
+    [U,S,~]=svd(log(ercc_cts.counts'+1));
     W=U*S;
     ds=diag(S);
     p=length(ds);
@@ -247,7 +247,7 @@ if get(handles.bak_checkbox,'Value')&&~any(strcmp(d.factor_ids,'Background'))
     d.factor_ids{end+1}='Background';
     d.fac_varexp{end+1}=zeros(length(d.gsymb),1); 
     d.fac_counts{end+1}=d.counts(d.bak_idx,:)';
-    [U,S,~]=svd(d.counts(d.bak_idx,:)');
+    [U,S,~]=svd(log(d.counts(d.bak_idx,:)'+1));
     W=U*S;
     ds=diag(S);
     p=length(ds);
@@ -259,7 +259,7 @@ end
 waitbar(0.5,h,'Processing factors');
 %cyclins/CDKs
 if get(handles.cyclin_checkbox,'Value')
-    if ~any(strcmp(d.factor_ids,'Cyclins'))
+    if ~any(strcmp(d.factor_ids,'Cyclins')) %haven't already done CCA analysis
         load cyclins.mat;
         tgidx1=[];%find the cyclin/CDKs in the list, and in chosen gene panel
         for i=1:length(cln_gns)
@@ -277,12 +277,11 @@ if get(handles.cyclin_checkbox,'Value')
         Y=d.counts(tgidx,:)';
         [U,V]=comp_cca(X,Y,0.05);%keep cannonical factors of cyclins at p=0.05 cutoff  
         if ~isempty(U)&&~isempty(V)
-            d.factor{end+1}=V;
             d.cyclinU=U;d.cyclinV=V;
             %plot the top 20 most correlated Cyclins
             cln_crs=nanmean(corr(U,Y)');%correlations between cyclins and gene factors
             [cln_scrs,cln_cidx]=sort(abs(cln_crs),'descend');
-            rdn=sum(nanmean(corr(X,V).^2));
+            rdn=sum(nanmean(corr(X,V).^2))
             f1=figure;
             set(f1,'color','w');
             ax=gca;
@@ -346,17 +345,15 @@ if get(handles.cyclin_checkbox,'Value')
                 end
                 fclose(f);
             end
-        else
-            [U1,S,~]=svd(Y);
-            W=U1*S;
-            ds=diag(S);
-            kpt=1:rank(Y)/2;
-            d.factor{end+1}=W(:,kpt);
-            %[~,rsq]=glm_reg(d.factor{end},d.counts(d.gidx,:)',log(d.sf));
-            %t=d.fac_varexp{end};
-            %t(d.gidx)=rsq;
-            %d.fac_varexp{end}=t;
         end
+        [U1,S,~]=svd(log(Y+1));
+        W=U1*S;
+        ds=diag(S);
+        p=length(ds);
+        gk=cumsum(1./[p:-1:1])/p;%broken stick criterion
+        gk=gk(end:-1:1)';
+        chk=diag(S)/sum(ds);
+        d.factor{end+1}=W(:,gk<chk);
     elseif isfield(d,'cyclinU')
         U=d.cyclinU;V=d.cyclinV;
         tgidx=intersect(d.cyclin_idx,d.gidx);
@@ -465,13 +462,15 @@ end
 %         fclose(f);
 %     end
 % end
-[var_exp,R]=glm_reg_step(d);
+delete(h);
+[var_exp,R]=lm_reg_step(d);
 for i=1:length(d.fac_varexp)
     t=d.fac_varexp{i};
     t(d.gidx)=var_exp{i};
     d.fac_varexp{i}=t;
 end
-d.norm_counts=R;
+d.nrmC=R';
+
 main_data.d=d;
 set(handles.norm_tool_root,'UserData',main_data);
 
@@ -495,6 +494,7 @@ if isfield(dnew,'factor_ids')&&~isempty(dnew.factor_ids)
     d.fac_varexp=dnew.fac_varexp;%vectors of variance explained per gene, per factor
     d.fac_counts=dnew.fac_counts;%matrices of counts, used to generate each factor, stored samples-by-genes
     d.factor=dnew.factor;
+    d.nrmC=dnew.nrmC;
 end
 main_window_data.d=d;
 set(main_data.main_window_handle,'UserData',main_window_data);
