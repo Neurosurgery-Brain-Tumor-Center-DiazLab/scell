@@ -77,6 +77,10 @@ if strcmp(typ,'fc')
     d.length=D{2}; 
 end
 if strcmp(typ,'ct'), ofst=1; end
+if length(D)-ofst~=length(d.slbls)
+    alert('String','file format error');
+    return;
+end
 for i=1:length(D)-ofst
     d.counts(:,i)=D{ofst+i};
     d.cpm(:,i)=d.counts(:,i)/sum(d.counts(:,i))*1e6;

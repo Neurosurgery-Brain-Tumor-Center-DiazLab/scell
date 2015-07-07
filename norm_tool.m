@@ -496,6 +496,13 @@ if isfield(dnew,'factor_ids')&&~isempty(dnew.factor_ids)
     d.factor=dnew.factor;
     d.nrmC=dnew.nrmC;
 end
+if ~isfield(d,'nrmC')||isempty(d.nrmC)
+    sf=sum(d.counts'+1)';
+    for i=1:size(d.counts,2)
+        d.nrmC(:,i)=log2((d.counts(:,i)+1)*1e6/sf(i));
+    end
+    d.nrmC=d.nrmC(d.gidx,find(d.cidx));
+end
 main_window_data.d=d;
 set(main_data.main_window_handle,'UserData',main_window_data);
 close(handles.norm_tool_root);

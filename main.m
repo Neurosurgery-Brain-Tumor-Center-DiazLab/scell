@@ -104,9 +104,9 @@ else
     set(handles.main_window,'UserData',main_data);
     h=waitbar(.5,['Loading ' strrep(fname,'_','\_')]);
     if get(handles.featureCounts_toggle,'Value')
-        d=load_counts(fullfile(pname,fname),'hum','fc');
+        d_new=load_counts(fullfile(pname,fname),'hum','fc');
     else
-        d=load_counts(fullfile(pname,fname),'hum','ct');
+        d_new=load_counts(fullfile(pname,fname),'hum','ct');
     end
 %     load name_chg.mat
 %     for i=1:length(d.slbls)
@@ -114,14 +114,30 @@ else
 %         if isempty(t), keyboard(), end
 %         d.slbls{i}=name_chg.new{t};
 %     end
-    d.qc=false;
-    d.cidx=ones(size(d.slbls));%index of cells to include in analysis
-    d.gidx=ones(size(d.gsymb));%index of genes to include in analysis
-    d.ctype=cell(size(d.gsymb));
-    d.mapped=ones(size(d.slbls));%mapped reads
-    d.unmapped=ones(size(d.slbls));%unmapped reads
-    d.ld_call=cell(size(d.slbls));%live-dead call string
-    for i=1:length(d.ctype),d.ctype{i}='';end
+    d_old=main_data.d;
+    if isempty(d_old)
+        d=d_new;
+        d.qc=false;
+        d.cidx=ones(size(d.slbls));%index of cells to include in analysis
+        d.gidx=ones(size(d.gsymb));%index of genes to include in analysis
+        d.ctype=cell(size(d.slbls));
+        d.mapped=ones(size(d.slbls));%mapped reads
+        d.unmapped=ones(size(d.slbls));%unmapped reads
+        d.ld_call=cell(size(d.slbls));%live-dead call string
+        for i=1:length(d.ctype),d.ctype{i}='';end
+    else
+        d=d_old;
+        for i=1:length(d_new.slbls), d.slbls{end+1}=d_new.slbls{i}; end
+        d.counts=[d.counts,d_new.counts];
+        d.cpm=[d.cpm,d_new.cpm];
+        d.qc=false;
+        d.cidx=ones(size(d.slbls));%index of cells to include in analysis
+        d.gidx=ones(size(d.gsymb));%index of genes to include in analysis
+        for i=1:length(d_new.slbls), d.ctype{end+1}=''; end
+        d.mapped=[d.mapped,ones(size(d_new.slbls))];
+        d.unmapped=[d.unmapped,ones(size(d_new.slbls))];
+        for i=1:length(d_new.slbls), d.ld_call{end+1}=''; end
+    end
     main_data.d=d;
 end
 set(handles.main_window,'UserData',main_data);
