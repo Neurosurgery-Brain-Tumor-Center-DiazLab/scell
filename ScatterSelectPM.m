@@ -20,16 +20,11 @@ methods
     
   function updateData(self, data, cluster)
     self.data = data;
-    self.clusterCount = 1;
     self.cluster = cluster;
-    if ~isempty(cluster)
-      tags = [];
-      for i=1:length(cluster)
-        if ~ismember(cluster(i), tags)
-          tags(end+1) = cluster(i); %#ok<AGROW>
-        end
-      end
-      self.clusterCount = length(tags);
+    if isempty(cluster)
+      self.clusterCount = 1;
+    else
+      self.clusterCount = length(unique(cluster));
     end
     self.selData = self.data(self.selIndices,:);
     self.emit('data_changed');

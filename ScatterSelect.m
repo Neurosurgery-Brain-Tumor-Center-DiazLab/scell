@@ -30,7 +30,7 @@ properties (GetAccess = public, SetAccess = private)
   isInWindow = false % whether mouse pointer is inside the window
   isInTimer % timer for checking if mouse pointer is inside the window
   lastSettings
-%   clusterCount = 1 % number of clusters
+  clusterCount = 1 % number of clusters
   colorMap = brewermap(8,'Dark2');
   plotBorder = 0.05; % fraction of free space (border) around xy plot
 end

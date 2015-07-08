@@ -65,7 +65,7 @@ methods
       case ClusteringMethod.Minkowski
         ind = 3;
       case ClusteringMethod.User
-        ind = 3 + self.pm.clusterUserInd;
+        ind = 4;
       otherwise
         error('Bug found');
     end    
@@ -74,7 +74,7 @@ methods
       str = [str sprintf(' (up to %d)', self.pm.maxPcInd)];
     end
     set(self.pcAxesPanelH, 'Title', str);
-    str = {'k-means', 'Gaussian mixture', 'Minkowski weighted k-means'};
+    str = {'k-means', 'Gaussian mixture', 'Minkowski weighted k-means','User'};
     str = [str self.pm.clusterUserNames];
     set(self.clusteringPopupH, 'Value', ind, 'String', str);
     self.updateAnnotationInfo();
@@ -83,6 +83,7 @@ methods
   
   %*** Callbacks from GUI objects defined in GUIDE
   function refreshPcaButtonH_Callback(self, varargin)
+    self.pm.updateCurrentClustering([],[]);
     self.pm.updatePcaAxes();
   end
 
@@ -106,7 +107,7 @@ methods
   
   function clusteringPopupH_Callback(self, varargin)
     ind = get(self.clusteringPopupH, 'Value');
-    if (ind <= 3)
+    if (ind <= 4)
       switch ind
         case 1
           self.pm.clusterMethod = ClusteringMethod.KMeans;
@@ -114,29 +115,46 @@ methods
           self.pm.clusterMethod = ClusteringMethod.Gaussian;
         case 3
           self.pm.clusterMethod = ClusteringMethod.Minkowski;
+        case 4
+          self.pm.clusterMethod = ClusteringMethod.User;
         otherwise
           error('Bug found');
       end
     else
       self.pm.clusterMethod = ClusteringMethod.User;
-      self.pm.clusterUserInd = ind-3;
+      self.pm.clusterUserInd = ind-4;
     end
   end
   
-  function loadListsButtonH_Callback(self, varargin)
-    [fname, pname, ~] = uigetfile('*.mat', 'Load lists struc');
-    if fname ~= 0
-      tmp = load(fullfile(pname, fname), 'cluster');
-      if isempty(tmp) || ~isstruct(tmp.cluster)
-        errordlg('Struct ''cluster'' not found');
-      else
-        self.pm.parseUserLists(tmp.cluster);
-      end
-    end
-  end
+%   function loadListsButtonH_Callback(self, varargin)
+%     [fname, pname, ~] = uigetfile('*.mat', 'Load lists struc');
+%     if fname ~= 0
+%       tmp = load(fullfile(pname, fname), 'cluster');
+%       if isempty(tmp) || ~isstruct(tmp.cluster)
+%         errordlg('Struct ''cluster'' not found');
+%       else
+%         self.pm.parseUserLists(tmp.cluster);
+%       end
+%     end
+%   end
   
   function clusterCellsButtonH_Callback(self, varargin)
-    self.pm.updateCurrentClustering();    
+    if ~isempty(self.pm.coefXY)
+      h=waitbar(0.5,'Clustering...');
+      switch self.clusterMethod
+          case ClusteringMethod.KMeans
+              opt=statset('UseParallel','always');
+              [U,C]=kmeans(self.coefXY,self.,'Replicates',1e2,'EmptyAction','drop','Options',opt);
+          case ClusteringMethod.Gaussian
+              
+          case ClusteringMethod.Minkowski
+              
+          case ClusteringMethod.User
+              
+      end
+    end  
+    delete(h);
+    self.pm.updateCurrentClustering(U,C);    
   end
   
   function sampleListboxH_Callback(self, varargin)

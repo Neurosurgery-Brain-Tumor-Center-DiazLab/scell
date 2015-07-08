@@ -18,6 +18,7 @@ properties (SetAccess = private, GetAccess = public)
   coefXY % current pca axes coeff values, i.e., genes
   scoreXY % current pca axes score values, i.e., samples
   cluster % cluster tags
+  clusterCtrs %cluster centroids
   samplePm % presentation model for samples, i.e., scores window 
   genePm % presentation model for genes, i.e., loadings window
   nBins = 20 % number of bins in gene histogram
@@ -100,27 +101,27 @@ methods
     val.pcayInd = self.pcayInd;
   end
   
-  function parseUserLists(self, cluster)
-    fns = fieldnames(cluster);
-    N = length(fns);
-    self.clusterUser = {};
-    self.clusterUserNames = {};
-    if self.clusterMethod == ClusteringMethod.User
-      self.clusterMethod = ClusteringMethod.KMeans;
-    end
-    for i = 1:N
-      fn = fns{i};
-      tmp = cluster.(fn);
-      tmp = tmp(:);
-      if size(tmp,1) ~= size(self.scoreXY,1) || size(tmp,2) ~= 1
-        warning('Skipping cluster %s', fn);
-      else
-        self.clusterUser = [self.clusterUser {tmp}];
-        self.clusterUserNames = [self.clusterUserNames {fn}];
-      end
-    end
-    self.emit('reset');
-  end
+%   function parseUserLists(self, cluster)
+%     fns = fieldnames(cluster);
+%     N = length(fns);
+%     self.clusterUser = {};
+%     self.clusterUserNames = {};
+%     if self.clusterMethod == ClusteringMethod.User
+%       self.clusterMethod = ClusteringMethod.KMeans;
+%     end
+%     for i = 1:N
+%       fn = fns{i};
+%       tmp = cluster.(fn);
+%       tmp = tmp(:);
+%       if size(tmp,1) ~= size(self.scoreXY,1) || size(tmp,2) ~= 1
+%         warning('Skipping cluster %s', fn);
+%       else
+%         self.clusterUser = [self.clusterUser {tmp}];
+%         self.clusterUserNames = [self.clusterUserNames {fn}];
+%       end
+%     end
+%     self.emit('reset');
+%   end
   
   function val = getAnnotation(self, name, ind)
     if strcmp(name, 'symbol_text')
@@ -206,12 +207,10 @@ methods
     end
   end
   
-  function updateCurrentClustering(self)
-    if ~isempty(self.coefXY)
-      self.cluster = randi(double(self.clusterMethod), ...
-          size(self.coefXY,1),1);
-      self.updatePcaAxes();
-    end
+  function updateCurrentClustering(self,U,C)
+    self.cluster=U;
+    self.clusterCtrs=C;
+    self.updatePcaAxes();
   end 
   
   %**** Handlers for changes in the UI 
