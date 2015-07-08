@@ -143,8 +143,10 @@ methods
       h=waitbar(0.5,'Clustering...');
       switch self.clusterMethod
           case ClusteringMethod.KMeans
+              km_param=choose_kmeans_params('String','Set k-means parameters...','Title','Set parameters');
+              if isempty(gcp('nocreate')), parpool; end
               opt=statset('UseParallel','always');
-              [U,C]=kmeans(self.coefXY,self.,'Replicates',1e2,'EmptyAction','drop','Options',opt);
+              [U,C]=kmeans(self.coefXY,km_param.num_clust,'Replicates',km_param.num_reps,'Distance',km_param.dist,'EmptyAction','drop','Options',opt);
           case ClusteringMethod.Gaussian
               
           case ClusteringMethod.Minkowski
@@ -375,7 +377,7 @@ methods (Access = private)
     tags = {'pcaxEditH', 'pcayEditH'};
     props = {'pcxAxisEnable', 'pcyAxisEnable'};
     % Clustering
-    tags = [tags {'clusteringPopupH', 'loadListsButtonH', ...
+    tags = [tags {'clusteringPopupH', ...
       'clusterCellsButtonH'}];
     props = [props {'clusteringMenuEnable', 'customListEnable', ...
       'clusteringButtonEnable'}];
