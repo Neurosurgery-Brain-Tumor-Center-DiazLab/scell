@@ -161,7 +161,7 @@ function save_button_Callback(hObject, eventdata, handles)
 main_data=get(handles.main_window,'UserData');
 d=main_data.d;
 [fname pname]=uiputfile('*.mat','Save data as...','my_session');
-save(fullfile(pname,fname),'d');
+save(fullfile(pname,fname),'d','-v7.3');
 
 % --- Executes on button press in restore_button.
 function restore_button_Callback(hObject, eventdata, handles)
@@ -358,6 +358,10 @@ d=main_data.d;
 %     d.nrmC(:,i)=log2(1e6*(d.counts(:,i)+1)/sc(i));
 % end
 %d.nrmC=d.nrmC(d.gidx,find(d.cidx));
+d.gsymb_full=d.gsymb;
+d.cpm_full=d.cpm;
+d.cidx_full=d.cidx;
+d.slbls_full=d.slbls;
 d.gsymb=d.gsymb(d.gidx);
 d.counts=d.counts(d.gidx,find(d.cidx));
 d.cpm=d.cpm(d.gidx,find(d.cidx));
