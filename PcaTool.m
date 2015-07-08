@@ -56,6 +56,7 @@ methods
   function refresh(self)
     set(self.pcaxEditH, 'String', num2str(self.pm.pcaxInd));
     set(self.pcayEditH, 'String', num2str(self.pm.pcayInd));
+    set(self.plotPopupH, 'String', {'contour','surface'});
     switch self.pm.clusterMethod
       case ClusteringMethod.KMeans
         ind = 1;
@@ -154,6 +155,32 @@ methods
     self.pm.deselectAllSamples();
   end
   
+  function runTraceButtonH_Callback(self, varargin)
+    d=self.pm.compute.d;
+    %find samples currently displayed
+    idx=[];
+    for i=1:self.pm.compute.sampleCount
+        t=min(find(strcmp(self.pm.getAnnotation('id_text',i),d.slbls_full)));
+        idx=[idx;t];
+    end
+    %lowess regress a surface to gene expression for user's gene and plot
+    s=get(self.genePlotEditH,'String');
+    t=find(strcmp(s,d.gsymb_full));
+    if isempty(t), alert('String','Gene not found!!!'); return; end
+    z=max(0,log2(d.cpm_full(t,idx)'));
+    surffit=fit(self.scores.pm.data,z,'thinplateinterp','normalize','off');
+    figure;
+    if get(self.plotPopupH,'Value')==1
+        plot(surffit,self.scores.pm.data,z,'Style','contour')
+        title(s)
+        colorbar
+    else
+        plot(surffit,self.scores.pm.data,z);
+        title(s)
+        colorbar
+    end
+  end
+  
   function saveSampleListButtonH_Callback(self, varargin)
     savedAs = self.openDialogAndSaveAsText('Save samples', ...
       self.lastSaveSamples, get(self.sampleListboxH, 'String'));
@@ -225,6 +252,10 @@ methods
     self.pm.newPcaUsingSamples();
   end
   
+   function genePlotEditH_Callback(self, varargin)
+    % nothing to do
+  end
+  
   function geneSymbolEditH_Callback(self, varargin)
     % nothing to do
   end
@@ -238,6 +269,10 @@ methods
   end
   
   function pcPopupH_Callback(self, varargin)
+    % nothing to do
+  end
+  
+  function plotPopupH_Callback(self, varargin)
     % nothing to do
   end
   
@@ -259,7 +294,7 @@ end
 %*** Private implementation related stuff
 methods (Access = private)
   function updateAvailableFeatures(self)
-    tags ={ 'tracePopupH', 'runTraceButtonH', 'ontologyButtonH'};
+    tags ={'ontologyButtonH'};
     for i = 1:length(tags)
       set(self.(tags{i}), 'Enable', 'off');
     end

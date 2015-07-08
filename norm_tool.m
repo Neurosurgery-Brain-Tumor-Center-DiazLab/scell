@@ -496,6 +496,9 @@ if isfield(dnew,'factor_ids')&&~isempty(dnew.factor_ids)
     d.factor=dnew.factor;
     d.nrmC=dnew.nrmC;
 end
+if ~isfield(d,'nrmC')||isempty(d.nrmC)
+    d.nrmC=max(0,log2(d.cpm(d.gidx,find(d.cidx))));
+end
 main_window_data.d=d;
 set(main_data.main_window_handle,'UserData',main_window_data);
 close(handles.norm_tool_root);
