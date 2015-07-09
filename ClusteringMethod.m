@@ -6,7 +6,8 @@ enumeration
   KMeans    (1)
   Gaussian  (2)
   Minkowski (3)
-  User      (4)
+  DBSCAN    (4)
+  User      (5)
 end
   
 end

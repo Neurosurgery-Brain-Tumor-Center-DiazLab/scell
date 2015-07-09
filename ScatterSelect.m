@@ -213,7 +213,9 @@ methods (Access = private)
     end
     if ishandle(self.figH)
       set(self.figH, 'Name', self.title); 
+      set(self.figH,'color','w');
       if ~isempty(self.pm.data)
+          
 %         set(self.figAxH, 'XLimMode', 'auto', 'YLimMode', 'auto');   
         cmap = self.computeClusterColors();
         set(self.scatterH, 'XData', self.pm.data(:,1), 'YData', ...
@@ -229,6 +231,20 @@ methods (Access = private)
         set(self.figAxH, 'XLimMode', 'manual', 'YLimMode', 'manual',...
           'XLim', [minX(1)-offX maxX(1)+offX], 'YLim', ...
           [minY(1)-offY maxY(1)+offY]);
+        if self.pm.clusterCount==1, legend(self.figAxH,'off');
+        else
+          idx=unique(self.pm.cluster,'stable');
+          c=[unique(cmap(:,1),'stable'),unique(cmap(:,2),'stable'),unique(cmap(:,3),'stable')];
+          s={};
+          for i=1:length(idx)
+              hold(self.figAxH,'on')
+              h(i)=plot(self.figAxH,0,0,'o','MarkerEdgeColor',c(i,:));
+              set(h(i),'Visible','off');
+              s{i}=['Cluster ' num2str(idx(i))]; 
+              hold(self.figAxH,'off')
+          end
+          legend(h,s);
+        end
       end
       self.updatePlotSelection();
       drawnow;

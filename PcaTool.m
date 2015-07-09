@@ -64,8 +64,10 @@ methods
         ind = 2;
       case ClusteringMethod.Minkowski
         ind = 3;
-      case ClusteringMethod.User
+      case ClusteringMethod.DBSCAN
         ind = 4;
+      case ClusteringMethod.User
+        ind = 5;
       otherwise
         error('Bug found');
     end    
@@ -74,7 +76,7 @@ methods
       str = [str sprintf(' (up to %d)', self.pm.maxPcInd)];
     end
     set(self.pcAxesPanelH, 'Title', str);
-    str = {'k-means', 'Gaussian mixture', 'Minkowski weighted k-means','User'};
+    str = {'k-means', 'Gaussian mixture', 'Minkowski weighted k-means', 'DBSCAN','User'};
     str = [str self.pm.clusterUserNames];
     set(self.clusteringPopupH, 'Value', ind, 'String', str);
     self.updateAnnotationInfo();
@@ -116,13 +118,15 @@ methods
         case 3
           self.pm.clusterMethod = ClusteringMethod.Minkowski;
         case 4
+          self.pm.clusterMethod = ClusteringMethod.DBSCAN
+        case 5
           self.pm.clusterMethod = ClusteringMethod.User;
         otherwise
           error('Bug found');
       end
     else
       self.pm.clusterMethod = ClusteringMethod.User;
-      self.pm.clusterUserInd = ind-4;
+      self.pm.clusterUserInd = ind-5;
     end
   end
   
