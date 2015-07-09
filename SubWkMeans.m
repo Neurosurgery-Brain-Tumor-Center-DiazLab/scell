@@ -37,7 +37,7 @@ function [U, W, Z, UDistToZ, LoopCount] = SubWkMeans (Data, k, Beta, InitialCent
 %      The distance of each entity to its centroid.
 %LoopCount
 %      The number of loops the algorithm took to converge. The maximum is
-%      hard-coded to 500 (variable MaxLoops)
+%      hard-coded to 10000 (variable MaxLoops)
 %
 %Note: modified by Aaron Diaz, 3/14, from the original SubWkMeans.m (author Dr. Cordeiro de
 %Amorim), to include constraints

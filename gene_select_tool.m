@@ -69,11 +69,9 @@ if strcmp(get(hObject,'Visible'),'off')
     else,return;end
     %test each gene for high variance (dispersion test)
     %test each gene for under-sampline (zero-inflation test)
-    if ~isfield(d,'pnz')||isempty(d.pnz)
-        [pnz,zinf_fdr,iod,iod_fdr]=comp_gene_var_stats(d,true);
-        d.pnz=pnz;d.zinf_fdr=zinf_fdr;
-        d.iod=iod;d.iod_fdr=iod_fdr;
-    end
+    [pnz,zinf_fdr,iod,iod_fdr]=comp_gene_var_stats(d,true);
+    d.pnz=pnz;d.zinf_fdr=zinf_fdr;
+    d.iod=iod;d.iod_fdr=iod_fdr;
     iod_fdr_cut=0.01;zinf_fdr_cut=0.01;pnz_cut=0.5;iod_cut=0.1;
     pl_iod=log(d.iod)/max(log(d.iod));
     idx1=find((d.iod_fdr<iod_fdr_cut&d.zinf_fdr>=zinf_fdr_cut)|(pl_iod>=(1-iod_cut)&d.pnz>=pnz_cut));

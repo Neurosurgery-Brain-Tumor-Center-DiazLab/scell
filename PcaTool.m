@@ -140,16 +140,25 @@ methods
   
   function clusterCellsButtonH_Callback(self, varargin)
     if ~isempty(self.pm.coefXY)
-      h=waitbar(0.5,'Clustering...');
-      switch self.clusterMethod
+      switch self.pm.clusterMethod
           case ClusteringMethod.KMeans
-              km_param=choose_kmeans_params('String','Set k-means parameters...','Title','Set parameters');
+              km_param=choose_kmeans_params('String','Set k-means parameters...');
               if isempty(gcp('nocreate')), parpool; end
               opt=statset('UseParallel','always');
-              [U,C]=kmeans(self.coefXY,km_param.num_clust,'Replicates',km_param.num_reps,'Distance',km_param.dist,'EmptyAction','drop','Options',opt);
+              h=waitbar(0.5,'Clustering...');
+              [U,C]=kmeans(self.pm.scoreXY,km_param.num_clust,'Replicates',km_param.num_reps,'Distance',km_param.dist,'EmptyAction','drop','Options',opt);
           case ClusteringMethod.Gaussian
-              
+              gm_param=choose_gauss_params('String','Set Gaussian MM parameters...');
+              if isempty(gcp('nocreate')), parpool; end
+              h=waitbar(0.5,'Clustering...');
+              opt=statset('UseParallel',true,'MaxIter',1000);
+              gm=fitgmdist(self.pm.scoreXY,gm_param.num_clust,'Replicates',gm_param.num_reps,'Options',opt);
+              U=cluster(gm,self.pm.scoreXY);
+              for i=1:max(U), C(i,:)=mean(self.pm.scoreXY(find(U==i),:)); end
           case ClusteringMethod.Minkowski
+              lnk=eye(size(score,1));
+              if isempty(gcp('nocreate')), parpool; end
+              h=waitbar(0.5,'Clustering...');
               
           case ClusteringMethod.User
               

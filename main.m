@@ -388,6 +388,10 @@ d.bak_idx=intersect(d.gidx,d.bak_idx);
 d.cidx=ones(length(find(d.cidx)),1);
 d.gidx=ones(length(d.gidx),1);
 h=waitbar(0.5,'Computing PCA...');
+if isempty(d.nrmC)
+    alert('String','Select genes/normalize samples first!');
+    return;
+end
 [coeff,score]=pca(d.nrmC');
 delete(h);
 c=PcaComputeMock2(coeff, score);

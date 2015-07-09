@@ -71,6 +71,7 @@ if strcmp(get(hObject,'Visible'),'off')
         d.fac_counts={};%matrices of counts, used to generate each factor, stored samples-by-genes
         d.factor={};%matrices of the factors themselves, derived from d.fac_counts
     end
+    d.nrmC=[];
     main_data.d=d;
     main_data.main_window_handle=main_window_handle;
     set(handles.norm_tool_root,'UserData',main_data);
@@ -152,27 +153,6 @@ if ~isempty(not_found)
     out_str=[out_str,sprintf('%s',not_found{end})];
     alert('String',out_str);
 end 
-
-% --- Executes on button press in bak_pushbutton.
-function bak_pushbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to bak_pushbutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in cyclin_pushbutton.
-function cyclin_pushbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to cyclin_pushbutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in user_pushbutton.
-function user_pushbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to user_pushbutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 
 % --- Executes on button press in select_genes_pushbutton.
 function select_genes_pushbutton_Callback(hObject, eventdata, handles)
@@ -489,12 +469,12 @@ d.iod=dnew.iod;
 d.pnz=dnew.pnz;
 d.iod_fdr=dnew.iod_fdr;
 d.zinf_fdr=dnew.zinf_fdr;
+d.nrmC=dnew.nrmC;
 if isfield(dnew,'factor_ids')&&~isempty(dnew.factor_ids)
     d.factor_ids=dnew.factor_ids;%string IDs for each factor in the regression model
     d.fac_varexp=dnew.fac_varexp;%vectors of variance explained per gene, per factor
     d.fac_counts=dnew.fac_counts;%matrices of counts, used to generate each factor, stored samples-by-genes
     d.factor=dnew.factor;
-    d.nrmC=dnew.nrmC;
 end
 if ~isfield(d,'nrmC')||isempty(d.nrmC)
     d.nrmC=max(0,log2(d.cpm(d.gidx,find(d.cidx))));

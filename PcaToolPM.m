@@ -129,7 +129,7 @@ methods
     elseif strcmp(name, 'id_text')
       val = self.compute.d.slbls{ind};
     elseif strcmp(name, 'median_number')
-      val = median(self.compute.d.cpm(ind,:));
+      val = mean(self.compute.d.cpm(ind,:));
     elseif strcmp(name, 'dispersion_number')
       val = self.compute.d.iod(ind);
     elseif strcmp(name, 'expressing_number')
