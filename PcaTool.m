@@ -228,10 +228,10 @@ methods
     %find samples currently displayed
     idx=[];
     for i=1:self.pm.compute.sampleCount
-        t=min(find(strcmp(self.pm.getAnnotation('id_text',i),d.slbls_full)));
-        idx=[idx;t];
+      t=min(find(strcmp(self.pm.getAnnotation('id_text',i),d.slbls_full)));
+      idx=[idx;t];
     end
-    %lowess regress a surface to gene expression for user's gene and plot
+    %regress/fit a surface to gene expression for user's gene and plot
     s=get(self.genePlotEditH,'String');
     t=find(strcmp(s,d.gsymb_full));
     if isempty(t), alert('String','Gene not found!!!'); return; end
@@ -239,14 +239,35 @@ methods
     surffit=fit(self.scores.pm.data,z,'thinplateinterp','normalize','off');
     figure;
     if get(self.plotPopupH,'Value')==1
-        plot(surffit,self.scores.pm.data,z,'Style','contour')
-        title(s)
-        colorbar
+      plot(surffit,self.scores.pm.data,z,'Style','contour')
+      title(s)
+      colorbar
     else
-        plot(surffit,self.scores.pm.data,z);
-        title(s)
-        colorbar
+      plot(surffit,self.scores.pm.data,z);
+      title(s)
+      colorbar
     end
+    Tr=self.pm.Tr;pred=self.pm.pred
+    C=self.pm.clusterCtrs;
+    for i=1:length(pred)
+      if pred(i)==0, continue; end
+      path=graphpred2path(pred,i)
+      f=figure;ax=gca;
+      set(f,'color','w');
+      xx=[];yy=[];t=[];
+      for j=1:length(path)-1
+        xq=linspace(C(j,1),C(j+1,1),10);
+        xq=xq(1:end-1);
+        t=[t,linspace(j,j+1,10)];
+        t=t(1:end-1);
+        xx=[xx,xq];
+        vq = interp1([C(j,1),C(j+1,1)],[C(j,2),C(j+1,2)],xq);
+        yy=[yy,vq];
+      end
+      zz=surffit(xx,yy);
+      plot(ax,t,zz);
+    end
+        
   end
   
   function saveSampleListButtonH_Callback(self, varargin)
@@ -310,6 +331,7 @@ methods
     hold(ax,'on')
     cD=squareform(pdist(self.pm.clusterCtrs));
     [Tr,pred]=graphminspantree(sparse(cD),get(self.setRootPopupH,'Value'));
+    self.pm.Tr=Tr; self.pm.pred=pred;
     C=self.pm.clusterCtrs;
     for i=1:size(C,1)
       for j=1:size(C,1)
