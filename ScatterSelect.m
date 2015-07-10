@@ -30,6 +30,7 @@ properties (GetAccess = public, SetAccess = private)
   isInWindow = false % whether mouse pointer is inside the window
   isInTimer % timer for checking if mouse pointer is inside the window
   lastSettings
+  cmap
   clusterCount = 1 % number of clusters
   colorMap = brewermap(8,'Dark2');
   plotBorder = 0.05; % fraction of free space (border) around xy plot
@@ -234,13 +235,17 @@ methods (Access = private)
         if self.pm.clusterCount==1, legend(self.figAxH,'off');
         else
           idx=unique(self.pm.cluster,'stable');
-          c=[unique(cmap(:,1),'stable'),unique(cmap(:,2),'stable'),unique(cmap(:,3),'stable')];
+          c=unique(cmap,'rows','stable');
           s={};
           for i=1:length(idx)
               hold(self.figAxH,'on')
               h(i)=plot(self.figAxH,0,0,'o','MarkerEdgeColor',c(i,:));
               set(h(i),'Visible','off');
-              s{i}=['Cluster ' num2str(idx(i))]; 
+              if idx(i)<0
+                  s{i}='scatter';
+              else
+                  s{i}=['Cluster ' num2str(idx(i))]; 
+              end
               hold(self.figAxH,'off')
           end
           legend(h,s);
@@ -271,6 +276,7 @@ methods (Access = private)
     else
       cmap = self.color;    
     end
+    self.cmap=cmap;
   end
   
   function updatePlotToSettings(self, settings)

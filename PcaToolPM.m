@@ -9,6 +9,7 @@ properties
   clusterMethod  % current ClusteringMethod
   clusterUserInd % index to the current user defined cluster, if user
                  % list is selected  
+  clustCmap %clustering's color map
   geneListInd % current selected index in gene list
   sampleListInd % current selected index in sample list   
 end
@@ -19,6 +20,8 @@ properties (SetAccess = private, GetAccess = public)
   scoreXY % current pca axes score values, i.e., samples
   cluster % cluster tags
   clusterCtrs %cluster centroids
+  Tr % minimum spanning tree on cluster centroids
+  pred %
   samplePm % presentation model for samples, i.e., scores window 
   genePm % presentation model for genes, i.e., loadings window
   nBins = 20 % number of bins in gene histogram

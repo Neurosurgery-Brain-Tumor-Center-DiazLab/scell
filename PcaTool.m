@@ -79,6 +79,19 @@ methods
     str = {'k-means', 'Gaussian mixture', 'Minkowski weighted k-means', 'DBSCAN','User'};
     str = [str self.pm.clusterUserNames];
     set(self.clusteringPopupH, 'Value', ind, 'String', str);
+    idx=unique(self.pm.cluster);
+    if isempty(idx)||length(idx)==1
+        set(self.setRootPopupH,'Value',1,'String','no clusters');
+    else
+        s={};k=1;
+        for i=1:length(idx)
+            if idx(i)>0
+                s{k}=['Cluster ' num2str(idx(i))];
+                k=k+1;
+            end
+        end
+        set(self.setRootPopupH,'Value',1,'String',s);
+    end
     self.updateAnnotationInfo();
     self.updateLists();
   end
@@ -160,16 +173,38 @@ methods
               U=cluster(gm,self.pm.scoreXY);
               for i=1:max(U), C(i,:)=mean(self.pm.scoreXY(find(U==i),:)); end
           case ClusteringMethod.Minkowski
-              lnk=eye(size(score,1));
+              lnk=eye(size(self.pm.scoreXY,1));
+              mk_param=choose_mink_params('String','Set Minkowski-weighted k-means parameters...');
               if isempty(gcp('nocreate')), parpool; end
               h=waitbar(0.5,'Clustering...');
-              
+              [U,~,C,~,~]=SubWkMeans(self.pm.scoreXY,mk_param.num_clust,mk_param.weight_exp,false,false,mk_param.mink_exp,lnk);
+          case ClusteringMethod.DBSCAN
+              dbscan_param=choose_dbscan_params('String','Set DBSCAN parameters...');
+              if isempty(gcp('nocreate')), parpool; end
+              h=waitbar(0.5,'Clustering...');
+              [U,t]=dbscan(self.pm.scoreXY,dbscan_param.min_size,[]);
+              for i=1:max(U), C(i,:)=mean(self.pm.scoreXY(find(U==i),:)); end
           case ClusteringMethod.User
-              
+              d=self.pm.compute.d;
+              [fname pname]=uigetfile('*.*','Select clustering definition file...');
+              try
+                  f=fopen(fullfile(pname,fname));
+                  D=textscan(f,'%s%n','Headerlines',1);
+              catch me
+                  alert('String','Error reading file');
+                  return;
+              end
+              U=(-1)*ones(size(self.pm.scoreXY,1),1);
+              for i=1:length(D{1})
+                  t=find(strcmp(D{1}{i},d.slbls));
+                  if ~isempty(t), U(t)=D{2}(i); end
+              end
+              for i=1:max(U), C(i,:)=mean(self.pm.scoreXY(find(U==i),:)); end
       end
     end  
     delete(h);
-    self.pm.updateCurrentClustering(U,C);    
+    self.pm.updateCurrentClustering(U,C);  
+    self.pm.clustCmap=self.scores.cmap;
   end
   
   function sampleListboxH_Callback(self, varargin)
@@ -254,6 +289,37 @@ methods
     end
   end
   
+  function fitTreeButtonH_Callback(self, varargin)
+    if isempty(self.pm.cluster)||length(self.pm.cluster)==1
+      alert('String','Cluster the data first');
+      return;
+    end
+    cmap = self.pm.clustCmap;
+    s={};
+    for i=1:length(self.pm.cluster)
+      if self.pm.cluster(i)<0
+        s{i}='scatter';
+      else
+        s{i}=['Cluster ' num2str(self.pm.cluster(i))]; 
+      end
+    end
+    f=figure;
+    set(f,'color','w');
+    gscatter(self.pm.scoreXY(:,1),self.pm.scoreXY(:,2),s',unique(cmap,'rows','stable'),'.',20);
+    ax=gca;
+    hold(ax,'on')
+    cD=squareform(pdist(self.pm.clusterCtrs));
+    [Tr,pred]=graphminspantree(sparse(cD),get(self.setRootPopupH,'Value'));
+    C=self.pm.clusterCtrs;
+    for i=1:size(C,1)
+      for j=1:size(C,1)
+        if Tr(i,j)~=0
+            plot([C(i,1),C(j,1)],[C(i,2),C(j,2)])
+        end
+      end
+    end
+  end
+  
   function addTopGenesButtonH_Callback(self, varargin)
     cutoff = str2double(get(self.cutoffEditH, 'String'))/100;
     if isnan(cutoff)
@@ -310,6 +376,10 @@ methods
   end
   
   function posPopupH_Callback(self, varargin)
+    % nothing to do
+  end
+  
+  function setRootPopupH_Callback(self, varargin)
     % nothing to do
   end
   
