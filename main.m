@@ -121,10 +121,11 @@ else
         d.cidx=ones(size(d.slbls));%index of cells to include in analysis
         d.gidx=ones(size(d.gsymb));%index of genes to include in analysis
         d.ctype=cell(size(d.slbls));
-        d.mapped=ones(size(d.slbls));%mapped reads
-        d.unmapped=ones(size(d.slbls));%unmapped reads
+        for i=1:length(d.ctype), d.ctype{i}='NA'; end
+        d.mapped=-1*ones(size(d.slbls));%mapped reads
+        d.unmapped=-1*ones(size(d.slbls));%unmapped reads
         d.ld_call=cell(size(d.slbls));%live-dead call string
-        for i=1:length(d.ctype),d.ctype{i}='';end
+        for i=1:length(d.slbls), d.ngns(i)=nnz(d.counts(:,i)); end
     else
         d=d_old;
         for i=1:length(d_new.slbls), d.slbls{end+1}=d_new.slbls{i}; end
@@ -133,10 +134,11 @@ else
         d.qc=false;
         d.cidx=ones(size(d.slbls));%index of cells to include in analysis
         d.gidx=ones(size(d.gsymb));%index of genes to include in analysis
-        for i=1:length(d_new.slbls), d.ctype{end+1}=''; end
+        for i=1:length(d_new.slbls), d.ctype{end+1}='NA'; end
         d.mapped=[d.mapped,ones(size(d_new.slbls))];
         d.unmapped=[d.unmapped,ones(size(d_new.slbls))];
         for i=1:length(d_new.slbls), d.ld_call{end+1}=''; end
+        for i=1:length(d_new.slbls), d.ngns(end+1)=nnz(d_new.counts(:,i)); end
     end
     main_data.d=d;
 end
@@ -358,34 +360,36 @@ d=main_data.d;
 %     d.nrmC(:,i)=log2(1e6*(d.counts(:,i)+1)/sc(i));
 % end
 %d.nrmC=d.nrmC(d.gidx,find(d.cidx));
+cidx=find(d.cidx);
 d.gsymb_full=d.gsymb;
 d.cpm_full=d.cpm;
 d.cidx_full=d.cidx;
 d.slbls_full=d.slbls;
 d.gsymb=d.gsymb(d.gidx);
-d.counts=d.counts(d.gidx,find(d.cidx));
-d.cpm=d.cpm(d.gidx,find(d.cidx));
-d.ctype=d.ctype(find(d.cidx));
+d.counts=d.counts(d.gidx,cidx);
+d.cpm=d.cpm(d.gidx,cidx);
+d.ctype=d.ctype(cidx);
+d.ngns=d.ngns(cidx);
 d.ent=d.ent(d.gidx);
-d.ld_call=d.ld_call(find(d.cidx));
-d.lorenz=d.lorenz(find(d.cidx));
-d.lorenzh=d.lorenzh(find(d.cidx));
-d.mapped=d.mapped(find(d.cidx));
-d.unmapped=d.unmapped(find(d.cidx));
-d.preseq=d.preseq(find(d.cidx));
-d.preseq_mar=d.preseq_mar(find(d.cidx));
-d.sf=d.sf(find(d.cidx));
-d.simpson=d.simpson(find(d.cidx));
-d.slbls=d.slbls(find(d.cidx));
-d.turing=d.turing(find(d.cidx));
-d.pareto=d.pareto(find(d.cidx));
+d.ld_call=d.ld_call(cidx);
+d.lorenz=d.lorenz(cidx);
+d.lorenzh=d.lorenzh(cidx);
+d.mapped=d.mapped(cidx);
+d.unmapped=d.unmapped(cidx);
+d.preseq=d.preseq(cidx);
+d.preseq_mar=d.preseq_mar(cidx);
+d.sf=d.sf(cidx);
+d.simpson=d.simpson(cidx);
+d.slbls=d.slbls(cidx);
+d.turing=d.turing(cidx);
+d.pareto=d.pareto(cidx);
 d.iod=d.iod(d.gidx);
 d.iod_fdr=d.iod_fdr(d.gidx);
 d.zinf_fdr=d.zinf_fdr(d.gidx);
-d.sidx=d.sidx(find(d.cidx));
+d.sidx=d.sidx(cidx);
 d.pnz=d.pnz(d.gidx);
 d.bak_idx=intersect(d.gidx,d.bak_idx);
-d.cidx=ones(length(find(d.cidx)),1);
+d.cidx=ones(length(cidx),1);
 d.gidx=ones(length(d.gidx),1);
 h=waitbar(0.5,'Computing PCA...');
 if isempty(d.nrmC)

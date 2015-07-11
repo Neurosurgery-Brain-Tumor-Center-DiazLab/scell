@@ -137,10 +137,10 @@ methods
       val = self.compute.d.iod(ind);
     elseif strcmp(name, 'expressing_number')
       val =  nnz(self.compute.d.counts(ind,:));
-    elseif strcmp(name, 'tags_number')
-      val = sum(self.compute.d.counts(:,ind));      
+    elseif strcmp(name, 'ctype_number')
+      val = sum(self.compute.d.ctype{ind});      
     elseif strcmp(name, 'genes_number')
-      val = nnz(self.compute.d.counts(:,ind));
+      val = self.compute.d.ngns(ind);
     elseif strcmp(name, 'preseq_number')
       val = self.compute.d.preseq(ind);
     elseif strcmp(name, 'simpson_number')

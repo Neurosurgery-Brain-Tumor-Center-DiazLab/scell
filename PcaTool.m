@@ -241,17 +241,21 @@ methods
     if get(self.plotPopupH,'Value')==1
       plot(surffit,self.scores.pm.data,z,'Style','contour')
       title(s)
-      colorbar
+      h=colorbar;
+      title(h,'$\log_2$CPM','Interpreter','latex')
     else
       plot(surffit,self.scores.pm.data,z);
       title(s)
-      colorbar
+      h=colorbar
+      title(h,'$\log_2$CPM','Interpreter','latex')
     end
     Tr=self.pm.Tr;pred=self.pm.pred
     C=self.pm.clusterCtrs;
     for i=1:length(pred)
       if pred(i)==0, continue; end
       path=graphpred2path(pred,i)
+      lbls={};tk=1:length(path);
+      for i=1:length(path), lbls{i}=['C' num2str(path(i))]; end
       f=figure;ax=gca;
       set(f,'color','w');
       xx=[];yy=[];t=[];
@@ -266,6 +270,9 @@ methods
       end
       zz=surffit(xx,yy);
       plot(ax,t,zz);
+      title(s)
+      xlabel('Cluster'); ylabel('$\log_2$CPM','Interpreter','latex');
+      set(ax,'XTick',tk,'XTickLabel',lbls,'FontSize',16);
     end
         
   end
@@ -294,6 +301,23 @@ methods
   function deleteGeneButtonH_Callback(self, varargin)
     ind = get(self.geneListboxH, 'Value');
     self.pm.deselectGene(ind)
+  end
+  
+  function exportClustButtonH_Callback(self, varargin)
+    [fname pname]=uiputfile('*.txt','Save data as...','clusters.txt');
+    try
+      f=fopen(fullfile(pname,fname),'w');
+    catch me
+      alert('String',['Error opening ' fullfile(pname,fname)]);
+      return;
+    end
+    fprintf(f,'Sample_ID\tCluster_ID\n');
+    slbls=self.pm.compute.d.slbls;
+    for i=1:length(slbls)
+      fprintf(f,'%s\t',slbls{i});
+      fprintf(f,'%i\n',self.pm.cluster(i));
+    end
+    fclose(f);  
   end
   
   function findGeneButtonH_Callback(self, varargin)
@@ -336,7 +360,7 @@ methods
     for i=1:size(C,1)
       for j=1:size(C,1)
         if Tr(i,j)~=0
-            plot([C(i,1),C(j,1)],[C(i,2),C(j,2)])
+            plot([C(i,1),C(j,1)],[C(i,2),C(j,2)],'LineWidth',2)
         end
       end
     end
@@ -370,6 +394,7 @@ methods
   end
   
   function refreshPcaUsingSamplesButtonH_Callback(self, varargin)
+    self.pm.updateCurrentClustering([],[]);
     self.pm.newPcaUsingSamples();
   end
   
@@ -545,21 +570,21 @@ methods (Access = private)
     if ~isempty(ind)
       titleText = [titleText ' (ID ' ...
         self.pm.getAnnotation('id_text', ind) ')'];
-      tagsText = num2str(self.pm.getAnnotation('tags_number', ind));
+      ctypeText = self.pm.getAnnotation('ctype_number', ind);
       genesText = num2str(self.pm.getAnnotation('genes_number', ind)); 
       preseqText = num2str(self.pm.getAnnotation('preseq_number', ind)); 
       simpsonText = num2str(self.pm.getAnnotation('simpson_number', ind)); 
       binomialText = num2str(self.pm.getAnnotation(...
                                               'binomial_number', ind)); 
     else
-      tagsText = '-';
+      ctypeText = '-';
       genesText = '-';
       preseqText = '-';
       simpsonText = '-';
       binomialText = '-';
     end
     set(self.cellPanelH, 'Title', titleText);
-    set(self.tagsTextH, 'String', tagsText);
+    set(self.ctypeTextH, 'String', ctypeText);
     set(self.genesTextH, 'String', genesText);
     set(self.preseqTextH, 'String', preseqText);
     set(self.simpsonTextH, 'String', simpsonText);

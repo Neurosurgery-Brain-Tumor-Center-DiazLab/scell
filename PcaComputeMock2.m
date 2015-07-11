@@ -19,7 +19,7 @@ classdef PcaComputeMock2 < PcaComputeBase
     function computePcaUsingSamples(self, sampleIndices)  
       props = {'slbls', 'cidx', 'mapped', 'unmapped', 'ld_call', ...
         'turing', 'simpson', 'preseq', 'preseq_mar', 'lorenz', ...
-        'lorenzh', 'sf', 'pareto', 'sidx'};
+        'lorenzh', 'sf', 'pareto', 'sidx','ngns','ctype'};
       d2 = self.d;
       for i = 1:length(props)
         p = props{i};
@@ -33,8 +33,9 @@ classdef PcaComputeMock2 < PcaComputeBase
         d2.(p) = tmp(:, sampleIndices);
       end
       % coeff indices may go out of out with the current dataset
-      self.coeff = self.coeff(:, sampleIndices);
-      self.score = self.score(sampleIndices, :);
+      [coeff,score]=pca(d2.nrmC');
+      self.coeff = coeff;
+      self.score = score;
       self.changeD(d2);
     end
     
