@@ -366,6 +366,17 @@ methods
     end
   end
   
+  function ontologyButtonH_Callback(self, varargin)
+    data=get(self.geneListboxH, 'String');
+    if isempty(data)
+        alert('String','Select genes first')
+        return;
+    end
+    smp.species='hsa';
+    smp.gsymb=data;
+    david_tool(smp);
+  end
+  
   function addTopGenesButtonH_Callback(self, varargin)
     cutoff = str2double(get(self.cutoffEditH, 'String'))/100;
     if isnan(cutoff)
@@ -444,7 +455,7 @@ end
 %*** Private implementation related stuff
 methods (Access = private)
   function updateAvailableFeatures(self)
-    tags ={'ontologyButtonH'};
+    tags ={};
     for i = 1:length(tags)
       set(self.(tags{i}), 'Enable', 'off');
     end

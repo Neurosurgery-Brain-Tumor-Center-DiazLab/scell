@@ -137,7 +137,7 @@ for i=1:length(main_data.gsymb) %look for each gene symbol's entrez id
         r=r+1;
     end                         
 end
-gene_data.gid=en;
+main_data.gid=en;
 if ~isempty(not_found)
     out_str=[num2str(length(not_found)),...
     sprintf(' genes could not be identified\n'),...
@@ -168,7 +168,8 @@ wb=waitbar(0.5,'Loading gene ontology data.');
 main_data.GO=geneont('file','gene_ontology.obo');
 delete(wb);
 set(handles.david_tool_root,'UserData',main_data);
-
+set(handles.glist_textbox,'String',main_data.gsymb,'UserData',main_data,'Value',1);
+set(handles.gene_lists,'UserData',{main_data},'String',{'my_list'},'Value',1);
 
 
 % UIWAIT makes david_tool wait for user response (see UIRESUME)
