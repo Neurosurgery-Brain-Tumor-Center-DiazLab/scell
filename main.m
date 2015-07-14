@@ -346,7 +346,7 @@ kidx=find(d.cidx);
 d.slbls=d.slbls(kidx);
 d.counts=d.counts(:,kidx);
 if ~isfield(d,'sf')||isempty(d.sf)
-    alert('QC libraries first')
+    alert('String','QC libraries first')
     return;
 end
 d.sf=d.sf(kidx);

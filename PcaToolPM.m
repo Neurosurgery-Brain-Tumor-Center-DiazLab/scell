@@ -213,6 +213,8 @@ methods
   function updateCurrentClustering(self,U,C)
     self.cluster=U;
     self.clusterCtrs=C;
+    self.Tr=[];
+    self.pred=[];
     self.updatePcaAxes();
   end 
   
