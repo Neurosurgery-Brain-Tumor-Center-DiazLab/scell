@@ -11,6 +11,5 @@ analysis*
 *.orig
 comp_*R
 patel*pdf
-color*.m
 test_counts.txt
 test_gene_select.m
