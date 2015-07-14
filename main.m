@@ -337,10 +337,18 @@ function norm_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 main_data=get(handles.main_window,'UserData');
+if isempty(main_data)
+    alert('String','Load data first');
+    return;
+end
 d=main_data.d;
 kidx=find(d.cidx);
 d.slbls=d.slbls(kidx);
 d.counts=d.counts(:,kidx);
+if ~isfield(d,'sf')||isempty(d.sf)
+    alert('QC libraries first')
+    return;
+end
 d.sf=d.sf(kidx);
 norm_tool(d,handles.main_window);
 

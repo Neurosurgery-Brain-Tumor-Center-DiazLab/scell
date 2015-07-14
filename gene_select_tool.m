@@ -72,7 +72,7 @@ if strcmp(get(hObject,'Visible'),'off')
     [pnz,zinf_fdr,iod,iod_fdr]=comp_gene_var_stats(d,true);
     d.pnz=pnz;d.zinf_fdr=zinf_fdr;
     d.iod=iod;d.iod_fdr=iod_fdr;
-    iod_fdr_cut=0.01;zinf_fdr_cut=0.01;pnz_cut=0.5;iod_cut=0.1;
+    iod_fdr_cut=0.05;zinf_fdr_cut=0.8;pnz_cut=0.1;iod_cut=0.75;
     pl_iod=log(d.iod)/max(log(d.iod));
     idx1=find((d.iod_fdr<iod_fdr_cut&d.zinf_fdr>=zinf_fdr_cut)|(pl_iod>=(1-iod_cut)&d.pnz>=pnz_cut));
     idx2=setdiff(1:length(pl_iod),idx1);
@@ -217,7 +217,7 @@ d=main_data.d;
 t=str2num(get(handles.iod_edit,'String'));
 if isempty(t)
     iod_cut=0.75;
-    set(handles.iod_edit,'String','0.1');
+    set(handles.iod_edit,'String','0.75');
 else
     iod_cut=t;
 end
@@ -230,15 +230,15 @@ else
 end
 t=str2num(get(handles.iod_fdr_edit,'String'));
 if isempty(t)
-    iod_fdr_cut=0.01;
-    set(handles.iod_fdr_edit,'String','0.01');
+    iod_fdr_cut=0.05;
+    set(handles.iod_fdr_edit,'String','0.05');
 else
     iod_fdr_cut=t;
 end
 t=str2num(get(handles.zinf_fdr_edit,'String'));
 if isempty(t)
-    zinf_fdr_cut=0.01;
-    set(handles.zinf_fdr_edit,'String','0.01');
+    zinf_fdr_cut=0.8;
+    set(handles.zinf_fdr_edit,'String','0.8');
 else
     zinf_fdr_cut=t;
 end
@@ -271,29 +271,29 @@ d=main_data.d;
 %get thresholds from user
 t=str2num(get(handles.iod_edit,'String'));
 if isempty(t)
-    iod_cut=0.1;
-    set(handles.iod_edit,'String','0.1');
+    iod_cut=0.75;
+    set(handles.iod_edit,'String','0.75');
 else
     iod_cut=t;
 end
 t=str2num(get(handles.pnz_edit,'String'));
 if isempty(t)
-    pnz_cut=0.5;
-    set(handles.pnz_edit,'String','0.5');
+    pnz_cut=0.1;
+    set(handles.pnz_edit,'String','0.1');
 else
     pnz_cut=t;
 end
 t=str2num(get(handles.iod_fdr_edit,'String'));
 if isempty(t)
-    iod_fdr_cut=0.01;
-    set(handles.iod_fdr_edit,'String','0.01');
+    iod_fdr_cut=0.05;
+    set(handles.iod_fdr_edit,'String','0.05');
 else
     iod_fdr_cut=t;
 end
 t=str2num(get(handles.zinf_fdr_edit,'String'));
 if isempty(t)
-    zinf_fdr_cut=0.01;
-    set(handles.zinf_fdr_edit,'String','0.01');
+    zinf_fdr_cut=0.8;
+    set(handles.zinf_fdr_edit,'String','0.8');
 else
     zinf_fdr_cut=t;
 end
@@ -349,28 +349,28 @@ d=norm_tool_data.d;
 t=str2num(get(handles.iod_edit,'String'));
 if isempty(t)
     iod_cut=0.75;
-    set(handles.iod_edit,'String','0.1');
+    set(handles.iod_edit,'String','0.75');
 else
     iod_cut=t;
 end
 t=str2num(get(handles.pnz_edit,'String'));
 if isempty(t)
-    pnz_cut=0.5;
-    set(handles.pnz_edit,'String','0.5');
+    pnz_cut=0.1;
+    set(handles.pnz_edit,'String','0.1');
 else
     pnz_cut=t;
 end
 t=str2num(get(handles.iod_fdr_edit,'String'));
 if isempty(t)
-    iod_fdr_cut=0.01;
-    set(handles.iod_fdr_edit,'String','0.01');
+    iod_fdr_cut=0.05;
+    set(handles.iod_fdr_edit,'String','0.05');
 else
     iod_fdr_cut=t;
 end
 t=str2num(get(handles.zinf_fdr_edit,'String'));
 if isempty(t)
-    zinf_fdr_cut=0.01;
-    set(handles.zinf_fdr_edit,'String','0.01');
+    zinf_fdr_cut=0.8;
+    set(handles.zinf_fdr_edit,'String','0.8');
 else
     zinf_fdr_cut=t;
 end

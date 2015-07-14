@@ -209,8 +209,10 @@ methods (Access = private)
   end
   
   function updatePlot(self)
-    if self.pm.clusterCount > size(self.colorMap,1)
-      warning('Specified more clusters than there are different colors');
+    if self.pm.clusterCount > 8
+      self.colorMap=distinguishable_colors(self.pm.clusterCount);
+    else
+      self.colorMap= brewermap(8,'Dark2');
     end
     if ishandle(self.figH)
       set(self.figH, 'Name', self.title); 
@@ -270,8 +272,11 @@ methods (Access = private)
       cmap = zeros(size(self.pm.data,1), 3);
       colorCount = size(self.colorMap,1);
       for i = 1:size(self.pm.data,1)
-        ind = mod(self.pm.cluster(i), colorCount) + 1;
-        cmap(i,:) = self.colorMap(ind,:);
+        if self.pm.cluster(i)==-1
+          cmap(i,:)=self.colorMap(end,:);
+        else
+          cmap(i,:) = self.colorMap(self.pm.cluster(i),:);
+        end
       end      
     else
       cmap = self.color;    

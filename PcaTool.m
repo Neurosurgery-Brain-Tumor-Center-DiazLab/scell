@@ -260,12 +260,12 @@ methods
       set(f,'color','w');
       xx=[];yy=[];t=[];
       for j=1:length(path)-1
-        xq=linspace(C(j,1),C(j+1,1),10);
+        xq=linspace(C(path(j),1),C(path(j+1),1),10);
         xq=xq(1:end-1);
         t=[t,linspace(j,j+1,10)];
         t=t(1:end-1);
         xx=[xx,xq];
-        vq = interp1([C(j,1),C(j+1,1)],[C(j,2),C(j+1,2)],xq);
+        vq = interp1([C(path(j),1),C(path(j+1),1)],[C(path(j),2),C(path(j+1),2)],xq);
         yy=[yy,vq];
       end
       zz=surffit(xx,yy);

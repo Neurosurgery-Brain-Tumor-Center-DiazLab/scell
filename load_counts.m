@@ -85,5 +85,9 @@ for i=1:length(D)-ofst
     d.counts(:,i)=D{ofst+i};
     d.cpm(:,i)=d.counts(:,i)/sum(d.counts(:,i))*1e6;
 end
-
+[~,sidx]=natsort(d.gsymb);
+d.gsymb=d.gsymb(sidx);
+d.ent=d.ent(sidx);
+d.counts=d.counts(sidx,:);
+d.cpm=d.cpm(sidx,:);
 
