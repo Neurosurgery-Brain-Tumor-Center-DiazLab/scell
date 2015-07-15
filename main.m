@@ -215,7 +215,11 @@ function qc_button_Callback(hObject, eventdata, handles)
 main_data=get(handles.main_window,'UserData');
 d=main_data.d;
 M=zeros(size(d.counts,2),4);%matrix to hold qc metrics, used for pareto rank
-preseq_dir='./';
+if isdeployed
+    preseq_dir=ctfroot;
+else
+    preseq_dir='./';
+end
 %for each cell call preseq
 j=1;
 h=waitbar(0,['processing cell ' num2str(j) ' of ' num2str(size(d.counts,2))]);
@@ -253,7 +257,10 @@ if comp_preseq
         for k=1:size(d.counts,1)
             if counts(k,i)>0,fprintf(f,'%d\n',counts(k,i));end
         end
-        [status,result]=system([preseq_dir 'preseq lc_extrap -V ' fname]);
+        if ismac, pref='/Applications/';
+        elseif isunix, pref='~/';
+        else, pref='C:\';end
+        [status,result]=system([pref 'preseq lc_extrap -V ' fname]);
         if status==0
             D=textscan(result,'%n%n%n%n','Headerlines',1);
             if ~isempty(D)&&~isempty(D{2})

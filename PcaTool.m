@@ -25,7 +25,7 @@ methods
     p.connectMe('highlight_changed', @self.updateAnnotationInfo);
     p.connectMe('selection_changed', @self.updateLists);
     self.pm = p;
-    self.settingsFile = fullfile(pwd, 'settings.mat');
+    self.settingsFile = fullfile(ctfroot, 'settings.mat');
     self.lastSaveGenes = '';
     self.lastSaveSamples = '';
   end
@@ -380,6 +380,7 @@ methods
   end
   
   function addTopGenesButtonH_Callback(self, varargin)
+    if isempty(get(self.cutoffEditH, 'String')), return;end
     cutoff = str2double(get(self.cutoffEditH, 'String'))/100;
     if isnan(cutoff)
       uiwait(errordlg('Cutoff must be numeric'));
@@ -526,12 +527,9 @@ methods (Access = private)
       'clusteringButtonEnable'}];
     % Working gene list
     tags = [tags {'deleteGeneButtonH', 'clearGeneListButtonH', ...
-      'findGeneButtonH', 'geneSymbolEditH', 'saveGeneListButtonH', ...
-      'addTopGenesButtonH',  'cutoffEditH', 'pcPopupH', 'posPopupH'}];
+      'findGeneButtonH', 'geneSymbolEditH', 'saveGeneListButtonH'}];
     props = [props {'deleteGeneEnable', 'clearGeneListEnable', ...
-      'findGeneEnable', 'geneSymbolInputEnable', 'saveGeneListEnable', ...
-      'addTopGenesEnable', 'cutoffEnable', 'cutoffAxisEnable', ...
-      'cutoffPosEnable'}];
+      'findGeneEnable', 'geneSymbolInputEnable', 'saveGeneListEnable'}];
     % Working sample list
     tags = [tags {'deleteSampleButtonH', 'clearSampleListButtonH', ...
       'findSampleButtonH', 'sampleSymbolEditH', ...

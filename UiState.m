@@ -17,10 +17,10 @@ properties (SetAccess = private, GetAccess = public)
   findGeneEnable = false
   geneSymbolInputEnable = false
   saveGeneListEnable = false  
-  addTopGenesEnable = false
-  cutoffEnable = false
-  cutoffAxisEnable = false
-  cutoffPosEnable = false
+  addTopGenesEnable = true
+  cutoffEnable = true
+  cutoffAxisEnable = true
+  cutoffPosEnable = true
   % sample list
   deleteSampleEnable = false
   clearSampleListEnable = false
@@ -45,7 +45,7 @@ methods
     % gene list
     self.findGeneEnable = value;
     self.geneSymbolInputEnable = value;
-    self.addTopGenesEnable = value;
+    %self.addTopGenesEnable = value;
     self.cutoffEnable = value;
     self.cutoffAxisEnable = value;
     self.cutoffPosEnable = value;
