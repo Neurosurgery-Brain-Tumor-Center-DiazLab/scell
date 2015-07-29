@@ -412,6 +412,7 @@ if isempty(d.nrmC)
     return;
 end
 [coeff,score]=pca(d.nrmC');
+keyboard()
 delete(h);
 c=PcaComputeMock2(coeff, score);
 p= PcaTool(c);
