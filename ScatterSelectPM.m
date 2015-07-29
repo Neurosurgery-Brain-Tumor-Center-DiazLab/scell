@@ -12,6 +12,9 @@ properties (GetAccess = public, SetAccess = private)
                % mouse is not inside the figure    
   clusterCount = 1 % number of clusters        
 %   isInWindow = false % whether mouse pointer is inside the window
+  selectionMode = SelectionMode.Pointwise % selection mode
+  lassoPoints % Nx2 matrix of (x,y) lasso polygon points, the last point
+              % is assumed to be connected to the first point
 end
 
 methods
@@ -28,6 +31,18 @@ methods
     end
     self.selData = self.data(self.selIndices,:);
     self.emit('data_changed');
+  end
+  
+  function addLassoPoint(self, xy)
+    self.lassoPoints(:,end+1) = xy(:)';
+    self.emit('changed');
+  end
+  
+  function undoLassoPoint(self)
+    if ~isempty(self.lassoPoints)
+      self.lassoPoints(end,:) = [];
+      self.emit('changed');
+    end
   end
   
   function updateCurrentIndex(self, value)

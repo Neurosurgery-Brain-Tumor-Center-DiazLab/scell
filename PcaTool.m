@@ -25,32 +25,26 @@ methods
     p.connectMe('highlight_changed', @self.updateAnnotationInfo);
     p.connectMe('selection_changed', @self.updateLists);
     self.pm = p;
-    self.settingsFile = fullfile(ctfroot, 'settings.mat');
+    if isdeployed
+      basedir = ctfroot;
+    else
+      basedir = pwd;
+    end
+    self.settingsFile = fullfile(basedir, 'settings.mat');
     self.lastSaveGenes = '';
     self.lastSaveSamples = '';
+    self.createMainFigure();
   end
 
-  function show(self)
-    if ishandle(self.mainH)
-      set(self.mainH, 'Visible', 'on');
+  function show(self, varargin)
+    if ishandle(self.mainH)      
       self.registerCallbacks();
     else
-      self.registerCallbacks();
-      fig = pca_tool2('HandleVisiblity', 'off');
-      self.mapUiControls(fig);
-      set(fig, 'CloserequestFcn', @self.windowAboutToClose);
-      % save callbacks
-      handles = guidata(fig);
-      handles.n = {self};
-      guidata(fig, handles);
-      self.mainH = fig;
-      self.loadSettings();
-      self.refresh();
-      self.updateAvailableFeatures();      
-      self.loadings.show();
-      self.scores.show();      
-      self.pm.updatePcaAxes();
+      self.createMainFigure();
     end
+    set(self.mainH, 'Visible', 'on');
+    self.loadings.show();
+    self.scores.show();    
   end
 
   function refresh(self)
@@ -464,6 +458,21 @@ methods (Access = private)
     end
   end
   
+  function createMainFigure(self)
+    self.registerCallbacks();
+    fig = pca_tool2('Visible', 'off','HandleVisibility', 'off');
+    self.mapUiControls(fig);
+    set(fig, 'CloserequestFcn', @self.windowAboutToClose);
+    % save callbacks
+    handles = guidata(fig);
+    handles.n = {self};
+    guidata(fig, handles);
+    self.mainH = fig;
+    self.loadSettings();
+    self.refresh();
+    self.updateAvailableFeatures();            
+    self.pm.updatePcaAxes();    
+  end
   
   function [tf, ind] = validatePcInput(self, str)
     ind = str2double(str);

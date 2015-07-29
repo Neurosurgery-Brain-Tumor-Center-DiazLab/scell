@@ -9,17 +9,11 @@ properties
   color = [0 0.4470 0.7410] % default Matlab color
   highColor = 'red' % highligh color
   highMarker = '*'  
+  lassoColor = 'magenta'
   selectingEnabled = true
 end
 
 properties (GetAccess = public, SetAccess = private)
-%   data % Nx2 matrix of data points, each row = [x y]
-%   cluster % empty or Nx1 vector of cluster tags (integers >= 1), 
-%           % each corresponds to data row
-%   selData % selected data Mx2
-%   selIndices % incides to self.data corresponding to the selected data  
-%   currentIndex % index to data closest to the mouse button now, empty if
-%                % mouse is not inside the figure
   pm % ScatterSelectPM presentation model
   figH     % handle to figure
   figAxH  % handle to figure axes
@@ -27,6 +21,7 @@ properties (GetAccess = public, SetAccess = private)
   highH % handle to higlight object
   highInd % index to highlight value
   selH % handle to selected points
+  lassoH % handle to lasso select polygon
   isInWindow = false % whether mouse pointer is inside the window
   isInTimer % timer for checking if mouse pointer is inside the window
   lastSettings
@@ -43,6 +38,7 @@ methods
     s = ScatterSelectPM();
     s.connectMe('selection_changed', @self.updatePlotSelection);
     s.connectMe('data_changed', @self.updatePlot);
+    s.connectMe('changed', @self.refresh);
     self.pm = s;
     self.lastSettings = self.defaultSettings;    
   end
@@ -85,12 +81,19 @@ methods
         @self.mouseMoved, 'WindowButtonDownFcn', @self.mouseClicked, ...
         'KeyPressFcn', @self.keyPressed);        
       self.figH = f;      
+      %*** Start creating UI related graphics elements
       hold(self.figAxH, 'on');
+      % selected points
       self.selH = plot(0, 0, 'Visible', 'off', 'Parent', self.figAxH,...
         'Color', self.highColor, 'Marker', self.highMarker, ...
         'LineStyle', 'none');      
+      % currently highlighted point
       self.highH = plot(0, 0, 'Visible', 'off', 'Parent', self.figAxH,...
         'Color', self.highColor, 'Marker', self.highMarker);
+      % lasso select polygon
+      self.lassoH = line('Visible', 'off', 'Parent', self.figAxH,...
+        'Color', self.lassoColor);
+      % the actual data points
       self.scatterH = scatter(0, 0, 'Visible', 'off', 'Parent', ...
         self.figAxH, 'Marker', self.marker);
       hold(self.figAxH, 'off');
@@ -206,6 +209,10 @@ methods (Access = private)
       self.emit('is_in', isIn);
     end
     self.isInWindow = isIn;
+  end
+  
+  function refresh(self)
+    
   end
   
   function updatePlot(self)
