@@ -15,37 +15,51 @@ h=-1;
 md=[];
 n=size(coef,1);
 %compute mean for initial input data
-e=gabrielGraph(coef);
+%e=gabrielGraph(coef);
+[~,~,c]=graph_rng(coef,1);
 !rm -f tmp.pairs
 f=fopen('tmp.pairs','w');
-for j=1:n
-    fprintf(f,'%i\t',e(j,1));
-    fprintf(f,'%i\n',e(j,2));
+for i=1:n
+  for j=1:i-1
+    if c(i,j)	  
+      fprintf(f,'%i\t',i);
+      fprintf(f,'%i\n',j);
+    end
+  end
 end
 [status,result]=system('./fitHRG -f tmp.pairs');
 x=textscan(result,'%n','Delimiter','\n');
 x=x{1}; x=x(end-n:end);
-md={mean(x)};
+md={median(x)};
 %compute means for perturbed data
-parfor i=1:nit
-    ptb=(1-2*rand(size(coef)))*ep;
-    e=gabrielGraph(coef+ptb);
-    tmp=[tempname(pwd) '.pairs'];
-    f=fopen(tmp,'w');
-    for j=1:n
-        fprintf(f,'%i\t',e(j,1));
-        fprintf(f,'%i\n',e(j,2));
-    end
-    [status,result]=system(['./fitHRG -f ' tmp]);
-    system(['rm -f ' tmp]);
-    x=textscan(result,'%n','Delimiter','\n');
-    x=x{1};
-    if n>=length(x), md{i+1}=-1;
-    else
-        x=x(end-n:end);
-        md{i+1}=mean(x);
-    end
-end
+%parfor i=1:nit
+%    ptb=(1-2*rand(size(coef)))*ep;
+%    e=gabrielGraph(coef+ptb);
+%    [~,~,c]=graph_rng(coef,1);
+%    tmp=[tempname(pwd) '.pairs'];
+%    f=fopen(tmp,'w');
+%    for k=1:n
+%      for j=1:k-1
+%        if c(k,j)	  
+%          fprintf(f,'%i\t',k);
+%          fprintf(f,'%i\n',j);
+%        end
+%      end
+%    end
+%    for j=1:n
+%        fprintf(f,'%i\t',e(j,1));
+%        fprintf(f,'%i\n',e(j,2));
+%    end
+%    [status,result]=system(['./fitHRG -f ' tmp]);
+%    system(['rm -f ' tmp]);
+%    x=textscan(result,'%n','Delimiter','\n');
+%    x=x{1};
+%    if n>=length(x), md{i+1}=-1;
+%    else
+%        x=x(end-n:end);
+%        md{i+1}=mean(x);
+%    end
+%end
 for i=1:length(md),y(i)=md{i};end
 md=y;
 if plt 
