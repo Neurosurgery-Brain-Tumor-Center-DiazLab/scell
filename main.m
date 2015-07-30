@@ -409,10 +409,10 @@ d.gidx=ones(length(d.gidx),1);
 h=waitbar(0.5,'Computing PCA...');
 if isempty(d.nrmC)
     alert('String','Select genes/normalize samples first!');
+    delete(h);
     return;
 end
 [coeff,score]=pca(d.nrmC');
-keyboard()
 delete(h);
 c=PcaComputeMock2(coeff, score);
 p= PcaTool(c);
