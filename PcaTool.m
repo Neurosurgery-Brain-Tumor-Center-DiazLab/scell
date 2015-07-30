@@ -57,6 +57,7 @@ methods
     set(self.pcaxEditH, 'String', num2str(self.pm.pcaxInd));
     set(self.pcayEditH, 'String', num2str(self.pm.pcayInd));
     set(self.plotPopupH, 'String', {'contour','surface'});
+    set(self.plotMethodPopupH, 'String', {'Lowess','Loess','Linear','Cubic','Bi-harmonic','Thin-plate'});
     switch self.pm.clusterMethod
       case ClusteringMethod.KMeans
         ind = 1;
@@ -99,6 +100,18 @@ methods
   %*** Callbacks from GUI objects defined in GUIDE
   function refreshPcaButtonH_Callback(self, varargin)
     self.pm.updateCurrentClustering([],[]);
+    self.pm.updatePcaAxes();
+  end
+  
+  function varimaxRotateButtonH_Callback(self, varargin)
+    cnew=self.pm.compute.coeff;
+    snew=self.pm.compute.score;
+    i1=self.pm.pcaxInd; i2=self.pm.pcayInd;
+    [c,R]=rotatefactors(cnew(:,[i1,i2]),'Method','varimax','Normalize','off');
+    cnew(:,[i1,i2])=c;
+    snew(:,[i1,i2])=snew(:,[i1,i2])*R';
+    self.pm.compute.changeCoeff(cnew);
+    self.pm.compute.changeScore(snew);
     self.pm.updatePcaAxes();
   end
 
@@ -236,7 +249,22 @@ methods
     t=find(strcmp(s,d.gsymb_full));
     if isempty(t), alert('String','Gene not found!!!'); return; end
     z=max(0,log2(d.cpm_full(t,idx)'));
-    surffit=fit(self.scores.pm.data,z,'thinplateinterp','normalize','off');
+    fstr='lowess';
+    switch get(self.plotMethodPopupH,'Value')
+        case 1
+            fstr='lowess';
+        case 2
+            fstr='loess';
+        case 3
+            fstr='linearinterp';
+        case 4
+            fstr='cubicinterp';
+        case 5
+            fstr='biharmonicinterp';
+        case 6
+            fstr='thinplateinterp';
+    end
+    surffit=fit(self.scores.pm.data,z,fstr,'normalize','off');
     figure;
     if get(self.plotPopupH,'Value')==1
       plot(surffit,self.scores.pm.data,z,'Style','contour')
@@ -254,7 +282,7 @@ methods
       C=self.pm.clusterCtrs;
       for i=1:length(pred)
         if pred(i)==0, continue; end
-        path=graphpred2path(pred,i)
+        path=graphpred2path(pred,i);
         lbls={};tk=1:length(path);
         for i=1:length(path), lbls{i}=['C' num2str(path(i))]; end
         f=figure;ax=gca;

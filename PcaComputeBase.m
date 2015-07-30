@@ -27,6 +27,12 @@ methods (Abstract)
 end
 
 methods 
+  function changeCoeff(self, cnew)
+    self.coeff=cnew;
+  end
+  function changeScore(self, snew)
+    self.score=snew;
+  end
   function changeD(self, d)
     self.d = d;
     self.emit('d_changed');

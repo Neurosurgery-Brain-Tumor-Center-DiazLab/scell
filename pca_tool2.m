@@ -22,7 +22,7 @@ function varargout = pca_tool2(varargin)
 
 % Edit the above text to modify the response to help pca_tool2
 
-% Last Modified by GUIDE v2.5 10-Jul-2015 17:38:48
+% Last Modified by GUIDE v2.5 29-Jul-2015 17:34:34
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -404,3 +404,33 @@ function exportClustButtonH_Callback(hObject, eventdata, handles)
 % hObject    handle to exportClustButtonH (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in varimaxRotateButtonH.
+function varimaxRotateButtonH_Callback(hObject, eventdata, handles)
+% hObject    handle to varimaxRotateButtonH (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on selection change in plotMethodPopupH.
+function plotMethodPopupH_Callback(hObject, eventdata, handles)
+% hObject    handle to plotMethodPopupH (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns plotMethodPopupH contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from plotMethodPopupH
+
+
+% --- Executes during object creation, after setting all properties.
+function plotMethodPopupH_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to plotMethodPopupH (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
