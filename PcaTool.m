@@ -109,7 +109,7 @@ methods
     i1=self.pm.pcaxInd; i2=self.pm.pcayInd;
     [c,R]=rotatefactors(cnew(:,[i1,i2]),'Method','varimax','Normalize','off');
     cnew(:,[i1,i2])=c;
-    snew(:,[i1,i2])=snew(:,[i1,i2])*R';
+    snew(:,[i1,i2])=snew(:,[i1,i2])*R;
     self.pm.compute.changeCoeff(cnew);
     self.pm.compute.changeScore(snew);
     self.pm.updatePcaAxes();
