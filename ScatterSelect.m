@@ -2,14 +2,12 @@ classdef ScatterSelect < MObject
   %SCATTERSELECT Interactively select points from a scatterplot
   %   Detailed explanation goes here
   
-properties
-  title = 'Unnamed' % figure title
+properties  
   closeFcn % function handle is called when the figure is closed
   marker = 'O' % current plot marker
   color = [0 0.4470 0.7410] % default Matlab color
   highColor = 'red' % highligh color
-  highMarker = '*'  
-  lassoColor = 'magenta'
+  highMarker = '*'    
   selectingEnabled = true
 end
 
@@ -43,10 +41,10 @@ methods
     self.lastSettings = self.defaultSettings;    
   end
 
-  function set.title(self, value)
-    self.title = value;
-    self.updatePlot();
-  end
+%   function set.title(self, value)
+%     self.title = value;
+%     self.updatePlot();
+%   end
   
   function val = defaultSettings(self)
     val = [86 344 672  504];
@@ -92,7 +90,7 @@ methods
         'Color', self.highColor, 'Marker', self.highMarker);
       % lasso select polygon
       self.lassoH = line('Visible', 'off', 'Parent', self.figAxH,...
-        'Color', self.lassoColor);
+        'Color', self.pm.lassoColor);
       % the actual data points
       self.scatterH = scatter(0, 0, 'Visible', 'off', 'Parent', ...
         self.figAxH, 'Marker', self.marker);
@@ -148,33 +146,78 @@ methods (Access = private)
         self.pm.data(ind,2), 'Visible', 'on', 'Color', self.highColor);
 %       self.emit('highlight', ind);
       self.pm.updateCurrentIndex(ind);
+      if self.pm.selectionMode == SelectionMode.Lasso
+        self.refreshLasso();
+      end
     end
   end
   
   function mouseClicked(self, varargin)
     if self.selectingEnabled
-      self.pm.selectCurrentIndex();
+      switch self.pm.selectionMode
+        case SelectionMode.Pointwise
+          self.pm.selectCurrentIndex();
+        case SelectionMode.Lasso
+          self.pm.addLassoPoint(self.pointerLocInCoord());
+        otherwise
+          error('Bug found!');
+      end
+      
     end
   end
   
   function keyPressed(self, varargin)
     ch = get(self.figH, 'CurrentCharacter');
     isEsc = false;
-    isClear = false;
+    isC = false;
+    isQ = false;
+    is1 = false;
+    is2 = false;
+    isEnter = false;
     % capture buttons
     if ~isempty(ch)
       if uint16(ch) == 27
         isEsc = true;
+      elseif uint16(ch) == 13
+        isEnter = true;
       elseif lower(ch) == 'c'
-        isClear = true;
+        isC = true;
+      elseif lower(ch) == 'q'
+        isQ = true;
+      elseif lower(ch) == '1'
+        is1 = true;
+      elseif lower(ch) == '2'
+        is2 = true;
       end
     end
     % actions
     if self.selectingEnabled
-      if isEsc
-        self.pm.deselectLastIndex();
-      elseif isClear
+      if is1
+        self.pm.updateSelectionMode(SelectionMode.Pointwise);
+      end
+      if is2
+        self.pm.updateSelectionMode(SelectionMode.Lasso);
+      end
+      if isC
         self.pm.deselectAll();
+      end
+      switch self.pm.selectionMode
+        case SelectionMode.Pointwise
+          if isEsc
+            self.pm.deselectLastIndex();
+          end
+        case SelectionMode.Lasso
+          if isEsc
+            self.pm.undoLassoPoint(false)
+          elseif isQ
+            self.pm.undoLassoPoint(true);
+          elseif isEnter
+            if self.pm.selectLassoedPoints();
+              self.pm.undoLassoPoint(true);
+            end
+          end
+        otherwise
+          error('Bug found!');
       end
     end
   end
@@ -211,8 +254,40 @@ methods (Access = private)
     self.isInWindow = isIn;
   end
   
+  function refreshLasso(self)
+    p = self.pm.lassoPoints; % shorthand notation
+    if ~isempty(p)
+      xy = self.pointerLocInCoord();
+      set(self.lassoH, 'Visible', 'on', ...
+        'XData', [p(:,1)' xy(1) p(1,1)],...
+        'YData', [p(:,2)' xy(2) p(1,2)], 'Color', self.pm.lassoColor);
+    else
+      set(self.lassoH, 'Visible', 'off');
+    end
+  end
+  
   function refresh(self)
-    
+%     if self.pm.selectionMode == SelectionMode.Lasso
+%       self.refreshLasso();
+% %       p = self.pm.lassoPoints; % shorthand notation
+% %       if ~isempty(p)
+% %         set(self.lassoH, 'Visible', 'on', 'XData', [p(:,1)' p(1,1)],...
+% %           'YData', [p(:,2)' p(1,2)], 'Color', self.pm.lassoColor);
+% %       end
+%     else
+%       set(self.lassoH, 'Visible', 'off');
+%     end
+    switch self.pm.selectionMode
+      case SelectionMode.Pointwise
+        mode = ' (pointwise select)';
+        set(self.lassoH, 'Visible', 'off');
+      case SelectionMode.Lasso        
+        mode = ' (lasso select)';
+        self.refreshLasso();
+      otherwise
+        error('Bug found!')
+    end
+    set(self.figH, 'Name', [self.pm.title mode]); 
   end
   
   function updatePlot(self)
@@ -222,10 +297,9 @@ methods (Access = private)
       self.colorMap= brewermap(8,'Dark2');
     end
     if ishandle(self.figH)
-      set(self.figH, 'Name', self.title); 
+      self.refresh();
       set(self.figH,'color','w');
-      if ~isempty(self.pm.data)
-          
+      if ~isempty(self.pm.data)          
 %         set(self.figAxH, 'XLimMode', 'auto', 'YLimMode', 'auto');   
         cmap = self.computeClusterColors();
         set(self.scatterH, 'XData', self.pm.data(:,1), 'YData', ...
@@ -277,7 +351,7 @@ methods (Access = private)
   function cmap = computeClusterColors(self)
     if self.pm.clusterCount > 1      
       cmap = zeros(size(self.pm.data,1), 3);
-      colorCount = size(self.colorMap,1);
+%       colorCount = size(self.colorMap,1);
       for i = 1:size(self.pm.data,1)
         if self.pm.cluster(i)==-1
           cmap(i,:)=self.colorMap(end,:);
@@ -298,6 +372,8 @@ methods (Access = private)
   end
 
   function xy = pointerLocInCoord(self)
+  % Returns mouse pointer location on screen in the underlaying XY plot
+  % coordinates
     pl = get(groot, 'PointerLocation');
     fp = get(self.figH, 'Position');
     ap = get_in_units(self.figAxH, 'Position', 'Pixels');
