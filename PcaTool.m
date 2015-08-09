@@ -277,6 +277,19 @@ methods
       h=colorbar
       title(h,'$\log_2$CPM','Interpreter','latex')
     end
+    %plot the average over the first principle component
+    xx=linspace(min(self.scores.pm.data(:,1)),max(self.scores.pm.data(:,1)),100);
+    ymn=min(self.scores.pm.data(:,2));ymx=max(self.scores.pm.data(:,2));tt=linspace(ymn,ymx,100);
+    yy=zeros(size(xx));
+    for i=1:length(xx)
+        yy(i)=median(surffit(xx(i)*ones(1,100),tt));
+    end
+    figure
+    ymed=median(yy);
+    yy=zscore(yy);
+    plot(xx,yy)
+    title(s)
+    axis tight
     if ~isempty(self.pm.Tr)
       Tr=self.pm.Tr;pred=self.pm.pred
       C=self.pm.clusterCtrs;
