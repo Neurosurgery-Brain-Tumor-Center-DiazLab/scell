@@ -147,7 +147,7 @@ ct_dat=get(handles.cell_table,'Data');
 for i=1:length(d.slbls)
     ct_dat{i,1}=true;
     ct_dat{i,2}=d.slbls{i};
-    ct_dat{i,3}=sum(d.counts(:,i));
+    ct_dat{i,3}=nansum(d.counts(:,i));
     ct_dat{i,7}=nnz(d.counts(:,i));
 end
 set(handles.cell_table,'Data',ct_dat);
@@ -181,7 +181,7 @@ ct_dat=get(handles.cell_table,'Data');
 for i=1:length(d.slbls)
     if d.cidx(i), ct_dat{i,1}=true; else, ct_dat{i,1}=false; end
     ct_dat{i,2}=d.slbls{i};
-    ct_dat{i,3}=sum(d.counts(:,i));
+    ct_dat{i,3}=nansum(d.counts(:,i));
     if isfield(d,'mapped')&&~isempty(d.mapped),ct_dat{i,4}=d.mapped(i);end
     if isfield(d,'unmapped')&&~isempty(d.unmapped),ct_dat{i,5}=d.mapped(i);end
     if isfield(d,'ld_call')&&~isempty(d.ld_call),ct_dat{i,6}=d.ld_call{i};end
@@ -196,7 +196,7 @@ end
 set(handles.cell_table,'Data',ct_dat);
 m=get(handles.disp_table,'Data');
 m{1}=d.slbls{1};
-m{2}=sum(d.counts(:,1));
+m{2}=nansum(d.counts(:,1));
 m{3}=nnz(d.counts(:,1));
 if isfield(d,'simpson')&&~isempty(d.simpson),m{4}=d.simpson(1);end
 if isfield(d,'preseq')&&~isempty(d.preseq),m{5}=d.preseq(1);end
@@ -229,13 +229,13 @@ while ~d.qc&&j<=size(d.counts,2)
     comp_simp=~isfield(d,'simpson')||isempty(d.simpson)||j>length(d.simpson)||d.simpson(j)==0;
     %turing
     if comp_turing
-        d.turing(j)=1-sum(d.counts(:,j)==1)/sum(d.counts(d.counts(:,j)>0,j));
+        d.turing(j)=1-nansum(d.counts(:,j)==1)/nansum(d.counts(d.counts(:,j)>0,j));
         t=find(d.counts(:,j)>0);
-        pt=d.counts(t,j)/sum(d.counts(t,j));
+        pt=d.counts(t,j)/nansum(d.counts(t,j));
     end
     %simpson
     if comp_simp
-        pt=d.counts(t,j)/sum(d.counts(t,j));
+        pt=d.counts(t,j)/nansum(d.counts(t,j));
         d.simpson(j)=1/(pt'*pt);
     end
 %    M(j,1)=d.preseq(j);
@@ -328,7 +328,7 @@ end
 set(handles.cell_table,'Data',ct_dat);
 m=get(handles.disp_table,'Data');
 m{1}=d.slbls{1};
-m{2}=sum(d.counts(:,1));
+m{2}=nansum(d.counts(:,1));
 m{3}=nnz(d.counts(:,1));
 m{4}=d.simpson(1);
 m{5}=d.preseq(1);
@@ -438,7 +438,7 @@ tdat=get(hObject,'Data');
 t=find(strcmp(d.slbls,tdat{eventdata.Indices(1),2}));%second column is sample name
 m=get(handles.disp_table,'Data');
 m{1}=d.slbls{t};
-m{2}=sum(d.counts(:,t));
+m{2}=nansum(d.counts(:,t));
 m{3}=nnz(d.counts(:,t));
 if isfield(d,'turing')&&~isempty(d.turing)%then we've done QC
     m{4}=d.simpson(t);
@@ -520,7 +520,7 @@ if ~isfield(d,'mapped')
     fprintf(f,'ID\tTag_count\tGenes_tagged\tSimpson_diversity\tPRESEQ_coverage\tTuring_coverage\tLorenz_outlier_test\tOutlier_PASS-FAIL\tMarginal_return\n');
     for i=1:length(d.slbls)
         fprintf(f,'%s\t',d.slbls{i});
-        fprintf(f,'%i\t',sum(d.counts(:,i)));
+        fprintf(f,'%i\t',nansum(d.counts(:,i)));
         fprintf(f,'%i\t',nnz(d.counts(:,i)));
         fprintf(f,'%g\t',d.simpson(i));
         fprintf(f,'%g\t',d.preseq(i));
@@ -538,7 +538,7 @@ else
         fprintf(f,'%i\t',d.unmapped(i));
         fprintf(f,'%g\t',d.mapped(i)/(d.mapped(i)+d.unmapped(i)));
         fprintf(f,'%s\t',d.ld_call{i});
-        fprintf(f,'%i\t',sum(d.counts(:,i)));
+        fprintf(f,'%i\t',nansum(d.counts(:,i)));
         fprintf(f,'%i\t',nnz(d.counts(:,i)));
         fprintf(f,'%g\t',d.simpson(i));
         fprintf(f,'%g\t',d.preseq(i));

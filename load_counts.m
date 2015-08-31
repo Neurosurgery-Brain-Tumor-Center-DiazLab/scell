@@ -83,7 +83,7 @@ if length(D)-ofst~=length(d.slbls)
 end
 for i=1:length(D)-ofst
     d.counts(:,i)=D{ofst+i};
-    d.cpm(:,i)=d.counts(:,i)/sum(d.counts(:,i))*1e6;
+    d.cpm(:,i)=d.counts(:,i)/nansum(d.counts(:,i))*1e6;
 end
 [~,sidx]=natsort(d.gsymb);
 d.gsymb=d.gsymb(sidx);
