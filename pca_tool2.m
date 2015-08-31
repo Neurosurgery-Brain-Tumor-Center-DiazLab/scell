@@ -22,7 +22,7 @@ function varargout = pca_tool2(varargin)
 
 % Edit the above text to modify the response to help pca_tool2
 
-% Last Modified by GUIDE v2.5 29-Jul-2015 17:34:34
+% Last Modified by GUIDE v2.5 22-Aug-2015 23:45:21
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -426,6 +426,82 @@ function plotMethodPopupH_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function plotMethodPopupH_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to plotMethodPopupH (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in popupmenu20.
+function popupmenu20_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu20 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu20 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu20
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu20_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu20 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in fitPathButtonH.
+function fitPathButtonH_Callback(hObject, eventdata, handles)
+% hObject    handle to fitPathButtonH (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on selection change in setStartPopupH.
+function setStartPopupH_Callback(hObject, eventdata, handles)
+% hObject    handle to setStartPopupH (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns setStartPopupH contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from setStartPopupH
+
+
+% --- Executes during object creation, after setting all properties.
+function setStartPopupH_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to setStartPopupH (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in setStopPopupH.
+function setStopPopupH_Callback(hObject, eventdata, handles)
+% hObject    handle to setStopPopupH (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns setStopPopupH contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from setStopPopupH
+
+
+% --- Executes during object creation, after setting all properties.
+function setStopPopupH_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to setStopPopupH (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

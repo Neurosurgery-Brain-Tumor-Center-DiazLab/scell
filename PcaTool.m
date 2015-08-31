@@ -83,6 +83,8 @@ methods
     idx=unique(self.pm.cluster);
     if isempty(idx)||length(idx)==1
         set(self.setRootPopupH,'Value',1,'String','no clusters');
+        set(self.setStartPopupH,'Value',1,'String','no clusters');
+        set(self.setStopPopupH,'Value',1,'String','no clusters');
     else
         s={};k=1;
         for i=1:length(idx)
@@ -92,6 +94,8 @@ methods
             end
         end
         set(self.setRootPopupH,'Value',1,'String',s);
+        set(self.setStartPopupH,'Value',1,'String',s);
+        set(self.setStopPopupH,'Value',1,'String',s);
     end
     self.updateAnnotationInfo();
     self.updateLists();
@@ -249,6 +253,8 @@ methods
     t=find(strcmp(s,d.gsymb_full));
     if isempty(t), alert('String','Gene not found!!!'); return; end
     z=max(0,log2(d.cpm_full(t,idx)'));
+    x=zscore(z(:));
+    z=reshape(x,size(z));
     fstr='lowess';
     switch get(self.plotMethodPopupH,'Value')
         case 1
@@ -270,12 +276,12 @@ methods
       plot(surffit,self.scores.pm.data,z,'Style','contour')
       title(s)
       h=colorbar;
-      title(h,'$\log_2$CPM','Interpreter','latex')
+      title(h,'Z-score','Interpreter','latex')
     else
       plot(surffit,self.scores.pm.data,z);
       title(s)
       h=colorbar
-      title(h,'$\log_2$CPM','Interpreter','latex')
+      title(h,'Z-score','Interpreter','latex')
     end
     %plot the average over the first principle component
     xx=linspace(min(self.scores.pm.data(:,1)),max(self.scores.pm.data(:,1)),100);
@@ -289,9 +295,13 @@ methods
     yy=zscore(yy);
     plot(xx,yy)
     title(s)
+    set(gcf,'color','w');
+    xlabel(['PCA ' num2str(self.pm.pcaxInd)]);
+    ylabel('Z-score');
+    set(gca,'FontSize',18);
     axis tight
-    if ~isempty(self.pm.Tr)
-      Tr=self.pm.Tr;pred=self.pm.pred
+    if ~isempty(self.pm.pred)
+      pred=self.pm.pred;
       C=self.pm.clusterCtrs;
       for i=1:length(pred)
         if pred(i)==0, continue; end
@@ -313,7 +323,7 @@ methods
         zz=surffit(xx,yy);
         plot(ax,t,zz);
         title(s)
-        xlabel('Cluster'); ylabel('$\log_2$CPM','Interpreter','latex');
+        xlabel('Cluster'); ylabel('Z-score','Interpreter','latex');
         set(ax,'XTick',tk,'XTickLabel',lbls,'FontSize',16);
       end
     end
@@ -397,7 +407,7 @@ methods
     ax=gca;
     hold(ax,'on')
     cD=squareform(pdist(self.pm.clusterCtrs));
-    [Tr,pred]=graphminspantree(sparse(cD),get(self.setRootPopupH,'Value'));
+    [Tr,pred]=graphminspantree(sparse(cD),get(self.setRootPopupH,'Value'),'method','Kruskal');
     self.pm.Tr=Tr; self.pm.pred=pred;
     C=self.pm.clusterCtrs;
     for i=1:size(C,1)
@@ -406,6 +416,44 @@ methods
             plot([C(i,1),C(j,1)],[C(i,2),C(j,2)],'LineWidth',2)
         end
       end
+    end
+  end
+  
+  function fitPathButtonH_Callback(self, varargin)
+    if isempty(self.pm.cluster)||length(self.pm.cluster)==1
+      alert('String','Cluster the data first');
+      return;
+    end
+    cmap = self.pm.clustCmap;
+    s={};
+    for i=1:length(self.pm.cluster)
+      if self.pm.cluster(i)<0
+        s{i}='scatter';
+      else
+        s{i}=['Cluster ' num2str(self.pm.cluster(i))]; 
+      end
+    end
+    f=figure;
+    set(f,'color','w');
+    gscatter(self.pm.scoreXY(:,1),self.pm.scoreXY(:,2),s',unique(cmap,'rows','stable'),'.',20);
+    ax=gca;
+    hold(ax,'on')
+    %cD=squareform(pdist(self.pm.clusterCtrs));
+    e=gabrielGraph(self.pm.clusterCtrs);
+    n=max(max(e));
+    cD=spalloc(n,n,2*size(e,1));
+    for i=1:size(e,1)
+        cD(e(i,1),e(i,2))=1;
+        cD(e(i,2),e(i,1))=1;
+    end
+    [~,path,pred]=graphshortestpath(cD,get(self.setStartPopupH,'Value'),get(self.setStopPopupH,'Value'));
+    pred2=zeros(size(pred));
+    pred2(path)=pred(path);
+    pred=pred2;
+    self.pm.pred=pred;
+    C=self.pm.clusterCtrs;
+    for i=1:length(path)-1
+        plot([C(path(i),1),C(path(i+1),1)],[C(path(i),2),C(path(i+1),2)],'LineWidth',2);
     end
   end
   
