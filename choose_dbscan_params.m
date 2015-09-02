@@ -1,4 +1,4 @@
-function varargout = choose_kmeans_params(varargin)
+function varargout = choose_dbscan_params(varargin)
 % CHOOSE_kmeans_params MATLAB code for choose_kmeans_params.fig
 %      CHOOSE_kmeans_params by itself, creates a new CHOOSE_kmeans_params or raises the
 %      existing singleton*.
@@ -28,8 +28,8 @@ function varargout = choose_kmeans_params(varargin)
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @choose_kmeans_params_OpeningFcn, ...
-                   'gui_OutputFcn',  @choose_kmeans_params_OutputFcn, ...
+                   'gui_OpeningFcn', @choose_dbscan_params_OpeningFcn, ...
+                   'gui_OutputFcn',  @choose_dbscan_params_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -44,7 +44,7 @@ end
 % End initialization code - DO NOT EDIT
 
 % --- Executes just before choose_kmeans_params is made visible.
-function choose_kmeans_params_OpeningFcn(hObject, eventdata, handles, varargin)
+function choose_dbscan_params_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -110,7 +110,7 @@ set(handles.figure1,'WindowStyle','modal')
 uiwait(handles.figure1);
 
 % --- Outputs from this function are returned to the command line.
-function varargout = choose_kmeans_params_OutputFcn(hObject, eventdata, handles)
+function varargout = choose_dbscan_params_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB

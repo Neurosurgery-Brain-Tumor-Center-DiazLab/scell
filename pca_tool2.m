@@ -22,7 +22,7 @@ function varargout = pca_tool2(varargin)
 
 % Edit the above text to modify the response to help pca_tool2
 
-% Last Modified by GUIDE v2.5 22-Aug-2015 23:45:21
+% Last Modified by GUIDE v2.5 01-Sep-2015 13:36:25
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -510,3 +510,40 @@ function setStopPopupH_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on selection change in addRmvClustPopupH.
+function addRmvClustPopupH_Callback(hObject, eventdata, handles)
+% hObject    handle to addRmvClustPopupH (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns addRmvClustPopupH contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from addRmvClustPopupH
+
+
+% --- Executes during object creation, after setting all properties.
+function addRmvClustPopupH_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to addRmvClustPopupH (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in addClustButtonH.
+function addClustButtonH_Callback(hObject, eventdata, handles)
+% hObject    handle to addClustButtonH (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in rmvClustButtonH.
+function rmvClustButtonH_Callback(hObject, eventdata, handles)
+% hObject    handle to rmvClustButtonH (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

@@ -25,6 +25,7 @@ end
 try
     f=fopen(fname);
 catch me
+    alert('String','File I/O Error, check format');
     keyboard()
 end
 dlm=char(9);%char(9)=='\t'
@@ -36,7 +37,12 @@ if strcmp(typ,'fc')
     f=fopen(fname);
     s='';
     for i=1:nsmp, s=[s '%s']; end
-    D=textscan(f,['%*s%*s%*s%*s%*s%*s' s],1,'Headerlines',1);
+    try
+        D=textscan(f,['%*s%*s%*s%*s%*s%*s' s],1,'Headerlines',1);
+    catch me
+        alert('String','File I/O Error, check format');
+        keyboard()
+    end
     for i=1:length(D)
         t=D{i}{1};
         idx=strfind(t,'/');

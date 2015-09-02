@@ -85,6 +85,7 @@ methods
         set(self.setRootPopupH,'Value',1,'String','no clusters');
         set(self.setStartPopupH,'Value',1,'String','no clusters');
         set(self.setStopPopupH,'Value',1,'String','no clusters');
+        set(self.addRmvClustPopupH,'Value',1,'String','no clusters');
     else
         s={};k=1;
         for i=1:length(idx)
@@ -96,6 +97,7 @@ methods
         set(self.setRootPopupH,'Value',1,'String',s);
         set(self.setStartPopupH,'Value',1,'String',s);
         set(self.setStopPopupH,'Value',1,'String',s);
+        set(self.addRmvClustPopupH,'Value',1,'String',s);
     end
     self.updateAnnotationInfo();
     self.updateLists();
@@ -468,6 +470,24 @@ methods
     david_tool(smp);
   end
   
+  function addClustButtonH_Callback(self, varargin)
+      s=get(self.addRmvClustPopupH,'String');
+      s=s{get(self.addRmvClustPopupH,'Value')};
+      s=textscan(s,'%*s%n');
+      k=s{1};
+      if isempty(k), keyboard();end
+      self.pm.addClust(find(self.pm.cluster==k));
+  end
+  
+  function rmvClustButtonH_Callback(self, varargin)
+      s=get(self.addRmvClustPopupH,'String');
+      s=s{get(self.addRmvClustPopupH,'Value')};
+      s=textscan(s,'%*s%n');
+      k=s{1};
+      if isempty(k), keyboard();end     
+      self.pm.rmClust(find(self.pm.cluster==k));
+  end
+  
   function addTopGenesButtonH_Callback(self, varargin)
     if isempty(get(self.cutoffEditH, 'String')), return;end
     cutoff = str2double(get(self.cutoffEditH, 'String'))/100;
@@ -533,6 +553,15 @@ methods
     % nothing to do
   end
   
+  function addRmvClustPopupH_Callback(self, varargin)
+      % nothing to do
+  end 
+  function setStartPopupH_Callback(self, varargin)
+      % nothing to do
+  end
+  function setStoptPopupH_Callback(self, varargin)
+      % nothing to do
+  end
   %*** 
   function saveSettingsAndQuit(self)
     self.saveSettings();

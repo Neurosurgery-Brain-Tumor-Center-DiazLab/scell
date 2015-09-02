@@ -382,6 +382,17 @@ methods
     ind = unique([ind(:)' self.geneSelIndices(:)']);
     self.genePm.setSelection(ind);  
   end
+  
+  function addClust(self, newInd)
+    ind = union(self.sampleSelIndices,newInd);
+    self.samplePm.setSelection(ind);
+  end
+  
+  function rmClust(self, oldInd)
+    ind = setdiff(self.sampleSelIndices,oldInd);
+    self.samplePm.setSelection(ind);
+  end
+  
 end
   
 end

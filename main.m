@@ -22,7 +22,7 @@ function varargout = main(varargin)
 
 % Edit the above text to modify the response to help main
 
-% Last Modified by GUIDE v2.5 20-Jun-2015 11:39:30
+% Last Modified by GUIDE v2.5 01-Sep-2015 14:05:31
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -103,11 +103,7 @@ else
     main_data.last_dir=pname;
     set(handles.main_window,'UserData',main_data);
     h=waitbar(.5,['Loading ' strrep(fname,'_','\_')]);
-    if get(handles.featureCounts_toggle,'Value')
-        d_new=load_counts(fullfile(pname,fname),'hum','fc');
-    else
-        d_new=load_counts(fullfile(pname,fname),'hum','ct');
-    end
+    d_new=load_counts(fullfile(pname,fname),'hum','ct');
 %     load name_chg.mat
 %     for i=1:length(d.slbls)
 %         t=find(strcmp(d.slbls{i},name_chg.old));
@@ -190,8 +186,7 @@ for i=1:length(d.slbls)
     if isfield(d,'preseq')&&~isempty(d.preseq),ct_dat{i,9}=d.preseq(i);end
     if isfield(d,'turing')&&~isempty(d.turing),ct_dat{i,10}=d.turing(i);end
     if isfield(d,'lorenz')&&~isempty(d.lorenz),ct_dat{i,11}=d.lorenz(i);end
-    if isfield(d,'pareto')&&~isempty(d.simpson),ct_dat{i,12}=d.pareto(i);end
-    if isfield(d,'preseq_mar')&&~isempty(d.preseq_mar),ct_dat{i,14}=d.preseq_mar(i);end
+    if isfield(d,'preseq_mar')&&~isempty(d.preseq_mar),ct_dat{i,12}=d.preseq_mar(i);end
 end
 set(handles.cell_table,'Data',ct_dat);
 m=get(handles.disp_table,'Data');
@@ -202,8 +197,7 @@ if isfield(d,'simpson')&&~isempty(d.simpson),m{4}=d.simpson(1);end
 if isfield(d,'preseq')&&~isempty(d.preseq),m{5}=d.preseq(1);end
 if isfield(d,'turing')&&~isempty(d.turing),m{6}=d.turing(1);end
 if isfield(d,'lorenz')&&~isempty(d.lorenz),m{7}=d.lorenz(1);end
-if isfield(d,'pareto')&&~isempty(d.simpson),m{8}=d.pareto(1);end
-if isfield(d,'preseq_mar')&&~isempty(d.preseq_mar),m{9}=d.preseq_mar(1);end
+if isfield(d,'preseq_mar')&&~isempty(d.preseq_mar),m{8}=d.preseq_mar(1);end
 set(handles.disp_table,'Data',m);
 
 
@@ -214,13 +208,6 @@ function qc_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 main_data=get(handles.main_window,'UserData');
 d=main_data.d;
-M=zeros(size(d.counts,2),4);%matrix to hold qc metrics, used for pareto rank
-if isdeployed
-    preseq_dir=ctfroot;
-else
-    preseq_dir='./';
-end
-%for each cell call preseq
 j=1;
 h=waitbar(0,['processing cell ' num2str(j) ' of ' num2str(size(d.counts,2))]);
 while ~d.qc&&j<=size(d.counts,2)
@@ -238,29 +225,33 @@ while ~d.qc&&j<=size(d.counts,2)
         pt=d.counts(t,j)/nansum(d.counts(t,j));
         d.simpson(j)=1/(pt'*pt);
     end
-%    M(j,1)=d.preseq(j);
-    M(j,2)=d.turing(j);
-    M(j,3)=d.simpson(j);
     waitbar(j/size(d.counts,2),h,['processing cell ' num2str(j) ' of ' num2str(size(d.counts,2))]);
     j=j+1;
 end
 delete(h);
 comp_preseq=~isfield(d,'preseq')||isempty(d.preseq);
 if comp_preseq
+    if isdeployed
+        if ~isfield(main_data,'last_dir')
+            [fname, pname]=uigetfile('*.*','Select PRESEQ executable...');
+        else
+            [fname, pname]=uigetfile([main_data.last_dir,'*.*'],'Select PRESEQ executable...');
+        end
+    else
+        pname='./';
+        fname='preseq';
+    end
+    if isempty(fname), break;end
     h=waitbar(0.5,'estimating library complexity');
     preseq=zeros(size(d.counts,2),1);
     preseq_mar=zeros(size(d.counts,2),1);
     counts=d.counts;
     parfor i=1:length(preseq)
-        fname=tempname;
-        f=fopen(fname,'w');
+        f=fopen(tempname,'w');
         for k=1:size(d.counts,1)
             if counts(k,i)>0,fprintf(f,'%d\n',counts(k,i));end
         end
-        if ismac, pref='/Applications/';
-        elseif isunix, pref='~/';
-        else, pref='C:\';end
-        [status,result]=system([pref 'preseq lc_extrap -V ' fname]);
+        [status,result]=system([fullfile(pname,fname) ' lc_extrap -V ' f]);
         if status==0
             D=textscan(result,'%n%n%n%n','Headerlines',1);
             if ~isempty(D)&&~isempty(D{2})
@@ -274,7 +265,6 @@ if comp_preseq
         fclose(f);
     end
     waitbar(1,h,'done');
-    M(:,1)=preseq;
     d.preseq=preseq;
     d.preseq_mar=preseq_mar;
     delete(h);
@@ -306,10 +296,6 @@ hold
 H=notBoxPlot(d.preseq(d.lorenz<0.05),2);
 set([H.data],'markersize',2);
 set(gca,'XTick',1:2,'XTickLabel',{'QC pass','QC fail'});
-M(:,4)=d.lorenz;
-%compute pareto ranking
-[~,f]=paretofronts(M,[1 1 1 1]);
-d.pareto=f;
 d.sidx=sidx;%index vector which sorts order stats of geo-mean
 d.cxi=cxi;%index scalar of point of maximal separation of geomean to poisson noise
 d.qc=true;
@@ -652,7 +638,11 @@ else
     set(handles.main_window,'UserData',main_data);
     h=waitbar(.5,['Loading ' strrep(fname,'_','\_')]);
     f=fopen(fullfile(pname,fname));
-    D=textscan(f,'%s%n%n%s','HeaderLines',1,'Delimiter',char(9));
+    try
+        D=textscan(f,'%s%n%n%s%s','HeaderLines',1,'Delimiter',char(9));
+    catch me
+        alert('String','File I/O error, check format.')
+    end
     not_found={};
     for i=1:length(D{1})
         t=find(strcmp(D{1}{i},d.slbls));
@@ -663,6 +653,7 @@ else
         d.mapped(t)=D{2}(i);
         d.unmapped(t)=D{3}(i);
         d.ld_call{t}=D{4}{i};
+        d.ctype{t}=D{5}{i};
     end 
     main_data.d=d;
 end
