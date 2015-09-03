@@ -19,7 +19,7 @@ classdef PcaComputeMock2 < PcaComputeBase
     function computePcaUsingSamples(self, sampleIndices)  
       props = {'slbls', 'cidx', 'mapped', 'unmapped', 'ld_call', ...
         'turing', 'simpson', 'preseq', 'preseq_mar', 'lorenz', ...
-        'lorenzh', 'sf', 'pareto', 'sidx','ngns','ctype'};
+        'lorenzh', 'sf', 'sidx','ngns','ctype'};
       d2 = self.d;
       for i = 1:length(props)
         p = props{i};

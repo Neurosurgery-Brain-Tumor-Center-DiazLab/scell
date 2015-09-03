@@ -241,33 +241,35 @@ if comp_preseq
         pname='./';
         fname='preseq';
     end
-    if isempty(fname), break;end
-    h=waitbar(0.5,'estimating library complexity');
-    preseq=zeros(size(d.counts,2),1);
-    preseq_mar=zeros(size(d.counts,2),1);
-    counts=d.counts;
-    parfor i=1:length(preseq)
-        f=fopen(tempname,'w');
-        for k=1:size(d.counts,1)
-            if counts(k,i)>0,fprintf(f,'%d\n',counts(k,i));end
-        end
-        [status,result]=system([fullfile(pname,fname) ' lc_extrap -V ' f]);
-        if status==0
-            D=textscan(result,'%n%n%n%n','Headerlines',1);
-            if ~isempty(D)&&~isempty(D{2})
-                D=D{2};
-                if numel(D)>2
-                    preseq_mar(i)=D(3)-D(2);
-                    preseq(i)=nnz(counts(:,i))/median(D(floor(length(D)*.75):end));
+    if ~isempty(fname)
+        h=waitbar(0.5,'estimating library complexity');
+        preseq=zeros(size(d.counts,2),1);
+        preseq_mar=zeros(size(d.counts,2),1);
+        counts=d.counts;
+        parfor i=1:length(preseq)
+            tn=tempname;
+            f=fopen(tn,'w');
+            for k=1:size(d.counts,1)
+                if counts(k,i)>0,fprintf(f,'%d\n',counts(k,i));end
+            end
+            [status,result]=system([fullfile(pname,fname) ' lc_extrap -V ' tn]);
+            if status==0
+                D=textscan(result,'%n%n%n%n','Headerlines',1);
+                if ~isempty(D)&&~isempty(D{2})
+                    D=D{2};
+                    if numel(D)>2
+                        preseq_mar(i)=D(3)-D(2);
+                        preseq(i)=nnz(counts(:,i))/median(D(floor(length(D)*.75):end));
+                    end
                 end
             end
+            fclose(f);
         end
-        fclose(f);
+        waitbar(1,h,'done');
+        d.preseq=preseq;
+        d.preseq_mar=preseq_mar;
+        delete(h);
     end
-    waitbar(1,h,'done');
-    d.preseq=preseq;
-    d.preseq_mar=preseq_mar;
-    delete(h);
 end
 h=waitbar(0.5,'identifying outliers');
 %compute lorenz outlier detection
@@ -308,8 +310,7 @@ for i=1:length(d.slbls)
     ct_dat{i,9}=d.preseq(i);
     ct_dat{i,10}=d.turing(i);
     ct_dat{i,11}=d.lorenz(i);
-    ct_dat{i,12}=d.pareto(i);
-    ct_dat{i,14}=d.preseq_mar(i);
+    ct_dat{i,12}=d.preseq_mar(i);
 end
 set(handles.cell_table,'Data',ct_dat);
 m=get(handles.disp_table,'Data');
@@ -320,8 +321,7 @@ m{4}=d.simpson(1);
 m{5}=d.preseq(1);
 m{6}=d.turing(1);
 m{7}=d.lorenz(1);
-m{8}=d.pareto(1);
-m{9}=d.preseq_mar(1);
+m{8}=d.preseq_mar(1);
 set(handles.disp_table,'Data',m);
 
 % --- Executes on button press in norm_button.
@@ -383,7 +383,6 @@ d.sf=d.sf(cidx);
 d.simpson=d.simpson(cidx);
 d.slbls=d.slbls(cidx);
 d.turing=d.turing(cidx);
-d.pareto=d.pareto(cidx);
 d.iod=d.iod(d.gidx);
 d.iod_fdr=d.iod_fdr(d.gidx);
 d.zinf_fdr=d.zinf_fdr(d.gidx);
@@ -431,8 +430,7 @@ if isfield(d,'turing')&&~isempty(d.turing)%then we've done QC
     m{5}=d.preseq(t);
     m{6}=d.turing(t);
     m{7}=d.lorenz(t);
-    m{8}=d.pareto(t);
-    m{9}=d.preseq_mar(t);
+    m{8}=d.preseq_mar(t);
 else
     for i=4:8, m{i}='NA'; end
 end
