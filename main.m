@@ -124,7 +124,6 @@ else
         for i=1:length(d.slbls), d.ngns(i)=nnz(d.counts(:,i)); end
     else
         d=d_old;
-        keyboard()
         for i=1:length(d_new.slbls), d.slbls{end+1}=d_new.slbls{i}; end
         d.counts=[d.counts,d_new.counts];
         d.cpm=[d.cpm,d_new.cpm];
