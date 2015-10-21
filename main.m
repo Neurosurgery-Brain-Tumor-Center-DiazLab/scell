@@ -392,7 +392,7 @@ d.bak_idx=intersect(d.gidx,d.bak_idx);
 d.cidx=ones(length(cidx),1);
 d.gidx=ones(length(d.gidx),1);
 h=waitbar(0.5,'Computing PCA...');
-if isempty(d.nrmC)
+if isempty(d.iod)||isempty(d.nrmC)
     alert('String','Select genes/normalize samples first!');
     delete(h);
     return;
@@ -604,12 +604,11 @@ switch fltr_str
 end
 for i=1:size(ct_dat,1)
     t=find(strcmp(ct_dat{i,2},d.slbls));
-    if f(x(t),thr)
-        ct_dat{i,1}=true;
-        d.cidx(t)=1;
-    else
-        ct_dat{i,1}=false;
-        d.cidx(t)=0;
+    if ct_dat{i,1}==true;
+        if ~f(x(t),thr)
+            ct_dat{i,1}=false;
+            d.cidx(t)=0;
+        end
     end
 end
 main_data.d=d;
