@@ -47,7 +47,12 @@ R=zeros(size(Y));
 k=size(Y,2);
 for i=1:k
     waitbar(i/k,h,'Normalizing...');
-    mdl=fitlm(X,Y(:,i),'linear');
+    try
+        mdl=fitlm(X,Y(:,i),'linear','RobustOpts','on');
+    catch me
+        disp('error with robust fit, falling back to OLS')
+        mdl=fitlm(X,Y(:,i),'linear','RobustOpts','on');
+    end
     R(:,i)=mdl.Residuals.Raw;
     var_tot(i)=mdl.Rsquared.Adjusted;
     vt=zeros(length(fac_idx),1);

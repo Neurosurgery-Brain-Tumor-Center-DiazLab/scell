@@ -147,8 +147,8 @@ if show_plt
     st=sum(N1');
     hold on
     yl=ylim;
-    hy=plot(find(pval(sidx)<0.05&N1(sidx,1)<quantile(N1(:,1),.25)),st(pval(sidx)<0.05&N1(sidx,1)<quantile(N1(:,1),.25))+.05,'m*');
-    hr=plot(find(h(sidx)),st(find(h(sidx)))+.05,'r*');
+    %hy=plot(find(pval(sidx)<0.05&N1(sidx,1)<quantile(N1(:,1),.25)),st(pval(sidx)<0.05&N1(sidx,1)<quantile(N1(:,1),.25))+.05,'m*');
+    %hr=plot(find(h(sidx)),st(find(h(sidx)))+.05,'r*');
     set(gca,'YLim',[0,1.1],'XLim',[0,m+1])
     title(gca,'raw counts','FontSize',18)
     set(gca,'FontSize',18)
@@ -162,7 +162,7 @@ if show_plt
         set(gca,'XtickLabel',lbls);
         rotateXLabels(gca,90);
     end
-    legend([hy;hr],{'low quality','extreme outliers'},'FontSize',12,'Location','NorthEast');
+    %legend([hy;hr],{'low quality','extreme outliers'},'FontSize',12,'Location','NorthEast');
     %plot 2
 %     subplot(2,1,2)
 %     bar(M1,'stacked');

@@ -22,7 +22,7 @@ function varargout = norm_tool(varargin)
 
 % Edit the above text to modify the response to help norm_tool
 
-% Last Modified by GUIDE v2.5 22-Feb-2015 20:40:41
+% Last Modified by GUIDE v2.5 21-Sep-2015 12:19:25
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -482,3 +482,111 @@ end
 main_window_data.d=d;
 set(main_data.main_window_handle,'UserData',main_window_data);
 close(handles.norm_tool_root);
+
+
+% --- Executes on button press in cca_pushbutton.
+function cca_pushbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to cca_pushbutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+main_data=get(handles.norm_tool_root,'UserData');
+d=main_data.d;
+if ~isfield(d,'gidx')
+    alert('String','select genes for analysis first');
+    return;
+end
+h=waitbar(0.25,'Processing...');
+load cyclins.mat;
+tgidx1=[];%find the cyclin/CDKs in the list, and in chosen gene panel
+for i=1:length(cln_gns)
+    t=min(find(strcmpi(cln_gns{i},d.gsymb)));
+    if ~isempty(t),tgidx1=[tgidx1;t];end
+end
+if isempty(tgidx1),alert('String','error no cyclins/CDKs found in your list');return;end
+tgidx=intersect(tgidx1,d.gidx);%only use cyclins/CDKs in chosen gene panel
+d.cyclin_idx=tgidx;
+d.non_cln_idx=setdiff(d.gidx,tgidx1);
+X=d.counts(d.non_cln_idx,:)';
+Y=d.counts(tgidx,:)';
+[U,V]=comp_cca(X,Y,0.05);%keep cannonical factors of cyclins at p=0.05 cutoff  
+if ~isempty(U)&&~isempty(V)
+    d.cyclinU=U;d.cyclinV=V;
+    %plot the top 20 most correlated Cyclins
+    cln_crs=nanmean(corr(U,Y)');%correlations between cyclins and gene factors
+    [cln_scrs,cln_cidx]=sort(abs(cln_crs),'descend');
+    rdn=sum(mean(corr(X,V).^2));
+    f1=figure;
+    set(f1,'color','w');
+    ax=gca;
+    set(ax,'FontSize',18);
+    bar(cln_scrs(1:min(length(cln_scrs),20)));
+    set(ax,'XTick',1:min(length(cln_scrs),20));
+    set(ax,'XTickLabel',d.gsymb(d.cyclin_idx(cln_cidx(1:min(length(cln_cidx),20)))));
+    title(['Cyclin/CDK Tenenhaus redundancy = ' num2str(rdn*100) '%'],'FontSize',18);
+    ylabel(sprintf('Mean correlation \nwith non-Cyclin/CDK gene factors'));
+    rotateXLabels(ax,90);
+    xlim([0 min(length(cln_scrs),20)+1]);
+    %plot the top 20 most correlated genes
+    gn_cr=nanmean(corr(X,V)');%correlations between genes and cyclin factors
+    [gn_scrs,gn_cidx]=sort(abs(gn_cr),'descend');
+    f2=figure;
+    set(f2,'color','w');
+    ax=gca;
+    set(ax,'FontSize',18);
+    bar(gn_scrs(1:min(length(gn_scrs),20)));
+    set(ax,'XTick',1:min(length(gn_scrs),20));
+    set(ax,'XTickLabel',d.gsymb(d.non_cln_idx(gn_cidx(1:min(length(gn_cidx),20)))));
+    ylabel(sprintf('Mean correlation \nwith Cyclins-CDK factors'));
+    rotateXLabels(ax,90);
+    xlim([0 min(length(gn_scrs),20)+1]);
+    %write a ranking of genes in the factor, by mean canonical cross
+    %correlation
+    [fname pname]=uiputfile('cyclin-CDK_correlation_rank.tsv','Where should I save a file of the most correlated Cyclin-CDKs?');
+    flag=true;
+    try
+        f=fopen(fullfile(pname,fname),'w');
+    catch me
+        alert('String',['I couln''t open ' fname]);
+        flag=false;
+    end
+    if flag
+        fprintf(f,'Cyclin-CDK\tMean_correlation\n');
+        for i=1:length(cln_cidx)
+            if isnan(cln_crs(cln_cidx(i))), continue;end
+            fprintf(f,'%s\t',d.gsymb{d.cyclin_idx(cln_cidx(i))});
+            fprintf(f,'%g\n',cln_crs(cln_cidx(i)));
+        end
+        fclose(f);
+    end
+    %write a list of top correlated genes with the factor
+    [fname pname]=uiputfile('Cyclin-CDK_correlated_genes.tsv','Where should I save genes most correlated with Cyclins/CDKs?');
+    flag=true;
+    try
+        f=fopen(fullfile(pname,fname),'w');
+    catch me
+        alert('String',['I couldn''t open ' fname]);
+        flag=false;
+    end
+    if flag
+        gn_crs=nanmean(corr(X,V)');%correlations between cyclins and gene factors
+        fprintf(f,'Gene\tMean_correlation_with_Cyclin-CDKs\n');
+        for i=1:length(d.non_cln_idx)
+            if isnan(gn_crs(i)), continue;end
+            fprintf(f,'%s\t',d.gsymb{d.non_cln_idx(i)});
+            fprintf(f,'%g\n',gn_crs(i));
+        end
+        fclose(f);
+    end
+end
+delete(h);
+main_data.d=d;
+set(handles.norm_tool_root,'UserData',main_data);
+
+% --- Executes on button press in user_list_checkbox.
+function user_list_checkbox_Callback(hObject, eventdata, handles)
+% hObject    handle to user_list_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of user_list_checkbox
