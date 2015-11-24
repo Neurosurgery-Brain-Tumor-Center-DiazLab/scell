@@ -10,6 +10,9 @@
 - [Quality control & outlier filtering](#qc)
 - [Gene panel selection and normalization](#norm)
 - [Dimensionality reduction and PCA](#pca)
+- [Visualize gene expression across cells](#visualization)
+- [Clustering](#clustering)
+- [Fit a minimum-spanning tree or minimum-cost path](#fit_mst)
 
 ## 1. <a id="installation"></a>Installation
 
@@ -243,7 +246,7 @@ To apply Varimax rotation, simply click **Varimax rotate**. The plots will be up
 <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/varimaxRotate.png" width=350>
 
 
-## 5. Visualize Gene Expression across Cells.
+## 6. <a id="visualization"></a>Visualize Gene Expression across Cells.
 
 Enter the name of the gene whose expression you want to visualize.
 
@@ -260,7 +263,7 @@ In this dataset, we will plot the expression of _VIM_ and _DCX_, a radial glia a
 
 The height of the points in the surface plot corresponds to their normalized gene expression value for the selected gene.
 
-## 6. Clustering
+## 7. <a id="clustering"></a>Clustering
 
 SCell can implement 4 different clustering  algorithms:
 
@@ -291,7 +294,7 @@ Upon selection, samples are added to the **Working sample list**, which can be e
 <img src= "https://dl.dropboxusercontent.com/u/9990581/Scell/SCell_Screenshots/kmeansClusters.png" width="600">
 
 
-## 7. Fitting a Minimum Spanning Tree
+## 8. <a id="mst_fit"></a>Fitting a Minimum Spanning Tree or minimum cost path
 
 Once cells have been clustered, SCell can compute a Minimum Spanning Tree to predict a lineage trajectory across clusters.
 
