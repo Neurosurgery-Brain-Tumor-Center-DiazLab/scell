@@ -85,6 +85,7 @@ end
 if strcmp(typ,'ct'), ofst=1; end
 if ~isfield(d,'slbls')||length(D)-ofst~=length(d.slbls)
     alert('String','file format error');
+    keyboard()
     return;
 end
 for i=1:length(D)-ofst
