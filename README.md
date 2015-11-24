@@ -59,9 +59,9 @@ In our tests, samples that have a small q-value for our Lorenz-statistic have lo
 
 To perform QC on the selected single-cell RNA-seq libraries, select **QC selected libraries** in the lower panel of the main window.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/QCButton.png" width="350">
+![QCbut](Images/QCButton.png)
 
-SCell will estimate library complexity, Lorenz statistic and PRESEQ score for the selected libraries, and will generate the plots shown below.
+SCell will estimate library complexity, coverage and the Lorenz statistic for the selected libraries. SCell will prompt you for the location of a <a href="https://github.com/smithlabcode/preseq">PRESEQ</a> executable. If you have PRESEQ installed, SCell will also run it for each of your libraries and estimate the marginal return for resequencing that library from PRESEQ's extrapolation curve. If you don't have PRESEQ installed or don't want to run it just hit cancel when prompted for the PRESEQ location. SCell will then generate the following QC plots:
 
 <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/libraryComplexityProgress.png" width="300">
 
