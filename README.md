@@ -34,7 +34,7 @@ SCell accepts as input a matrix of raw gene counts with **genes as rows and cell
 
 To import your gene expression dataset into SCell, select **Load data** in the main window, then choose your raw gene counts file from the dialog box.
 
-![MainWindow](Images/main_window.png?raw=true)
+![MainWindow](Images/main_window1.png?raw=true)
 
 
 SCell also accepts a metadata table associated with the libraries in your dataset. The metadata matrix can include:
