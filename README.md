@@ -4,10 +4,17 @@
 >
 >Binary executables for Windows, MacOS and Linux are available at http://sourceforge.net/projects/scell, source code and pre-processing scripts are available from https://github.com/diazlab/SCell. If you use this software for your research, please cite:
 
-## 1. Installation
+## Table of contents
+- [Installation](#installation)
+- [Load data and metadata](#load_data)
+- [Quality control & outlier filtering](#qc)
+- [Gene panel selection and normalization](#norm)
+- [Dimensionality reduction and PCA](#pca)
+
+## 1. <a id="installation"></a>Installation
 
 
-## 1. Load data and metadata
+## 2. <a id="load_data"></a>Load data and metadata
 
 SCell accepts as input a matrix of raw gene counts with **genes as rows and cells as columns.** The table should have the format shown below.
 
@@ -32,7 +39,7 @@ To import your metadata into SCell, select **Load meta-data** in the main window
 
 The library names and associated metadata for the imported cells is displayed in the interactive expression profiler in the main window.
 
-## 2. Library Quality Control / Outlier Filtering
+## 3. <a id="qc"></a>Library Quality Control / Outlier Filtering
 
 SCell can identify low quality libraries by computing their Lorenz statistic. Briefly, it estimates genes expressed at background levels in a given sample, and filters samples whose background fraction is significantly larger than average, via a threshold on the (Benjamini-Hochberg corrected) q-value.
 
@@ -76,7 +83,7 @@ Then, click **Filter by** to unckeck cells that did not meet the established thr
 
 You may also de-select libraries that you wish to exclude based on other criteria shown in the expression profiler, such as live/dead staining image call or number of genes tagged.
 
-## 3. Gene Panel Selection and Library Normalization
+## 4. <a id="norm"></a>Gene Panel Selection and Library Normalization
 
 Once your single-cell data has been filtered for low-quality samples, SCell can perform normalization of your libraries in several ways:
 
@@ -93,44 +100,44 @@ An ideal gene for dimensionality reduction is one that is sampled in a large num
 
 SCell provides statistics for feature selection. It uses a score statistic derived from a generalized-Poisson model, to test for zero-inflation in each gene’s expression across cells.  
 
-#### 3a. Feature Selection and Normalization by Library size (CPM)
+#### 4a. Feature Selection and Normalization by Library size (CPM)
 
 To normalize samples by library size and select meaningful genes for analysis, follow these steps:
 
-1. In the main panel, select the **Normalize selected libraries** button to launch the **normalization tool** window.
+- In the main panel, select the **Normalize selected libraries** button to launch the **normalization tool** window.
 
     <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/NormalizeButton.png" width="300">
 
-2. Once in the normalization tool, click on **Select Genes**.
+- Once in the normalization tool, click on **Select Genes**.
 
     <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/normTool.png" width="250">
 
-3. SCell will perform gene variance and zero-inflation analysis, and a **Gene Selection Tool** window will be launched.
+- SCell will perform gene variance and zero-inflation analysis, and a **Gene Selection Tool** window will be launched.
 
     <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/geneVarianceProgress.png" width="250">
 
     <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/ZIprogress.png" width="250">
 
-4. In the **Gene Selection Tool** window, set an Index of Dispersion percentile threshold for genes, as well as a threshold for the fraction of cells expressing a given gene. You can also set a zero-inflation power threshold. On the lower panel, SCell displays a list of the genes in your dataset and their values for these metrics. This list, as well as the displayed plot, can be exported by selecting the **Export plot** or **Export gene list** buttons.
+- In the **Gene Selection Tool** window, set an Index of Dispersion percentile threshold for genes, as well as a threshold for the fraction of cells expressing a given gene. You can also set a zero-inflation power threshold. On the lower panel, SCell displays a list of the genes in your dataset and their values for these metrics. This list, as well as the displayed plot, can be exported by selecting the **Export plot** or **Export gene list** buttons.
 
     <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/GeneSelection.png" width="350">
 
-5. Once the thresholds for a gene panel have been chosen, click **Use these genes**.
+- Once the thresholds for a gene panel have been chosen, click **Use these genes**.
 Only the genes that meet your criteria will be used for downstream analysis.
 
-6. You will be taken back to the **Normalization Tool** window. Click **Done**.
+- You will be taken back to the **Normalization Tool** window. Click **Done**.
 
     <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/normToolDone.png" width="250">
 
 Your libraries are now normalized by library size (counts per million) .You will be taken back to the Main Panel, where you may proceed to dimensionality reduction and clustering of the filtered, normalized libraries.
 
-#### 3b. Normalization by Human Cyclins and Cyclin-Dependent Kinases (Cell Cycle Regression)
+#### 4b. Normalization by Human Cyclins and Cyclin-Dependent Kinases (Cell Cycle Regression)
 
 To normalize for the effect of cell cycle on gene expression (remove unwanted variation due to cell cycle state), in addition to normalizing libraries by size, follow these steps:
 
-1. Follow steps 1 to 5 from the **Normalization by Library size (CPM)** section above, in order to select a meaningful gene panel to include in the analysis.
+- Follow steps 1 to 5 from the **Normalization by Library size (CPM)** section above, in order to select a meaningful gene panel to include in the analysis.
 
-2. On the **Normalization Tool** window, check the **Human cyclins/CDKs** box, then click **Normalize samples**.
+- On the **Normalization Tool** window, check the **Human cyclins/CDKs** box, then click **Normalize samples**.
 
 <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/cyclinNormalization.png" width="250">
 
@@ -167,11 +174,11 @@ Once the libraries have been normalized, you will be taken back to the Main Pane
 
 Note: SCell can produce counts normalized by any combination of:
 
-1. Cyclins and cyclin-dependent kinases (a model of cell cycle state)
+- Cyclins and cyclin-dependent kinases (a model of cell cycle state)
 
-2. A user supplied count matrix (enabling an arbitrary set of controls).
+- A user supplied count matrix (enabling an arbitrary set of controls).
 
-## 4. Dimensionality Reduction (PCA)
+## 5. <a id="pca"></a>Dimensionality Reduction (PCA)
 
 SCell implements PCA for dimensionality reduction, and optionally Varimax-rotation.
 
