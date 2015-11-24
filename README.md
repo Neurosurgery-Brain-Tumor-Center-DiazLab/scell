@@ -30,7 +30,7 @@ be obtained from
 
 SCell accepts as input a matrix of raw gene counts with **genes as rows and cells as columns.** The table should have the format shown below.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/CountsSample.png" width=550>
+![Counts](Images/CountsSample.png?raw=true)
 
 To import your gene expression dataset into SCell, select **Load data** in the main window, then choose your raw gene counts file from the dialog box.
 
@@ -303,7 +303,7 @@ Upon selection, samples are added to the **Working sample list**, which can be e
 <img src= "https://dl.dropboxusercontent.com/u/9990581/Scell/SCell_Screenshots/kmeansClusters.png" width="600">
 
 
-## 8. <a id="mst_fit"></a>Fitting a Minimum Spanning Tree or minimum cost path
+## 8. <a id="fit_mst"></a>Fitting a Minimum Spanning Tree or minimum cost path
 
 Once cells have been clustered, SCell can compute a Minimum Spanning Tree to predict a lineage trajectory across clusters.
 
