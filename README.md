@@ -37,7 +37,7 @@ To import your gene expression dataset into SCell, select **Load data** in the m
 ![MainWindow](Images/main_window1.png?raw=true)
 
 
-SCell also accepts a metadata table associated with the libraries in your dataset. The metadata matrix can include:
+SCell also accepts a metadata table associated with the libraries in your dataset. The metadata table should include:
 
 - a live-dead image call from your single-cell workflow
 - number of mapped reads
@@ -45,7 +45,7 @@ SCell also accepts a metadata table associated with the libraries in your datase
 
 The metadata file must have the format shown below.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/MetadataSample.png" width="300">
+![MetaSample](Images/MetadataSample.png?raw=true)
 
 To import your metadata into SCell, select **Load meta-data** in the main window, then choose the corresponding file from the dialog box.
 
@@ -53,11 +53,11 @@ The library names and associated metadata for the imported cells is displayed in
 
 ## 3. <a id="qc"></a>Library Quality Control / Outlier Filtering
 
-SCell can identify low quality libraries by computing their Lorenz statistic. Briefly, it estimates genes expressed at background levels in a given sample, and filters samples whose background fraction is significantly larger than average, via a threshold on the (Benjamini-Hochberg corrected) q-value.
+SCell can identify low quality libraries by computing their Lorenz statistic. Briefly, it estimates genes expressed at background levels in a given sample, and filters samples whose background fraction is significantly larger than average, via a threshold on the Lorenz statistic's Benjamini-Hochberg corrected q-value.
 
-In our tests, samples that have a small q-value for our Lorenz-statistic have low library complexity, as measured by Gini-Simpson index (Simpson, 1949), and they have low coverage, as estimated by the Good-Turing statistic (Good, 1953). Moreover, in our data the Lorenz-statistic correlates with the results of live-dead staining (Pearson-correlation 0.7).
+In our tests, samples that have a small q-value for our Lorenz-statistic have low library complexity, as measured by Gini-Simpson index (Simpson, 1949), and they have low coverage, as estimated by the Good-Turing statistic (Good, 1953). Moreover, in our data the Lorenz-statistic correlates with the results of live-dead staining.
 
-To perform QC on the loaded and selected single-cell RNA-seq libraries, select **QC selected libraries** in the lower panel of the main window.
+To perform QC on the selected single-cell RNA-seq libraries, select **QC selected libraries** in the lower panel of the main window.
 
 <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/QCButton.png" width="350">
 
