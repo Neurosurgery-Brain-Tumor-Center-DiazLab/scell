@@ -17,7 +17,14 @@
 - [Save and load sessions](#save)
 
 ## 1. <a id="installation"></a>Installation
+SCell runs under 64bit Mac OSX, Windows, and Linux. Start by downloading the appropriate installation package
+from:
+[https://sourceforge.net/projects/scell/](https://sourceforge.net/projects/scell/) 
 
+SCell is released under the GNU General Public License:
+[http://www.gnu.org/licenses/](http://www.gnu.org/licenses/). The SCell source code can
+be obtained from
+[https://github.com/diazlab/scell](https://github.com/songlab/scell).
 
 ## 2. <a id="load_data"></a>Load data and metadata
 
