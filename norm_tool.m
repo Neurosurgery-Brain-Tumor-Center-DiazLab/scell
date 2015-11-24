@@ -191,51 +191,8 @@ end
 h=waitbar(0,'Processing factors');
 %identify which factors to use
 %ERCCs
-if get(handles.ercc_checkbox,'Value')&&~any(strcmp(d.factor_ids,'ERCCs')) 
-    if ~isfield(main_data,'last_dir')
-        [fname pname]=uigetfile('*.*','Select ERCCs readcounts...');
-    else
-        [fname pname]=uigetfile([main_data.last_dir,'*.*'],'Select ERCCs readcounts...');
-    end
-    try
-        ercc_cts=load_counts(fullfile(pname,fname),'hum','ct');
-        main_data.last_dir=pname;
-    catch me
-        alert('String','Error loading ERCCs');
-        return;
-    end
-    d.factor_ids{end+1}='ERCCs';
-    d.fac_varexp{end+1}=zeros(length(d.gsymb),1);
-    d.fac_counts{end+1}=ercc_cts.counts';
-    d.factor{end+1}=[];
-    [U,S,~]=svd(log(ercc_cts.counts'+1));
-    W=U*S;
-    ds=diag(S);
-    p=length(ds);
-    gk=cumsum(1./[p:-1:1])/p;%broken stick criterion to select singular values
-    gk=gk(end:-1:1)';
-    chk=diag(S)/sum(ds);
-    d.factor{end+1}=W(:,gk<chk);
-end
 waitbar(0.25,h,'Processing factors');
 %mutual background
-if get(handles.bak_checkbox,'Value')&&~any(strcmp(d.factor_ids,'Background'))
-    if ~isfield(d,'bak_idx')
-        alert('String',sprintf('No estimate of mutual background found\nUncheck mutual background, or close the normalization tool and run QC first'));
-        return;
-    end
-    d.factor_ids{end+1}='Background';
-    d.fac_varexp{end+1}=zeros(length(d.gsymb),1); 
-    d.fac_counts{end+1}=d.counts(d.bak_idx,:)';
-    [U,S,~]=svd(log(d.counts(d.bak_idx,:)'+1));
-    W=U*S;
-    ds=diag(S);
-    p=length(ds);
-    gk=cumsum(1./[p:-1:1])/p;%broken stick criterion
-    gk=gk(end:-1:1)';
-    chk=diag(S)/sum(ds);
-    d.factor{end+1}=W(:,gk<chk);
-end
 waitbar(0.5,h,'Processing factors');
 %cyclins/CDKs
 if get(handles.cyclin_checkbox,'Value')
@@ -515,7 +472,7 @@ if ~isempty(U)&&~isempty(V)
     %plot the top 20 most correlated Cyclins
     cln_crs=nanmean(corr(U,Y)');%correlations between cyclins and gene factors
     [cln_scrs,cln_cidx]=sort(abs(cln_crs),'descend');
-    rdn=sum(mean(corr(X,V).^2));
+    rdn=nansum(nanmean(corr(X,V).^2));
     f1=figure;
     set(f1,'color','w');
     ax=gca;
@@ -528,8 +485,9 @@ if ~isempty(U)&&~isempty(V)
     rotateXLabels(ax,90);
     xlim([0 min(length(cln_scrs),20)+1]);
     %plot the top 20 most correlated genes
-    gn_cr=nanmean(corr(X,V)');%correlations between genes and cyclin factors
-    [gn_scrs,gn_cidx]=sort(abs(gn_cr),'descend');
+   gn_cr=nanmean(corr(X,V)');%correlations between genes and cyclin factors
+   gn_cr(isnan(gn_cr))=0;
+   [gn_scrs,gn_cidx]=sort(abs(gn_cr),'descend');
     f2=figure;
     set(f2,'color','w');
     ax=gca;
