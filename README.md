@@ -97,16 +97,14 @@ Once your single-cell data has been filtered for low-quality samples, SCell can 
 
 a) Normalization by library size (counts per million)
 
-b) Latent variable regression based on cyclin/CDK expression
+b) Iteratively-reweighted least squares regression (IRLS), with a bi-square weight function, to regress out variation dependent on human cyclin/CDK expression
 
-c) Mutual background latent variable regression
+c) IRLS regression to regress out variation dependent on a user-defined gene list
 
 ### Feature Selection
-It is also important to select a discriminating panel of genes useful for dimensionality reduction.
+It is also useful to select a discriminating panel of genes for dimensionality reduction (feature selection). An ideal gene for dimensionality reduction is one that is sampled in a large number of cells, while at the same time exhibiting sufficient inter-cellular variance as to distinguish disparate cell types. In the low-coverage regime, typical of single-cell data, it can be difficult to distinguish when a gene is under-sampled due to technical limitations from when it is lowly expressed.
 
-An ideal gene for dimensionality reduction is one that is sampled in a large number of cells, while at the same time exhibiting sufficient inter-cellular variance as to distinguish disparate cell types. In the low-coverage regime, typical of single-cell data, it can be difficult to distinguish when a gene is under-sampled due to technical limitations from when it is lowly expressed.
-
-SCell provides statistics for feature selection. It uses a score statistic derived from a generalized-Poisson model, to test for zero-inflation in each gene’s expression across cells.  
+SCell provides statistics for feature selection. It uses a score statistic derived from a generalized-Poisson model, to test for zero-inflation in each gene’s expression across cells. And, SCell uses the index of dispersion (ratio of variance to mean) to estimate a gene's variability, which has a closed form power function.  
 
 #### 4a. Feature Selection and Normalization by Library size (CPM)
 
@@ -118,7 +116,7 @@ To normalize samples by library size and select meaningful genes for analysis, f
 
 - Once in the normalization tool, click on **Select Genes**.
 
-    <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/normTool.png" width="250">
+    ![nrm_tool](Images/norm_tool.png?raw=true)
 
 - SCell will perform gene variance and zero-inflation analysis, and a **Gene Selection Tool** window will be launched.
 
