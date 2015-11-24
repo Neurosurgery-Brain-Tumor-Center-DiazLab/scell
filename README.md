@@ -65,13 +65,10 @@ SCell will estimate library complexity, coverage and the Lorenz statistic for th
 
 ___Lorenz Curves___
 
-[Add figure legend.]
-
 <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/Lorenz.png" width="300">
+In green, plotted is the cumulative density of the order-statistics (i.e. a sorting) of the reference sample. The reference sample is constructed as the gene-wise geometric means of the individual libraries' read-counts. The cumulative densities of the concomitant-statistics (i.e. re-orderd according to the index that sorts the reference) of the individual libraries are shown in red and blue. That of a low-rate Poisson noise simmulation is shown in black circles. Single-tailed score tests of binomial proportions (with the height of the reference sample as a null hypothesis) are performed at the point where the reference sample maximally diverges from the Poisson noise simulation. Samples whose q-value is less that 0.05 are highlighted in red, all others in blue.
 
 ___Per-Cell Gene Expression Distribution___
-
-[Add figure legend.]
 
 <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/GeneExpressionQuantiles.png" width="300">
 
