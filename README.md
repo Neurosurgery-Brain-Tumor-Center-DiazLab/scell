@@ -1,12 +1,14 @@
-SCell is an integrated software tool for quality filtering, normalization, feature selection, iterative dimensionality reduction, clustering and the estimation of gene-expression gradients from large ensembles of single-cell RNA-seq datasets. SCell is open source, and implemented with an intuitive graphical interface.
+#SCell user guide
 
-Binary executables for Windows, MacOS and Linux are available at http://sourceforge.net/projects/scell, source code and pre-processing scripts are available from https://github.com/diazlab/SCell.
+>**SCell** is an integrated software tool for quality filtering, normalization, feature selection, iterative dimensionality reduction, clustering and the estimation of gene-expression gradients from large ensembles of single-cell RNA-seq datasets. SCell is open source, and implemented with an intuitive graphical interface.
+>
+>Binary executables for Windows, MacOS and Linux are available at http://sourceforge.net/projects/scell, source code and pre-processing scripts are available from https://github.com/diazlab/SCell. If you use this software for your research, please cite:
 
 ## 1. Installation
 
 
 ## 1. Load data and metadata
-��������������������������������������
+
 SCell accepts as input a matrix of raw gene counts with **genes as rows and cells as columns.** The table should have the format shown below.
 
 <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/CountsSample.png" width=550>
@@ -14,7 +16,7 @@ SCell accepts as input a matrix of raw gene counts with **genes as rows and cell
 To import your gene expression dataset into SCell, select **Load data** in the main window, then choose your raw gene counts file from the dialog box.
 
 <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/LoadData.png" width=300>
-���������������������������������������
+
 
 SCell also accepts a metadata table associated with the libraries in your dataset. The metadata matrix can include:
 
