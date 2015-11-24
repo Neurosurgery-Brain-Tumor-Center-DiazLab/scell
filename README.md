@@ -59,32 +59,33 @@ In our tests, samples that have a small q-value for our Lorenz-statistic have lo
 
 To perform QC on the selected single-cell RNA-seq libraries, select **QC selected libraries** in the lower panel of the main window.
 
-![QCbut](Images/QCButton.png)
+![QCbut](Images/QCButton.png?raw=true)
 
 SCell will estimate library complexity, coverage and the Lorenz statistic for the selected libraries. SCell will prompt you for the location of a <a href="https://github.com/smithlabcode/preseq">PRESEQ</a> executable. If you have PRESEQ installed, SCell will also run it for each of your libraries and estimate the marginal return for resequencing that library from PRESEQ's extrapolation curve. If you don't have PRESEQ installed or don't want to run it just hit cancel when prompted for the PRESEQ location. SCell will then generate the following QC plots:
 
 ___Lorenz Curves___
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/Lorenz.png" width="300">
+![LorenzPlot](Images/Lorenz.png?raw=true)
+
 In green, plotted is the cumulative density of the order-statistics (i.e. a sorting) of the reference sample. The reference sample is constructed as the gene-wise geometric means of the individual libraries' read-counts. The cumulative densities of the concomitant-statistics (i.e. re-orderd according to the index that sorts the reference) of the individual libraries are shown in red and blue. That of a low-rate Poisson noise simmulation is shown in black circles. Single-tailed score tests of binomial proportions (with the height of the reference sample as a null hypothesis) are performed at the point where the reference sample maximally diverges from the Poisson noise simulation. Samples whose q-value is less that 0.05 are highlighted in red, all others in blue.
 
 ___Per-Cell Gene Expression Distribution___
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/GeneExpressionQuantiles.png" width="300">
+![ExpressionPlot](Images/expression.png?raw=true)
+
+This plot provides a summary snapshot of the quality of your data. Each column is a sample, and the percentages of genes expressed above a given expression quantiles are displayed as a stacked bar chart. 
 
 ___Simpson Diversity and PRESEQ Coverage Boxplots___
 
-[Add figure legend.]
+SCell reports library coverage estimates based on PRESEQ (Daley and Smith, 2014) extrapolation curves, as well as the Simpson diversity statistic.
 
-SCell reports library coverage and marginal return estimates based on the PRESEQ (Daley and Smith, 2014) extrapolation curve.
+![QCbox](Images/QCBoxplots.png?raw=true)
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/QCBoxplots.png" width="300">
+SCell displays these quality metrics along with the user’s metadata, in the interactive expression profiler.
 
-SCell displays these quality metrics, Gini-Simpson index, along with the user’s metadata, in the interactive expression profiler.
+Once these metrics have been estimated, you may **filter low-complexity or outlier cells** by selecting **Lorenz** or **PRESEQ** from the dropdown menu in the main window lower panel, and setting a threshold to filter by (default=0.05, Lorenz).
 
-Once these metrics have been estimated, **filter low-complexity or outlier cells** by selecting **Lorenz** or **PRESEQ** from the dropdown menu in the main window lower panel, and setting a threshold to filter by (default=0.05, Lorenz).
-
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/FIlterByButton.png" width="300">
+![FilterBtn](Images/FIlterByButton.png?raw=true)
 
 Then, click **Filter by** to unckeck cells that did not meet the established threshold in the interactive expression profiler. This will cause low quality/outlier libraries to be excluded from all downstream analysis.
 
