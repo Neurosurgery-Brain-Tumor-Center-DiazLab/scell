@@ -13,6 +13,8 @@
 - [Visualize gene expression across cells](#visualization)
 - [Clustering](#clustering)
 - [Fit a minimum-spanning tree or minimum-cost path](#fit_mst)
+- [Iterative PCA](#iter_pca)
+- [Save and load sessions](#save)
 
 ## 1. <a id="installation"></a>Installation
 
@@ -322,7 +324,7 @@ Additionally, the following plots will be displayed, describing the expression l
 
 <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/PAX6expressionClusters.png" width="300"> <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/PAX6ExpressionClusters2.png" width="295">
 
-## 7. Iterative PCA
+## 9. <a id="iter_pca"></a>Iterative PCA
 
 SCell can perform PCA on a subset of libraries selected from the first round of analysis.
 
@@ -348,7 +350,7 @@ The expression of selected genes across this subset of samples can be displayed 
 
 Samples can be clustered and a new minimum-spanning tree can be fit to further characterize the subset of cells being analyzed.
 
-## Saving and Loading Sessions
+## 10. <a id="save"></a>Saving and Loading Sessions
 
 #### Save Current Session
 
