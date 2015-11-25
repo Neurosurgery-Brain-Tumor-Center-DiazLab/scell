@@ -129,8 +129,6 @@ Only the genes that meet your criteria will be used for downstream analysis.
 
 - You will be taken back to the **Normalization Tool** window. Click **Done**.
 
-    ![normDone](Images/normToolDone.png?raw=true)
-
 Your libraries are now normalized by library size (counts per million). You will be taken back to the Main Panel, where you may proceed to dimensionality reduction and clustering of the filtered, normalized libraries.
 
 #### 4b. Normalization by Human Cyclins and Cyclin-Dependent Kinases (Cell Cycle Regression)
