@@ -116,7 +116,7 @@ To normalize samples by library size and select a gene panel for analysis, follo
 
 - Once in the normalization tool, click on **Select Genes**.
 
-    ![nrm_tool](Images/norm_tool.png?raw=true)
+    ![nrm_tool](Images/norm_tool1.pdf)
 
 - SCell will perform gene variance and zero-inflation analysis, and a **Gene Selection Tool** window will be launched.
 
