@@ -177,49 +177,49 @@ SCell implements PCA for dimensionality reduction, and optionally Varimax-rotati
 
 On the lower panel of the Main Window, select **Analyze selected libraries** to perform dimensionality reduction via PCA on the QC-filtered and normalized libraries.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/AnalyzeButton.png" width="350">
+![analyzeBtn](Images/AnalyzeButton.png?raw=true)
 
-Two interactive plots will be displayed, which allow the user to explore samples in PCA space, with gene-level and sample-level metadata displayed upon mouse-over:
+Two interactive plots will be displayed, which allow the user to explore samples in PCA space, with gene-level and sample-level metadata displayed in a third window upon mouse-over:
 
+![pcaWindow](Images/pca_window.png?raw=true)
 
   ○ ___Interactive PCA Sample Scores Plot___
 
 View samples in PCA space.
 
-Mouse-over samples to view their identity and associated metrics, or click on a sample to mark and add it to the **working sample list**.
-By default, PC1 and PC2 are the axes shown on the plot, but this can be modified (see below).
+Mouse-over samples to view their identity and associated metrics, or click on a sample to mark and add it to the **working sample list**. By default, PC1 and PC2 are the axes shown on the plot, but this can be modified (see below).
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/PCAScores.png" width="300"> <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/CellAnnotations.png" width="300">
+![pcaScores](Images/PCAScores.png?raw=true) ![cellAnnot](Images/CellAnnotations.png?raw=true)
 
   ○ ___Interactive Gene Loadings Plot___
 
 Explore strongly loading genes in your dataset.
 
-In this dataset, **many canonical neuronal** genes are loading negative PC1.
+You can add genes to the working gene list which load a given PCA axis by specifying a percentile cutoff. In this dataset, canonical neuronal genes load negative PC1.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/PCAGenesNeuronal.png" width="300">
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/PCAGenesNeuronal2.png" width="300">
+![pcaGeneNeuron](Images/PCAGenesNeuronal.png?raw=true)
+![pcaGeneNeuron2](Images/PCAGenesNeuronal2.png?raw=true)
 
-Many **canonical radial glia (neocortical neural stem cells)** marker genes strongly load positive PC1.
+Canonical radial glia (neocortical neural stem cells) marker genes load positive PC1.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/PCAGenesRG.png" width="300">
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/PCAGenesRG2.png" width="300">
+![pcaGeneRG](Images/PCAGenesRG.png?raw=true)
+![pcaGene2](Images//PCAGenesRG2.png?raw=true)
 
 Mouse over genes in the **Gene Loading plot** to view their gene symbol, mean expression, IOD and the percentage of cells expressing the gene in the **Gene Annotations** panel.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/GeneAnnotations.png" width="300">
+![geneAnnot](Images/GeneAnnotations.png?raw=true)
 
-Click on genes on the **gene loading plot** to add them to the **Working gene list**. Alternatively, to find a gene in the loading plot, type its gene symbol in the **Working gene list** panel search box, then click **Add/Find gene**. The gene will be highlighted on the loading plot, and added to the working list.
+Click on genes in the **gene loading plot** to add them to the **Working gene list**. Alternatively, to find a gene in the loading plot, type its gene symbol in the **Working gene list** panel search box, then click **Add/Find gene**. The gene will be highlighted on the loading plot, and added to the working list.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/workingGeneList_Search.png" width="300">
+![geneListSearch](Images/workingGeneList_Search.png?raw=true)
 
 The current working gene list can be exported to a file for downstream analysis, by selecting **Save gene list to file** in the **Working gene list** panel.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/workingGeneListSave.png" width="300">
+![geneList](Images/workingGeneListSave.png?raw=true)
 
 You will be prompted to choose a location to store the file.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/saveLoadingGeneList.png" width="300">
+![saveList](Images/saveLoadingGeneList.png?raw=true)
 
 #### Refresh PCA Axes
 
