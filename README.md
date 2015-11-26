@@ -209,9 +209,9 @@ Mouse over genes in the **Gene Loading plot** to view their gene symbol, mean ex
 
 ![geneAnnot](Images/GeneAnnotations.png?raw=true)
 
-Click on genes in the **gene loading plot** to add them to the **Working gene list**. Alternatively, to find a gene in the loading plot, type its gene symbol in the **Working gene list** panel search box, then click **Add/Find gene**. The gene will be highlighted on the loading plot, and added to the working list.
+Click on genes in the **gene loading plot** to add them to the **Working gene list**. Alternatively, to find a gene in the loading plot, type its gene symbol in the **Working gene list** panel search box, then click **Add/Find gene**. The gene will be highlighted on the loading plot, and added to the working list. Lastly, one can select simultaneously (and add to the working gene list) the top loading genes of a given PCA direction based on a threshold.
 
-![geneListSearch](Images/workingGeneList_Search.png?raw=true)
+![geneListSearch](Images/gene_list.png?raw=true)
 
 The current working gene list can be exported to a file for downstream analysis, by selecting **Save gene list to file** in the **Working gene list** panel.
 
@@ -225,11 +225,11 @@ You will be prompted to choose a location to store the file.
 
  By default, PC1 and PC2 are the axes shown on the PCA score and loading plots, but this can be modified. Enter the axes you would like to plot, then select **Refresh PCA axes** to generate new Sample Scores and Gene Loadings plots.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/refreshPCAaxes.png" width=350>
+![refreshAxes](Images/refreshPCAaxes.png?raw=true)
 
 #### Varimax Rotation
 
-You can choose to apply Varimax Rotation to post-process the PCA. This rotates the PCA axes in order to reduce the number of genes strongly loading two axes.
+You can choose to apply Varimax Rotation to post-process the PCA. 
 
 To apply Varimax rotation, simply click **Varimax rotate**. The plots will be updated accordingly.
 
