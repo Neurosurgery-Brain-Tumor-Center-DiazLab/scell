@@ -209,11 +209,7 @@ Click on genes in the **gene loading plot** to add them to the **Working gene li
 
 ![geneListSearch](Images/gene_list.png?raw=true)
 
-The current working gene list can be exported to a file for downstream analysis, by selecting **Save gene list to file** in the **Working gene list** panel.
-
-![geneList](Images/workingGeneListSave.png?raw=true)
-
-You will be prompted to choose a location to store the file.
+The current working gene list can be exported to a file for downstream analysis, by selecting **Save gene list to file** in the **Working gene list** panel. You will be prompted to choose a location to store the file.
 
 #### Refresh PCA Axes
 
@@ -268,29 +264,15 @@ The sample-score window will now be color-coded according to their assigned clus
 
 ## 8. <a id="fit_mst"></a>Fitting a Minimum Spanning Tree or minimum cost path
 
-Once cells have been clustered, SCell can compute a Minimum Spanning Tree or a Gabriel graph minimum cost path, to predict a lineage trajectory across clusters. Select a **root cluster** from the drop-down menu in the **Fit MST** panel, then click **Fit Tree**, or select the **root cluster** and **terminal cluster** and cluck **Fit path**.
+Once cells have been clustered, SCell can compute a Minimum Spanning Tree or a Gabriel graph minimum cost path, to predict a lineage trajectory across clusters. Select a **root cluster** from the drop-down menu in the **Fit MST** panel, then click **Fit Tree**, or select the **root cluster** and **terminal cluster** and click **Fit path**.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/MSTButton.png" width="300">
+![mstBtn](Images/shortest_path.png?raw=true)
 
-In this working example, we have selected **Cluster 2** as the root cluster, given that its cells express high levels of canonical radial glia marker genes.
+A shortest-path or a MST will then be fit. All subsequent gene visualizations (i.e. clicking the **Plot expression** button) will then produce expression estimates along this path or tree, and a new plot will be generated with the path or tree highlighted.
 
-The MST trajectory passes through Intermediate Progenitor Cells (IPCs) **(Cluster 4)** and continues on to neurons **(Cluster 1)**.
-
-Note that a branching event also occurs at **Cluster 4**. The cells in **Cluster 3** have the transcriptional profile corresponding to interneurons, a neuronal population which stems from a distinct lineage and region in the brain, and which migrates to the neocortex during development.
-
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/MST_withVarimax.png" width=300>
-
-#### Visualize Average Gene Expression Across MST Clusters
-
-To view a profile of the transcriptional dynamics of a gene across the estimated lineage trajectory, repeat the steps outlined above in **5. Visualize Gene Expression across Cells**, after fitting a Minimum-Spanning Tree.
-
-A surface / contour plot will be generated showing the gene's expression levels across cells in PCA space.
-
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/PAX6Surface.png" width=350>
-
-Additionally, the following plots will be displayed, describing the expression level dynamics of the gene across the defined clusters, following the estimated trajectory.
-
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/PAX6expressionClusters.png" width="300"> <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/PAX6ExpressionClusters2.png" width="295">
+![pth](Images/clust_path.png?raw=true)
+![srf](Images/sox2_surf.png?raw=true)
+![prof](Images/sox2_path.png?raw=true)
 
 ## 9. <a id="iter_pca"></a>Iterative PCA
 
