@@ -116,7 +116,7 @@ To normalize samples by library size and select a gene panel for analysis, follo
 
 - Once in the normalization tool, click on **Select Genes**.
 
-    ![nrm_tool](Images/norm_tool1.pdf)
+    ![nrm_tool](Images/norm_tool1.png?raw=true)
 
 - SCell will perform gene variance and zero-inflation analysis, and a **Gene Selection Tool** window will be launched.
 
@@ -131,48 +131,41 @@ Only the genes that meet your criteria will be used for downstream analysis.
 
 Your libraries are now normalized by library size (counts per million). You will be taken back to the Main Panel, where you may proceed to dimensionality reduction and clustering of the filtered, normalized libraries.
 
-#### 4b. Normalization by Human Cyclins and Cyclin-Dependent Kinases (Cell Cycle Regression)
+#### 4b. Assess the correlation of human cyclins and cyclin-dependent kinases with genome-wide expression via cannonical correlation analysis
 
-To normalize for the effect of cell cycle on gene expression (remove unwanted variation due to cell cycle state), in addition to normalizing libraries by size, follow these steps:
+- Press the Analyze Cell-Cycle button
 
-- Follow steps 1 to 5 from the **Normalization by Library size (CPM)** section above, in order to select a meaningful gene panel to include in the analysis.
+![normTool2](Images/norm_tool2.png?raw=true)
 
-- On the **Normalization Tool** window, check the **Human cyclins/CDKs** box, then click **Normalize samples**.
-
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/cyclinNormalization.png" width="250">
-
-SCell will estimate the percentage of genome-wide variance explained by cyclin/CDKs, the specific cyclins/CDKs that explain the highest percentage of variance and the genes that correlate most strongly with cyclin/CDKs.
-
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/cyclinNormProgress.png" width="250">
+- SCell will estimate the percentage of genome-wide variance explained by cyclin/CDKs, the specific cyclins/CDKs that explain the highest percentage of variance and the genes that correlate most strongly with cyclin/CDKs.
 
 A barchart will be displayed, showing Cyclin/CDK contribution to the observed variance in gene expression.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/cyclinCorrelations.png" width="400">
+![ccaBar](Images/cyclinCorrelations.png?raw=true)
 
-You will be prompted to specify the location to store the file for cyclin/CDK correlations, then for cyclin/CDK-gene correlations.
-
-Choose a location in the dialog box, then click **Save**.
-
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/saveCyclinCorr.png" width="400">
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/saveGeneCorrToCyclins.png" width="400">
-
-SCell utilizes canonical-correlation analysis (CCA) on cyclins/CDKs to correlate cell-cycle and gene expression.
+You will be prompted to specify the location to store the file for cyclin/CDK correlations, then for cyclin/CDK-gene correlations. Choose a location in the dialog box, then click **Save**.
 
 ___Cyclin-CDK Correlations File___
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/cyclinCorrTSV.png" width="250">
+![clnTSV](Images/cyclinCorrTSV.png?raw=true)
 
 ___Cyclin-CDK/Gene Correlations File___
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/geneCorrWithCyclinsTSV.png" width="350">
+![gnClnISV](Images/geneCorrWithCyclinsTSV.png?raw=true)
 
-After specifying a location to save the gene-cyclin correlation and cyclin-cyclin correlation TSV files, normalization will take place. Please allow a few minutes for its completion.
+#### 4c. Normalization by Human Cyclins and Cyclin-Dependent Kinases (Cell Cycle Regression) or a user supplied list
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/normalizationCyclins_Progress.png" width="300">
+To normalize for the effect of cell cycle on gene expression (remove unwanted variation due to cell cycle state) or to normalize by a user defined set of genes, in addition to normalizing libraries by size, follow these steps:
 
-Once the libraries have been normalized, you will be taken back to the Main Panel, where you may proceed to dimensionality reduction and clustering of the filtered, normalized libraries.
+- Follow steps 1 to 5 from the **Normalization by Library size (CPM)** section above, in order to select a meaningful gene panel to include in the analysis.
 
-Note: SCell can produce counts normalized by any combination of:
+- On the **Normalization Tool** window, check the **Human cyclins/CDKs** box or the **User gene list** box, then click **Normalize samples**.
+
+![normTool3](Images/norm_tool3.png?raw=true)
+
+If you checked **User gene list** then you will be prompted for a gene list. This should be a text file with one gene name per line, and the gene names must match those used in the original input data file exactly. Normalization may take up to a half-hour to complete. Once the libraries have been normalized, you will be taken back to the Main Panel, where you may proceed to dimensionality reduction and clustering of the filtered, normalized libraries.
+
+SCell can produce counts normalized by any combination of:
 
 - Cyclins and cyclin-dependent kinases (a model of cell cycle state)
 
@@ -184,49 +177,49 @@ SCell implements PCA for dimensionality reduction, and optionally Varimax-rotati
 
 On the lower panel of the Main Window, select **Analyze selected libraries** to perform dimensionality reduction via PCA on the QC-filtered and normalized libraries.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/AnalyzeButton.png" width="350">
+![analyzeBtn](Images/AnalyzeButton.png?raw=true)
 
-Two interactive plots will be displayed, which allow the user to explore samples in PCA space, with gene-level and sample-level metadata displayed upon mouse-over:
+Two interactive plots will be displayed, which allow the user to explore samples in PCA space, with gene-level and sample-level metadata displayed in a third window upon mouse-over:
 
+![pcaWindow](Images/pca_window.png?raw=true)
 
   ○ ___Interactive PCA Sample Scores Plot___
 
 View samples in PCA space.
 
-Mouse-over samples to view their identity and associated metrics, or click on a sample to mark and add it to the **working sample list**.
-By default, PC1 and PC2 are the axes shown on the plot, but this can be modified (see below).
+Mouse-over samples to view their identity and associated metrics, or click on a sample to mark and add it to the **working sample list**. By default, PC1 and PC2 are the axes shown on the plot, but this can be modified (see below).
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/PCAScores.png" width="300"> <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/CellAnnotations.png" width="300">
+![pcaScores](Images/PCAScores.png?raw=true) ![cellAnnot](Images/CellAnnotations.png?raw=true)
 
   ○ ___Interactive Gene Loadings Plot___
 
 Explore strongly loading genes in your dataset.
 
-In this dataset, **many canonical neuronal** genes are loading negative PC1.
+You can add genes to the working gene list which load a given PCA axis by specifying a percentile cutoff. In this dataset, canonical neuronal genes load negative PC1.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/PCAGenesNeuronal.png" width="300">
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/PCAGenesNeuronal2.png" width="300">
+![pcaGeneNeuron](Images/PCAGenesNeuronal.png?raw=true)
+![pcaGeneNeuron2](Images/PCAGenesNeuronal2.png?raw=true)
 
-Many **canonical radial glia (neocortical neural stem cells)** marker genes strongly load positive PC1.
+Canonical radial glia (neocortical neural stem cells) marker genes load positive PC1.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/PCAGenesRG.png" width="300">
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/PCAGenesRG2.png" width="300">
+![pcaGeneRG](Images/PCAGenesRG.png?raw=true)
+![pcaGene2](Images//PCAGenesRG2.png?raw=true)
 
 Mouse over genes in the **Gene Loading plot** to view their gene symbol, mean expression, IOD and the percentage of cells expressing the gene in the **Gene Annotations** panel.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/GeneAnnotations.png" width="300">
+![geneAnnot](Images/GeneAnnotations.png?raw=true)
 
-Click on genes on the **gene loading plot** to add them to the **Working gene list**. Alternatively, to find a gene in the loading plot, type its gene symbol in the **Working gene list** panel search box, then click **Add/Find gene**. The gene will be highlighted on the loading plot, and added to the working list.
+Click on genes in the **gene loading plot** to add them to the **Working gene list**. Alternatively, to find a gene in the loading plot, type its gene symbol in the **Working gene list** panel search box, then click **Add/Find gene**. The gene will be highlighted on the loading plot, and added to the working list.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/workingGeneList_Search.png" width="300">
+![geneListSearch](Images/workingGeneList_Search.png?raw=true)
 
 The current working gene list can be exported to a file for downstream analysis, by selecting **Save gene list to file** in the **Working gene list** panel.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/workingGeneListSave.png" width="300">
+![geneList](Images/workingGeneListSave.png?raw=true)
 
 You will be prompted to choose a location to store the file.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/saveLoadingGeneList.png" width="300">
+![saveList](Images/saveLoadingGeneList.png?raw=true)
 
 #### Refresh PCA Axes
 
