@@ -196,12 +196,10 @@ Mouse-over samples to view their identity and associated metrics, or click on a 
 In this dataset, canonical neuronal genes load negative PC1.
 
 ![pcaGeneNeuron](Images/PCAGenesNeuronal.png?raw=true)
-![pcaGeneNeuron2](Images/PCAGenesNeuronal2.png?raw=true)
 
 Canonical radial glia (neocortical neural stem cells) marker genes load positive PC1.
 
 ![pcaGeneRG](Images/PCAGenesRG.png?raw=true)
-![pcaGene2](Images//PCAGenesRG2.png?raw=true)
 
 Mouse over genes in the **Gene Loading plot** to view their gene symbol, mean expression, IOD and the percentage of cells expressing the gene in the **Gene Annotations** panel.
 
@@ -217,8 +215,6 @@ The current working gene list can be exported to a file for downstream analysis,
 
 You will be prompted to choose a location to store the file.
 
-![saveList](Images/saveLoadingGeneList.png?raw=true)
-
 #### Refresh PCA Axes
 
  By default, PC1 and PC2 are the axes shown on the PCA score and loading plots, but this can be modified. Enter the axes you would like to plot, then select **Refresh PCA axes** to generate new Sample Scores and Gene Loadings plots.
@@ -227,33 +223,26 @@ You will be prompted to choose a location to store the file.
 
 #### Varimax Rotation
 
-You can choose to apply Varimax Rotation to post-process the PCA. 
+You can apply <a href="https://en.wikipedia.org/wiki/Varimax_rotation">Varimax Rotation</a> to post-process the PCA, a technique which will decrease the number of genes that load both PCA axes to a comparable degree and can make the PCA axes more interpretable. To apply Varimax rotation, simply click **Varimax rotate**. The plots will be updated accordingly.
 
-To apply Varimax rotation, simply click **Varimax rotate**. The plots will be updated accordingly.
-
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/varimaxRotate.png" width=350>
-
+![varimaxRot](Images/varimaxRotate.png?raw=true)
 
 ## 6. <a id="visualization"></a>Visualize Gene Expression across Cells.
 
-Enter the name of the gene whose expression you want to visualize.
+SCell can be used to visualize gene expression as a regression or interpolation across PCA coordinates. To visualize a gene of interest, enter the name and select **surface** or **contour**. Select a regression method from the drop-down menu, then click on **Plot expression** to generate a plot of gene expression across cells in PCA space.
 
-Select **surface** or **contour**, and a regression method from the drop-down menu, then click on **Plot expression** to generate a plot of gene expression across cells in PCA space.
+![visualizeGene](Images/VisGeneExpressionButton.png?raw=true)
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/VisGeneExpressionButton.png" width="300">
+For example, we plot the expression of _VIM_ and _DCX_, a radial glia and newborn neuron marker respectively.
 
-In this dataset, we will plot the expression of _VIM_ and _DCX_, a radial glia and newborn neuron marker, respectively.
+![vimExp](Images/VIMExpressionContourPlot.png?raw=true) ![vimSurf](Images/VIMExpressionSurface.png?raw=true)
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/VIMExpressionContourPlot.png" width="300"> <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/VIMExpressionSurface.png" width="297">
-
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/DCXExpressionContourPlot.png" width="300">
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/DCXExpressionSurfacePlot.png" width="297">
-
-The height of the points in the surface plot corresponds to their normalized gene expression value for the selected gene.
+![dcxExp](Images/DCXExpressionContourPlot.png?raw=true)
+![dcxSurf](Images/DCXExpressionSurfacePlot.png?raw=true)
 
 ## 7. <a id="clustering"></a>Clustering
 
-SCell can implement 4 different clustering  algorithms:
+SCell implements 4 different clustering  algorithms:
 
 ○ k-means
 
@@ -265,28 +254,21 @@ SCell can implement 4 different clustering  algorithms:
 
 In the **Clustering panel**, select one of the clustering algorithms from the drop-down menu, then click  **Cluster cells**.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/ClusterMenu.png" width="300">
+![clust](Images/ClusterMenu.png?raw=true)
 
 A new window will prompt you to enter the desired number of clusters, as well as the number of replicates and distance metric to use. Enter these parameters, then click **Done**.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/kmeansParameters.png" width="302">
+![kmeans](Images/kmeansParameters.png?raw=true)
 
 ###### Example: K-means Cluster Assignments
 
-A plot will be generated with samples color-coded according to their assigned cluster.
+The sample-score window will now be color-coded according to their assigned cluster. In addition to adding samples to the **Working sample list** by clicking individual samples, you can now add all samples in a cluster at once. This could for example be used to run a new PCA to subcluster a given cluster.
 
-Upon mouse-over, sample information is displayed in the **Cell Annotation** panel.
-
-Upon selection, samples are added to the **Working sample list**, which can be exported to a file, or used to run a new PCA iteration (see below).
-
-<img src= "https://dl.dropboxusercontent.com/u/9990581/Scell/SCell_Screenshots/kmeansClusters.png" width="600">
-
+![kmeansClust](Images/kmeansClusters.png?raw=true)
 
 ## 8. <a id="fit_mst"></a>Fitting a Minimum Spanning Tree or minimum cost path
 
-Once cells have been clustered, SCell can compute a Minimum Spanning Tree to predict a lineage trajectory across clusters.
-
-Select a **root cluster** from the drop-down menu in the **Fit MST** panel, then click **Fit Tree**.
+Once cells have been clustered, SCell can compute a Minimum Spanning Tree or a Gabriel graph minimum cost path, to predict a lineage trajectory across clusters. Select a **root cluster** from the drop-down menu in the **Fit MST** panel, then click **Fit Tree**, or select the **root cluster** and **terminal cluster** and cluck **Fit path**.
 
 <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/MSTButton.png" width="300">
 
