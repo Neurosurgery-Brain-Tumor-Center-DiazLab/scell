@@ -187,15 +187,13 @@ Two interactive plots will be displayed, which allow the user to explore samples
 
 View samples in PCA space.
 
-Mouse-over samples to view their identity and associated metrics, or click on a sample to mark and add it to the **working sample list**. By default, PC1 and PC2 are the axes shown on the plot, but this can be modified (see below).
+Mouse-over samples to view their identity and associated metrics, or click on a sample to mark and add it to the **working sample list**. By default, PC1 and PC2 are the axes shown on the plot, but this can be modified (see below). You can add genes to the working gene list which load a given PCA axis by specifying a percentile cutoff.
 
-![pcaScores](Images/PCAScores.png?raw=true) ![cellAnnot](Images/CellAnnotations.png?raw=true)
+![pcaScores](Images/PCAScores.png?raw=true) ![cellAnnot](Images/gene_list.png?raw=true)
 
   ○ ___Interactive Gene Loadings Plot___
 
-Explore strongly loading genes in your dataset.
-
-You can add genes to the working gene list which load a given PCA axis by specifying a percentile cutoff. In this dataset, canonical neuronal genes load negative PC1.
+In this dataset, canonical neuronal genes load negative PC1.
 
 ![pcaGeneNeuron](Images/PCAGenesNeuronal.png?raw=true)
 ![pcaGeneNeuron2](Images/PCAGenesNeuronal2.png?raw=true)
