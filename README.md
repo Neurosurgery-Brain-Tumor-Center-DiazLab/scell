@@ -279,24 +279,10 @@ A shortest-path or a MST will then be fit. All subsequent gene visualizations (i
 
 SCell can perform PCA on a subset of libraries selected from the first round of analysis. Select cells individualy or select an entire clsuter at once using the **Add cluster** button and dropdown.
 
-![iterPCA](Images/iter_pca.png?raw=true)
+\includegraphics[height=2in]{Images/iter_pca.png}
 ![selSubclust](Images/select_subclust.png?raw=true)
 
-The selected samples will appear on the **Working Sample List** in the main panel and be highlighted in the scatter-plot. Click **Refresh PCA using samples** to perform a new iteration of PCA on the selected libraries only.
-
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/iterativePCArefresh.png" width="400">
-
-A new **sample scores** plot will be displayed containing only the selected libraries in PCA space. You can choose to apply Varimax rotation as described above, or to change the principal components plotted on each axis.
-
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/iterativePCAsampleScores.png" width="600">
-
-A new **gene loading** plot will be displayed as well, showing the new contribution of genes to each principal component shown.
-
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/iterativePCAplot.png" width="400"><img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/iterativePCAsampleList.png" width="400">
-
-The expression of selected genes across this subset of samples can be displayed as described above.
-
-Samples can be clustered and a new minimum-spanning tree can be fit to further characterize the subset of cells being analyzed.
+The selected samples will appear on the **Working Sample List** in the main panel and be highlighted in the scatter-plot. Click **Refresh PCA using samples** to perform a new iteration of PCA on the selected libraries only. A new **sample scores** plot will be displayed containing only the selected libraries in PCA space. You can choose to apply Varimax rotation as described above, or to change the principal components plotted on each axis. A new **gene loading** plot will be displayed as well, showing the new contribution of genes to each principal component shown. The expression of selected genes across this subset of samples can be displayed as described above. Samples can be clustered and a new minimum-spanning tree can be fit to further characterize the subset of cells being analyzed.
 
 ## 10. <a id="save"></a>Saving and Loading Sessions
 
