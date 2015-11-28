@@ -279,8 +279,8 @@ A shortest-path or a MST will then be fit. All subsequent gene visualizations (i
 
 SCell can perform PCA on a subset of libraries selected from the first round of analysis. Select cells individualy or select an entire clsuter at once using the **Add cluster** button and dropdown.
 
-[!iterPCA](Images/iter_pca.png?raw=true)
-[!selSubclust](Images/select_subclust.png?raw=true)
+![iterPCA](Images/iter_pca.png?raw=true)
+![selSubclust](Images/select_subclust.png?raw=true)
 
 The selected samples will appear on the **Working Sample List** in the main panel and be highlighted in the scatter-plot. Click **Refresh PCA using samples** to perform a new iteration of PCA on the selected libraries only.
 
