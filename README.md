@@ -279,7 +279,7 @@ A shortest-path or a MST will then be fit. All subsequent gene visualizations (i
 
 SCell can perform PCA on a subset of libraries selected from the first round of analysis. Select cells individualy or select an entire clsuter at once using the **Add cluster** button and dropdown.
 
-\includegraphics[height=2in]{Images/iter_pca.png}
+![iterPCA](Images/iter_pca.png?raw=true}
 ![selSubclust](Images/select_subclust.png?raw=true)
 
 The selected samples will appear on the **Working Sample List** in the main panel and be highlighted in the scatter-plot. Click **Refresh PCA using samples** to perform a new iteration of PCA on the selected libraries only. A new **sample scores** plot will be displayed containing only the selected libraries in PCA space. You can choose to apply Varimax rotation as described above, or to change the principal components plotted on each axis. A new **gene loading** plot will be displayed as well, showing the new contribution of genes to each principal component shown. The expression of selected genes across this subset of samples can be displayed as described above. Samples can be clustered and a new minimum-spanning tree can be fit to further characterize the subset of cells being analyzed.
@@ -290,18 +290,22 @@ The selected samples will appear on the **Working Sample List** in the main pane
 
 To save the current session, including library QC and filtering, feature selection and normalization, select **Save Session** on the main window.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/saveSessionButton.png" width="350">
+![saveSessBtn](Images/saveSessionButton.png?raw=true)
 
 You will be prompted to choose a location to store the **.mat** session. Choose a name for the session, and click **Save**.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/saveSession.png" width="350">
+![saveSess](Images/saveSession.png?raw=true)
 
 #### Load Session from File
 
 To restore a previously saved session into SCell, select **Load data** on the main window.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/mainPanelLoadSession.png" width="350">
+![mainLoad](Images/mainPanelLoadSession.png?raw=true)
 
 You will be prompted to select the .mat file you wish to load. Once the file has been selected, select **Open**. Your data, selected libraries, feature selection and normalization, will be restored.
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/loadSessionLocation.png" width="350">
+![loadSess](Images/loadSessionLocation.png?raw=true)
+
+## 11 <id="preproc"></a>Preprocessing scripts
+
+
