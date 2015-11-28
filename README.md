@@ -15,6 +15,7 @@
 - [Fit a minimum-spanning tree or minimum-cost path](#fit_mst)
 - [Iterative PCA](#iter_pca)
 - [Save and load sessions](#save)
+- [Preprocessing scripts](#preproc)
 
 ## 1. <a id="installation"></a>Installation
 SCell runs under 64bit Mac OSX, Windows, and Linux. Start by downloading the appropriate installation package
@@ -187,7 +188,7 @@ Two interactive plots will be displayed, which allow the user to explore samples
 
 View samples in PCA space.
 
-Mouse-over samples to view their identity and associated metrics, or click on a sample to mark and add it to the **working sample list**. By default, PC1 and PC2 are the axes shown on the plot, but this can be modified (see below).
+Mouse-over samples to view their identity and associated metrics, or click on a sample to mark and add it to the **working sample list**. A sample can be removed by pressing escape. By default, PC1 and PC2 are the axes shown on the plot, but this can be modified (see below).
 
 ![pcaScores](Images/PCAScores.png?raw=true) ![cellAnnot](Images/sample_scores_list.png?raw=true)
 
@@ -276,15 +277,12 @@ A shortest-path or a MST will then be fit. All subsequent gene visualizations (i
 
 ## 9. <a id="iter_pca"></a>Iterative PCA
 
-SCell can perform PCA on a subset of libraries selected from the first round of analysis.
+SCell can perform PCA on a subset of libraries selected from the first round of analysis. Select cells individualy or select an entire clsuter at once using the **Add cluster** button and dropdown.
 
-Select the cells from the cluster you wish to further analyze on the displayed sample scatterplot.
+[!iterPCA](Images/iter_pca.png?raw=true)
+[!selSubclust](Images/select_subclust.png?raw=true)
 
-<img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/iterativePCAselect.png" width="400">
-
-The selected samples will appear on the **Working Sample List** in the main panel.
-
-Click **Refresh PCA using samples** to perform a new iteration of PCA on the selected libraries only.
+The selected samples will appear on the **Working Sample List** in the main panel and be highlighted in the scatter-plot. Click **Refresh PCA using samples** to perform a new iteration of PCA on the selected libraries only.
 
 <img src= "https://dl.dropboxusercontent.com/u/9990581/SCell/SCell_Screenshots/iterativePCArefresh.png" width="400">
 
