@@ -231,17 +231,16 @@ end
 delete(h);
 comp_preseq=~isfield(d,'preseq')||isempty(d.preseq);
 if comp_preseq
-    if isdeployed
+%    if isdeployed
         if ~isfield(main_data,'last_dir')
             [fname, pname]=uigetfile('*.*','Select PRESEQ executable...');
         else
             [fname, pname]=uigetfile([main_data.last_dir,'*.*'],'Select PRESEQ executable...');
         end
-    else
-        pname='./';
-        fname='preseq';
-    end
-    if ~isempty(fname)
+%        pname='./';
+%        fname='preseq';
+%    end
+    if ~isempty(fname)&&fname~=0
         h=waitbar(0.5,'estimating library complexity');
         preseq=zeros(size(d.counts,2),1);
         preseq_mar=zeros(size(d.counts,2),1);
@@ -280,7 +279,9 @@ d.lorenz=q;d.lorenzh=lorenzh;d.sf=sf;d.bak_idx=bak_idx;
 delete(h);
 figure
 set(gcf,'color','w');
-subplot(2,1,1);
+if isfield(d,'preseq')&&~isempty(d.preseq)
+    subplot(2,1,1);
+end
 set(gca,'FontSize',18);
 ylabel('Simpson diversity','FontSize',18)
 H=notBoxPlot(d.simpson(d.lorenz>=0.05),1);
@@ -289,15 +290,17 @@ hold
 H=notBoxPlot(d.simpson(d.lorenz<0.05),2);
 set([H.data],'markersize',2);
 set(gca,'XTick',1:2,'XTickLabel',{'QC pass','QC fail'});
-subplot(2,1,2);
-set(gca,'FontSize',18);
-ylabel('Preseq coverage','FontSize',18)
-H=notBoxPlot(d.preseq(d.lorenz>=0.05),1);
-set([H.data],'markersize',2);
-hold
-H=notBoxPlot(d.preseq(d.lorenz<0.05),2);
-set([H.data],'markersize',2);
-set(gca,'XTick',1:2,'XTickLabel',{'QC pass','QC fail'});
+if isfield(d,'preseq')&&~isempty(d.preseq)
+    subplot(2,1,2);
+    set(gca,'FontSize',18);
+    ylabel('Preseq coverage','FontSize',18)
+    H=notBoxPlot(d.preseq(d.lorenz>=0.05),1);
+    set([H.data],'markersize',2);
+    hold
+    H=notBoxPlot(d.preseq(d.lorenz<0.05),2);
+    set([H.data],'markersize',2);
+    set(gca,'XTick',1:2,'XTickLabel',{'QC pass','QC fail'});
+end
 d.sidx=sidx;%index vector which sorts order stats of geo-mean
 d.cxi=cxi;%index scalar of point of maximal separation of geomean to poisson noise
 d.qc=true;
@@ -305,12 +308,19 @@ main_data.d=d;
 set(handles.main_window,'UserData',main_data);
 %update sample list
 ct_dat=get(handles.cell_table,'Data');
+if isfield(d,'preseq')&&~isempty(d.preseq)
+    pr=d.preseq;
+    prm=d.preseq_mar;
+else
+    pr=zeros(size(d.slbls));
+    prm=pr;
+end
 for i=1:length(d.slbls)
     ct_dat{i,8}=d.simpson(i);
-    ct_dat{i,9}=d.preseq(i);
+    ct_dat{i,9}=pr(i);
     ct_dat{i,10}=d.turing(i);
     ct_dat{i,11}=d.lorenz(i);
-    ct_dat{i,12}=d.preseq_mar(i);
+    ct_dat{i,12}=prm(i);
 end
 set(handles.cell_table,'Data',ct_dat);
 m=get(handles.disp_table,'Data');
@@ -318,10 +328,10 @@ m{1}=d.slbls{1};
 m{2}=nansum(d.counts(:,1));
 m{3}=nnz(d.counts(:,1));
 m{4}=d.simpson(1);
-m{5}=d.preseq(1);
+m{5}=pr(1);
 m{6}=d.turing(1);
 m{7}=d.lorenz(1);
-m{8}=d.preseq_mar(1);
+m{8}=prm(1);
 set(handles.disp_table,'Data',m);
 
 % --- Executes on button press in norm_button.
@@ -378,8 +388,13 @@ try
     d.lorenzh=d.lorenzh(cidx);
     d.mapped=d.mapped(cidx);
     d.unmapped=d.unmapped(cidx);
-    d.preseq=d.preseq(cidx);
-    d.preseq_mar=d.preseq_mar(cidx);
+    if ~isfield(d,'preseq')||isempty(d.preseq)
+        d.preseq=zeros(size(cidx));
+        d.preseq_mar=d.preseq;
+    else
+        d.preseq=d.preseq(cidx);
+        d.preseq_mar=d.preseq_mar(cidx);
+    end
     d.sf=d.sf(cidx);
     d.simpson=d.simpson(cidx);
     d.slbls=d.slbls(cidx);
@@ -393,8 +408,9 @@ try
     d.cidx=ones(length(cidx),1);
     d.gidx=ones(length(d.gidx),1);
 catch me
+    keyboard()
     alert('String','Select genes/normalize samples first!');
-    delete(h);
+    if exist('h','var'), delete(h); end
     return;
 end
 h=waitbar(0.5,'Computing PCA...');
@@ -490,7 +506,7 @@ function write_qc_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 main_data=get(handles.main_window,'UserData');
 d=main_data.d;
-if isempty(d.preseq)
+if isempty(d.qc)||~d.qc
     alert('String','Run library QC first');
     return;
 end

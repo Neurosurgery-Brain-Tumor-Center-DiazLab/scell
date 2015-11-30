@@ -501,7 +501,7 @@ if ~isempty(U)&&~isempty(V)
     %write a ranking of genes in the factor, by mean canonical cross
     %correlation
     [fname pname]=uiputfile('cyclin-CDK_correlation_rank.tsv','Where should I save a file of the most correlated Cyclin-CDKs?');
-    flag=true;
+    if isempty(fname)||fname==0, flag=false; else, flag=true; end
     try
         f=fopen(fullfile(pname,fname),'w');
     catch me
@@ -519,7 +519,7 @@ if ~isempty(U)&&~isempty(V)
     end
     %write a list of top correlated genes with the factor
     [fname pname]=uiputfile('Cyclin-CDK_correlated_genes.tsv','Where should I save genes most correlated with Cyclins/CDKs?');
-    flag=true;
+    if isempty(fname)||fname==0, flag=false; else, flag=true; end
     try
         f=fopen(fullfile(pname,fname),'w');
     catch me
