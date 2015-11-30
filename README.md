@@ -307,5 +307,45 @@ You will be prompted to select the .mat file you wish to load. Once the file has
 ![loadSess](Images/loadSessionLocation.png?raw=true)
 
 ## 11 <id="preproc"></a>Preprocessing scripts
+In the folder **preproc_scripts** you can find scripts to trim, align and perform read-level QC on large ensembles of single-cell RNA-seq libraries. These scripts are written to be run on a high-performance computing cluster running the <a href="http://www.adaptivecomputing.com/products/open-source/torque/">Torque</a> resource manager. All of them have the property that they take as input a directory containing sub-directories in which are stored the files corresponding to individual libraries for individual cells. The assumed arangement of raw data is a folder corresponding to a sample or sequencing run, with one sub-folder per single-cell library. Each sub-folder should then contain the raw reads as compressed **FASTQ** files. The scripts assume that you have paired-end reads. You will need to edit these scripts to match your read type. Jobs that process individual libraries are instantiated in an array. The number of jobs run concurrently, the number of threads to use and which references to use in the alignment and gene quantification can be set as parameters. These scripts are provided "as is" in an effort to be useful and save you some typing, they are not gauranteed to be suitable for any particular purpose.  
 
+#### 11.1. Read Trimming and FastQC
+
+We use [**TrimGalore!**](http://www.bioinformatics.babraham.ac.uk/projects/trim_galore/), which employs [**cutadapt**](https://wiki.gacrc.uga.edu/wiki/Cutadapt) to trim adapter sequences, as well as to trim low quality bases at the ends of reads.
+
+To trim reads, run the shell script [`sub_trim.sh`](preproc_scripts/sub_trim.sh) from the terminal, specifying the directory of single-cell libraries you want to trim. This usually corresponds to a sequencing plate of single-cell libraries.
+
+```shell
+sh sub_trim.sh sequencingRunDir
+```
+
+This script calls and executes the PBS script [`trim.pbs`](preproc_scripts/trim.pbs). A new subdirectory called `/trimmed` will be created under each individual library's directory, which now contains the quality-and-barcode-trimmed reads in a `fastq` file. The `/trimmed` subdirectory will also contain the output from [**FastQC**](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/) for each individual library in your sequencing run. This will allow you to inspect read-level quality metrics. A **MATLAB** script to summarize read-level QC by sequencing run is also provided: [`summarize_fastqc.m`](preproc_scripts/summarize_fastqc.m).
+
+#### 1.2. Read Alignment
+The scripts provided here make use of [**TopHat 2**](https://ccb.jhu.edu/software/tophat/index.shtml), a splice junction short read aligner for RNA-Seq data. To align your single-cell libraries, run the shell script [`sub_align.sh`]() from the terminal, specifying the directory of single-cell libraries you wish to align. This script calls and executes the PBS script [`align.pbs`](), which will submit the alignment jobs for each of the *trimmed* libraries in the specified directory as a job array.
+
+```sh
+sh sub_align.sh /path/to/sequencingRunDir
+```
+
+In the `sub_align.sh` script, you must specify:
+
+ • The path to the Bowtie genome index directory containing the necessary `.bt2` files for alignment.
+
+ • The path to the transcriptome index containing the necessary `.bt2` files to be used for the guided alignment.
+
+ • The base name for the `.bt2` files in the Bowtie genome index directory to be used for alignment.
+
+This script will create a new directory called `/tophat_out`, which contains one sub-directory per library. In each sub-directory is placed the `.bam` files and other **Tophat2** output, as well as alignment summary statistics corresponding to each single-cell library. Mapping rate statistics contained in the file `accepted_hits.stats` from each library can be summarized by running the script [`comp_mapping_rates.m`](preproc_scripts/comp_mapping_rates.m).
+
+#### 1.3. Gene Expression Quantification
+
+[**FeatureCounts**](http://bioinformatics.oxfordjournals.org/content/30/7/923.full.pdf?keytype=ref&ijkey=ZzPz96t2lqzAH6F), part of the [**SubRead**](http://subread.sourceforge.net/) package, assigns aligned reads/fragments to genomic features, such as genes.
+
+The output of this read summarization process is a counts matrix, which contains the number of reads/fragments assigned to each feature for each one of your single-cell libraries. To obtain a matrix of gene counts from your aligned single-cell libraries, run the shell script [`sub_featureCounts.sh`](preproc_scripts/sub_featureCounts.sh) from the terminal, specifying the name of the single-cell library directory to summarize.
+
+```sh
+sh sub_featureCounts.sh sequencingRunDir
+```
+This script calls the PBS script [`run_featureCounts.pbs`](preproc_scripts/run_featureCounts.pbs). You will need a GTF file containing the features you want to summarize aligned reads to. In the `run_featureCounts.pbs` file, you must specify the path to the GTF file to use for read summarization. This will create a new directory named `/featureCounts_out`, which contains a tab-delimited text file with genes as rows, and columns as single-cell libraries. This matrix is ready to be imported into SCell for quality control and analysis, but you must remove columns 2-6 and remove the first header line, for example `cut -f1,7-${num_of_libs} my_counts.txt >final_counts.txt` to remove columns 2-6 and delete the first headerline in a text editor.
 
