@@ -20,7 +20,7 @@
 ## 1. <a id="installation"></a>Installation
 SCell runs under 64bit Mac OSX, Windows, and Linux. Start by downloading the appropriate installation package
 from:
-[https://sourceforge.net/projects/scell/](https://sourceforge.net/projects/scell/). Files that end in `_web` will have a smaller initial download, but will download more files during installation. Those without the `_web` ending have everything needed already bundled. Once downloaded double click the installer and follow the on-screen instructions. 
+[https://sourceforge.net/projects/scell/](https://sourceforge.net/projects/scell/). Files that end in `_web` will have a smaller initial download, but will download more files during installation. Those without the `_web` ending have everything needed already bundled. Once downloaded double click the installer and follow the on-screen instructions. If you want **SCell** to call **preseq** to estimate marginal return, you can [install **preseq** here](https://github.com/smithlabcode/preseq).
 
 SCell is released under the GNU General Public License:
 [http://www.gnu.org/licenses/](http://www.gnu.org/licenses/). The SCell source code can
@@ -48,7 +48,7 @@ The metadata file must have the format shown below.
 
 ![MetaSample](Images/MetadataSample.png?raw=true)
 
-There is also a sample meta-data file on Github, [`test_data.txt`](test_meta_data.txt).To import your metadata into SCell, select **Load meta-data** in the main window, then choose the corresponding file from the dialog box.
+There is also a sample meta-data file on Github, [`test_meta_data.txt`](test_meta_data.txt).To import your metadata into SCell, select **Load meta-data** in the main window, then choose the corresponding file from the dialog box.
 
 The library names and associated metadata for the imported cells is displayed in the interactive expression profiler in the main window.
 
