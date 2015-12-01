@@ -33,7 +33,7 @@ SCell accepts as input a matrix of raw gene counts with **genes as rows and cell
 
 ![Counts](Images/CountsSample.png?raw=true)
 
-To import your gene expression dataset into SCell, select **Load data** in the main window, then choose your raw gene counts file from the dialog box.
+There is also a sample data file included in the source-code , [`test_data.txt`](test_data.txt). To import your gene expression dataset into SCell, select **Load data** in the main window, then choose your raw gene counts file from the dialog box.
 
 ![MainWindow](Images/main_window1.png?raw=true)
 
@@ -48,7 +48,7 @@ The metadata file must have the format shown below.
 
 ![MetaSample](Images/MetadataSample.png?raw=true)
 
-To import your metadata into SCell, select **Load meta-data** in the main window, then choose the corresponding file from the dialog box.
+There is also a sample meta-data file on Github, [`test_data.txt`](test_meta_data.txt).To import your metadata into SCell, select **Load meta-data** in the main window, then choose the corresponding file from the dialog box.
 
 The library names and associated metadata for the imported cells is displayed in the interactive expression profiler in the main window.
 
