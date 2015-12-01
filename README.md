@@ -20,7 +20,7 @@
 ## 1. <a id="installation"></a>Installation
 SCell runs under 64bit Mac OSX, Windows, and Linux. Start by downloading the appropriate installation package
 from:
-[https://sourceforge.net/projects/scell/](https://sourceforge.net/projects/scell/) 
+[https://sourceforge.net/projects/scell/](https://sourceforge.net/projects/scell/). Files that end in `_web` will have a smaller initial download, but will download more files during installation. Those without the `_web` ending have everything needed already bundled. Once downloaded double click the installer and follow the on-screen instructions. 
 
 SCell is released under the GNU General Public License:
 [http://www.gnu.org/licenses/](http://www.gnu.org/licenses/). The SCell source code can
