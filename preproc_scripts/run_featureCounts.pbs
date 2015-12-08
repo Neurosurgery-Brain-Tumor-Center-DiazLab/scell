@@ -1,0 +1,36 @@
+#!/bin/bash
+
+#PBS -m ae
+#PBS -l nodes=1:ppn=12
+
+export PATH=/diazlab/shared/bin:$PATH
+
+#human
+annot="/diazlab/refs/Homo_sapiens/NCBI/build37.2/Annotation/Genes/genes_ercc.gtf"
+#chimp
+#annot="/diazlab/refs/Pan_troglodytes/NCBI/build3.1/Annotation/Genes/genes_ercc.gtf"
+#baboon
+#annot="/diazlab/refs/baboon/Annotation/papAnu2_ercc.gtf"
+#john lncRNA
+#annot=/diazlab/liuj/hbrain/bulk/lncRNA_pipeline_v3/polya/ensembl_75_polya_augment_stringent.v3_ercc.pnky.gtf
+#TNC
+#annot=/diazlab/refs/Homo_sapiens/NCBI/build37.2/Annotation/Genes/TNC.gtf
+
+annot_id=human
+
+cd $indr
+infl=''
+for f in $(ls $indr)
+do
+    if [ -f "${indr}${f}/accepted_hits.bam" ]
+    then
+	infl="${infl}${indr}${f}/accepted_hits.bam "
+    fi
+done 
+
+featureCounts -T 12 -p -C -a ${annot} -o "${otdr}${fname}" $infl
+
+grep ERCC- "${otdr}${fname}_${annot_id}.txt" > "${otdr}ERCC-${fname}.txt"
+grep -v ERCC- "${otdr}${fname}_${annot_id}.txt" > "${otdr}${fname}-tmp"
+mv -f "${otdr}${fname}-tmp" "${otdr}${fname}_${annot_id}.txt"
+rm -f "${otdr}${fname}-tmp" 

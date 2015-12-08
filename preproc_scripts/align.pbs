@@ -1,0 +1,40 @@
+#!/bin/bash
+
+#PBS -m ae
+#PBS -l nodes=1:ppn=12
+
+export BOWTIE2_INDEXES=$bowtie_idx_path
+export PATH=/diazlab/shared/bin:$PATH
+
+cd $indir
+a=($(echo $to_proc|sed 's/:/ /g'))
+idx=$((PBS_ARRAYID))
+
+cd "${a[idx]}/trimmed"
+declare lf=`ls -m *R1*.gz|tr -d '\n'|tr -d ' '`
+declare rf=`ls -m *R2*.gz|tr -d '\n'|tr -d ' '`
+echo "align to $bowtie_idx_path : job $idx in directory ${a[idx]}" >>"/diazlab/BRAIN_data/scripts/align_log`date|tr ' ' '-'`.txt"
+
+if [ ! -d "$otdir_pref${a[idx]}" ]; then
+    mkdir "$otdir_pref${a[idx]}"
+fi
+
+/diazlab/shared/tophat/tophat-2.0.14.Linux_x86_64/tophat2 -o "$otdir_pref${a[idx]}" -p 12 --transcriptome-index=$transcriptome_idx_path --prefilter-multihits $genome_name $lf $rf
+
+#TNC specific alignment command
+#/diazlab/shared/tophat/tophat-2.0.14.Linux_x86_64/tophat2 -o "$otdir_pref${a[idx]}" -p 12 -G /diazlab/refs/Homo_sapiens/NCBI/build37.2/Annotation/Genes/TNC.gtf -T $genome_name $lf $rf
+
+
+cd "$otdir_pref${a[idx]}"
+
+if [ -f accepted_hits.bam ]; then
+    samtools index accepted_hits.bam
+    samtools flagstat accepted_hits.bam>accepted_hits.stats
+    samtools index unmapped.bam
+    samtools flagstat unmapped.bam>unmapped.stats
+fi
+
+cd $otdir_pref
+if [ -d logs ]; then rm -fR logs; fi
+if [ -d tmp ]; then rm -fR tmp; fi
+if [ -d Sample_empty ]; then rm -fR Sample_empty; fi
