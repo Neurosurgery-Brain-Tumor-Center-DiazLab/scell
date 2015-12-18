@@ -240,7 +240,7 @@ if comp_preseq
 %        pname='./';
 %        fname='preseq';
 %    end
-    if ~isempty(fname)&&fname~=0
+    if ~isempty(fname)&&any(fname~=0)
         h=waitbar(0.5,'estimating library complexity');
         preseq=zeros(size(d.counts,2),1);
         preseq_mar=zeros(size(d.counts,2),1);
