@@ -449,7 +449,7 @@ function cca_pushbutton_Callback(hObject, eventdata, handles)
 
 main_data=get(handles.norm_tool_root,'UserData');
 d=main_data.d;
-if ~isfield(d,'gidx')
+if ~isfield(d,'gidx')||all(d.gidx==1)
     alert('String','select genes for analysis first');
     return;
 end
@@ -501,7 +501,7 @@ if ~isempty(U)&&~isempty(V)
     %write a ranking of genes in the factor, by mean canonical cross
     %correlation
     [fname pname]=uiputfile('cyclin-CDK_correlation_rank.tsv','Where should I save a file of the most correlated Cyclin-CDKs?');
-    if isempty(fname)||fname==0, flag=false; else, flag=true; end
+    if isempty(fname)||any(fname==0), flag=false; else, flag=true; end
     try
         f=fopen(fullfile(pname,fname),'w');
     catch me
@@ -519,7 +519,7 @@ if ~isempty(U)&&~isempty(V)
     end
     %write a list of top correlated genes with the factor
     [fname pname]=uiputfile('Cyclin-CDK_correlated_genes.tsv','Where should I save genes most correlated with Cyclins/CDKs?');
-    if isempty(fname)||fname==0, flag=false; else, flag=true; end
+    if isempty(fname)||any(fname==0), flag=false; else, flag=true; end
     try
         f=fopen(fullfile(pname,fname),'w');
     catch me

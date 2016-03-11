@@ -24,7 +24,14 @@ nS=2*sqrt(S+3/8);
 bak_idx=zeros(n,1);%index into the mutual background fraction
 %trimmed means of order stats of the geometric mean, geometric mean is a
 %reference sample
-gm=geomean(nS')';
+nS2=sort(nS,2);
+per=10; %10% winsorization
+kt=round(m*(per/100)/2);
+x1=min(nS2(:,kt+1:end-kt),[],2);
+x2=max(nS2(:,kt+1:end-kt),[],2);
+nS2(:,1:kt)=repmat(x1,1,kt);
+nS2(:,end-kt+1:end)=repmat(x2,1,kt);
+gm=geomean(nS2,2);
 [cs,sidx]=sort(gm);
 cs=cumsum(cs);
 cs=cs/cs(end);

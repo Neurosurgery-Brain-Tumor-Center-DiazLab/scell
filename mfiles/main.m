@@ -22,7 +22,7 @@ function varargout = main(varargin)
 
 % Edit the above text to modify the response to help main
 
-% Last Modified by GUIDE v2.5 01-Sep-2015 14:05:31
+% Last Modified by GUIDE v2.5 10-Mar-2016 21:25:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,7 +54,7 @@ function main_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for main
 handles.output = hObject;
-
+splash('scell_splash.png')
 % Update handles structure
 guidata(hObject, handles);
 if isempty(gcp('nocreate')), parpool; end
@@ -542,11 +542,11 @@ else
         fprintf(f,'%i\t',nansum(d.counts(:,i)));
         fprintf(f,'%i\t',nnz(d.counts(:,i)));
         fprintf(f,'%g\t',d.simpson(i));
-        fprintf(f,'%g\t',d.preseq(i));
+        if isfield(d,'preseq'),fprintf(f,'%g\t',d.preseq(i)); else, fprintf(f,'NA\t'); end 
         fprintf(f,'%g\t',d.turing(i));
         fprintf(f,'%g\t',d.lorenz(i));
         if d.lorenz(i)<0.05,fprintf(f,'FAIL\t');else,fprintf(f,'PASS\t');end
-        fprintf(f,'%g\n',d.preseq_mar(i));
+        if isfield(d,'preseq'),fprintf(f,'%g\n',d.preseq_mar(i)); else, fprintf(f,'NA\n'); end
     end
     fclose(f);
 end
@@ -572,7 +572,7 @@ function filter_menu_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
-    set(hObject,'String',{'Lorenz','PRESEQ'});
+    set(hObject,'String',{'Lorenz','PRESEQ coverage', 'Turing coverage', 'Simpson diversity', 'Genes tagged', 'Mapped reads'});
     set(hObject,'Value',1);
 end
 
@@ -615,10 +615,54 @@ fltr_str=get(handles.filter_menu,'String');
 fltr_str=fltr_str{get(handles.filter_menu,'Value')};
 switch fltr_str
     case 'Lorenz'
-        x=d.lorenz; %threshold on Lorenz p-value
-        f=@gt; %threshold less than thr
-    case 'PRESEQ'
+        if ~isfield(d,'lorenz')||isempty(d.lorenz)
+            x=[];
+        else
+            x=d.lorenz; %threshold on Lorenz p-value
+            f=@gt; %threshold less than thr
+        end
+    case 'PRESEQ coverage'
+        if ~isfield(d,'preseq')||isempty(d.preseq)
+            x=[];
+        else
+            x=d.preseq;
+            f=@gt;
+        end
+    case 'Turing coverage'
+        if ~isfield(d,'turing')||isempty(d.turing)
+            x=[];
+        else
+            x=d.turing;
+            f=@gt;
+        end
+    case 'Simpson diversity'
+        if ~isfield(d,'simpson')||isempty(d.simpson)
+            x=[];
+        else
+            x=d.simpson;
+            f=@gt;
+        end
+    case 'Genes tagged'
+        if ~isfield(d,'ngns')||isempty(d.ngns)
+            x=[];
+        else
+            x=d.ngns;
+            f=@gt;
+        end
+    case 'Mapped reads'
+        if ~isfield(d,'mapped')||isempty(d.mapped)
+            x=[];
+        else
+            x=d.mapped;
+            f=@gt;
+        end
 end
+if isempty(x), return; end
+figure
+notBoxPlot(x)
+set(gcf,'color','w')
+set(gca,'FontSize',18)
+ylabel(fltr_str)
 for i=1:size(ct_dat,1)
     t=find(strcmp(ct_dat{i,2},d.slbls));
     if ct_dat{i,1}==true;
@@ -712,6 +756,76 @@ ct_dat=get(handles.cell_table,'Data');
 for i=1:size(ct_dat,1)
     ct_dat{i,1}=false;
     d.cidx(i)=0;
+end
+main_data.d=d;
+set(handles.main_window,'UserData',main_data);
+set(handles.cell_table,'Data',ct_dat);
+
+
+% --- Executes on button press in user_qc_pushbutton.
+function user_qc_pushbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to user_qc_pushbutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+main_data=get(handles.main_window,'UserData');
+d=main_data.d;
+d.cidx=zeros(size(d.slbls));
+ct_dat=get(handles.cell_table,'Data');
+if ~isfield(main_data,'last_dir')
+    [fname, pname]=uigetfile('*.*','Select user QC file...');
+else
+    [fname, pname]=uigetfile([main_data.last_dir,'*.*'],'Select user QC file...');
+end
+if ~isstr(fname),return;end
+D=importdata(fullfile(pname,fname));
+if ~isstr(D{1})
+    alert('String','File format error, see manual');
+    return;
+end
+for i=1:length(D)
+    t=find(strcmp(D{i},ct_dat(:,2)));
+    if ~isempty(t)
+        r=find(strcmp(D{i},d.slbls));
+        d.cidx(r)=1;
+        ct_dat{t,1}=false;
+    end
+end
+main_data.d=d;
+set(handles.main_window,'UserData',main_data);
+set(handles.cell_table,'Data',ct_dat);
+
+% --- Executes on button press in whitelist_pushbutton.
+function whitelist_pushbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to whitelist_pushbutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+main_data=get(handles.main_window,'UserData');
+d=main_data.d;
+d.cidx=zeros(size(d.slbls));
+ct_dat=get(handles.cell_table,'Data');
+if ~isfield(main_data,'last_dir')
+    [fname, pname]=uigetfile('*.*','Select user QC file...');
+else
+    [fname, pname]=uigetfile([main_data.last_dir,'*.*'],'Select user QC file...');
+end
+if ~isstr(fname),return;end
+D=importdata(fullfile(pname,fname));
+if ~isstr(D{1})
+    alert('String','File format error, see manual');
+    return;
+end
+for i=1:length(D)
+    q=find(strcmp(D{i},d.gsymb));
+    if isempty(q), continue; end
+    idx=find(d.counts(q,:)>0);
+    d.cidx(idx)=1;
+end
+for i=1:length(d.cidx)
+    t=find(strcmp(d.slbls{i},ct_dat(:,2)));
+    if ~isempty(t)
+        if d.cidx(i)==1, ct_dat{t,1}=true;
+        else, ct_dat{t,1}=false; end
+    end
 end
 main_data.d=d;
 set(handles.main_window,'UserData',main_data);
