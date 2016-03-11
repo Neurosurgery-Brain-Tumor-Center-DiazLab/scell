@@ -306,7 +306,7 @@ You will be prompted to select the .mat file you wish to load. Once the file has
 
 ![loadSess](Images/loadSessionLocation.png?raw=true)
 
-## 11 <id="preproc"></a>Preprocessing scripts
+## 11 <a id="preproc"></a>Preprocessing scripts
 In the folder **preproc_scripts** you can find scripts to trim, align and perform read-level QC on large ensembles of single-cell RNA-seq libraries. These scripts are written to be run on a high-performance computing cluster running the <a href="http://www.adaptivecomputing.com/products/open-source/torque/">Torque</a> resource manager. All of them have the property that they take as input a directory containing sub-directories in which are stored the files corresponding to individual libraries for individual cells. The assumed arangement of raw data is a folder corresponding to a sample or sequencing run, with one sub-folder per single-cell library. Each sub-folder should then contain the raw reads as compressed **FASTQ** files. The scripts assume that you have paired-end reads. You will need to edit these scripts to match your read type. Jobs that process individual libraries are instantiated in an array. The number of jobs run concurrently, the number of threads to use and which references to use in the alignment and gene quantification can be set as parameters. These scripts are provided "as is" in an effort to be useful and save you some typing, they are not gauranteed to be suitable for any particular purpose.  
 
 #### 11.1. Read Trimming and FastQC
