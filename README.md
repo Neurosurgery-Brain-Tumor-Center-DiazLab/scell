@@ -2,7 +2,7 @@
 
 >**SCell** is an integrated software tool for quality filtering, normalization, feature selection, iterative dimensionality reduction, clustering and the estimation of gene-expression gradients from large ensembles of single-cell RNA-seq datasets. SCell is open source, and implemented with an intuitive graphical interface.
 >
->Binary executables for Windows, MacOS and Linux are available at http://sourceforge.net/projects/scell, source code and pre-processing scripts are available from https://github.com/diazlab/SCell. If you use this software for your research, please cite: Aaron Diaz, Siyuan J. Liu, Carmen Sandoval, Alex Pollen, Tom J. Nowakowski, Daniel A. Lim, Arnold Kriegstein. [http://bioinformatics.oxfordjournals.org/content/early/2016/04/18/bioinformatics.btw201.abstract](SCell: integrated analysis of single-cell RNA-seq data). Bioinformatics. 2016. doi: 10.1093/bioinformatics/btw201
+>Binary executables for Windows, MacOS and Linux are available at http://sourceforge.net/projects/scell, source code and pre-processing scripts are available from https://github.com/diazlab/SCell. If you use this software for your research, please cite: Aaron Diaz, Siyuan J. Liu, Carmen Sandoval, Alex Pollen, Tom J. Nowakowski, Daniel A. Lim, Arnold Kriegstein. [SCell: integrated analysis of single-cell RNA-seq data](http://bioinformatics.oxfordjournals.org/content/early/2016/04/18/bioinformatics.btw201.abstract). Bioinformatics. 2016. doi: 10.1093/bioinformatics/btw201
 ## Table of contents
 - [Installation](#installation)
 - [Load data and metadata](#load_data)
